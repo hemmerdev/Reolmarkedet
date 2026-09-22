@@ -116,6 +116,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_newShelfType != value)
                 {
                     _newShelfType = value;
+                    ShelfTypeMessage = string.Empty;
                     OnPropertyChanged();
 
                     AddShelfCommand.RaiseCanExecuteChanged();
@@ -491,6 +492,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public void Refresh()
         {
+            ShelfTypeMessage = string.Empty;
+            ShelfMessage = string.Empty;
             ApplyShelfFilter();
         }
     }
