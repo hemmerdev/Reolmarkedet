@@ -1,11 +1,33 @@
 ﻿using Reolmarkedet.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Reolmarkedet.Core.Models;
 
 namespace Reolmarkedet.Data.Repositorires
 {
-    public class SqlShelfRepository : IShelfRepository
+    public class SqlShelfRepository : IRepository<Shelf>
     {
+        public IEnumerable<Shelf> GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Shelf? GetById(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(Shelf entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(Shelf entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delete(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -16,10 +16,28 @@ CREATE TABLE dbo.TENANT (
 		CONSTRAINT DF_TENANT_IsActive DEFAULT (1)
 	);
 
+CREATE TABLE dbo.SHELFTYPE (
+	ShelfTypeID INT PRIMARY KEY IDENTITY(1,1),
+	ShelfTypeName NVARCHAR(50) NOT NULL,
+		CONSTRAINT UQ_SHELFTYPE_ShelfTypeName UNIQUE (ShelfTypeName)		
+	);
+
+INSERT INTO dbo.SHELFTYPE (ShelfTypeName)
+VALUES
+    (N'6 hylder'),
+    (N'3 hylder og bøjlestang');
+
 CREATE TABLE dbo.SHELF (
 	ShelfID INT PRIMARY KEY IDENTITY(1,1),
-	ShelfNumber INT NOT NULL UNIQUE CHECK (ShelfNumber BETWEEN 1 AND 80),
-	ShelfType NVARCHAR(50) NOT NULL CHECK (ShelfType IN ('SixShelves', 'ThreeShelvesWithClothesRail'))	
+	ShelfNumber INT NOT NULL,
+	IsActive BIT NOT NULL
+		CONSTRAINT DF_SHELF_IsActive DEFAULT (1),
+	ShelfTypeID INT NOT NULL,
+
+		CONSTRAINT UQ_SHELF_ShelfNumber UNIQUE (ShelfNumber),
+		CONSTRAINT CK_SHELF_ShelfNumber_Positive CHECK (ShelfNumber > 0),
+		CONSTRAINT FK_SHELF_SHELFTYPE
+			FOREIGN KEY (ShelfTypeID) REFERENCES dbo.SHELFTYPE(ShelfTypeID)
 	);
 
 CREATE TABLE dbo.RENTAL (
@@ -27,6 +45,7 @@ CREATE TABLE dbo.RENTAL (
 	StartDate DATE NOT NULL,
 	MonthlyRent DECIMAL(10, 2) NOT NULL CHECK (MonthlyRent >= 0),
 	EndDate DATE NULL, 
+	TerminationNoticeDate DATE NULL,
 	TenantID INT NOT NULL,
 	ShelfID INT NOT NULL,
 		CONSTRAINT FK_RENTAL_TENANT
@@ -34,7 +53,7 @@ CREATE TABLE dbo.RENTAL (
 		CONSTRAINT FK_RENTAL_SHELF 
 			FOREIGN KEY (ShelfID) REFERENCES dbo.SHELF(ShelfID),
 		CONSTRAINT CK_RENTAL_EndDate
-			CHECK (EndDate IS NULL OR EndDate >= StartDate)
+			CHECK (EndDate IS NULL OR EndDate > StartDate)
 	);
 
 CREATE TABLE dbo.ITEM (
