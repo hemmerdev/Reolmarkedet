@@ -135,7 +135,7 @@ namespace Reolmarkedet.Data.Repositories
                 if (rowsAffected == 0)
                 {
                     throw new InvalidOperationException(
-                        $"No shelf found with id {shelf.ShelfId}");
+                        $"No shelf found with ShelfId {shelf.ShelfId}");
                 }
             }
         }
@@ -156,7 +156,7 @@ namespace Reolmarkedet.Data.Repositories
                 if (rowsAffected == 0)
                 {
                     throw new InvalidOperationException(
-                        $"No shelf found with id {id}");
+                        $"No shelf found with ShelfId {id}");
                 }
             }
         }
