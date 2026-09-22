@@ -268,7 +268,7 @@ namespace Reolmarkedet.WPF.ViewModels
             _rentalRepository = rentalRepository;
 
             // Loads existing rentals from the repository and populates the Rentals collection
-            foreach (Rental rental in Rentals)
+            foreach (Rental rental in _rentalRepository.GetAll())
             {
                 Tenant? matchingTenant = null;
 
