@@ -1,5 +1,6 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.ViewModels;
+using ReolMarkedet.Tests.Fakes;
 using System.Collections.ObjectModel;
 
 namespace ReolMarkedet.Tests;
@@ -11,7 +12,7 @@ public class ShelfViewModelTests
     public void DeleteShelfType_WhenTypeIsUsed_LeavesTypeUnchanged()
     {
         // Arrange
-        var viewModel = new ShelfViewModel(new ObservableCollection<Rental>());
+        var viewModel = CreateViewModel();
         ShelfType shelfType = viewModel.Shelves[1].ShelfType;
 
         int originalCount = viewModel.ShelfTypes.Count;
@@ -32,7 +33,7 @@ public class ShelfViewModelTests
     public void AddShelf_WhenNumberAlreadyExists_DoesNotAddShelf()
     {
         // Arrange
-        var viewModel = new ShelfViewModel(new ObservableCollection<Rental>());
+        var viewModel = CreateViewModel();
 
         int originalCount = viewModel.Shelves.Count();
 
@@ -53,7 +54,7 @@ public class ShelfViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new ShelfViewModel(rentals);
+        var viewModel = CreateViewModel(rentals);
         Shelf shelf = viewModel.Shelves[0];
         int originalCount = viewModel.Shelves.Count;
 
@@ -83,7 +84,7 @@ public class ShelfViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new ShelfViewModel(rentals);
+        var viewModel = CreateViewModel(rentals);
         Shelf shelf = viewModel.Shelves[0];
         int originalCount = viewModel.Shelves.Count;
 
@@ -120,7 +121,7 @@ public class ShelfViewModelTests
         // Arrange
         DateTime today = DateTime.Today;
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new ShelfViewModel(rentals);
+        var viewModel = CreateViewModel(rentals);
         Shelf shelf = viewModel.Shelves[0];
         Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
 
@@ -154,7 +155,7 @@ public class ShelfViewModelTests
         // Arrange
         DateTime today = DateTime.Today;
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new ShelfViewModel(rentals);
+        var viewModel = CreateViewModel(rentals);
         Shelf shelf = viewModel.Shelves[0];
         Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
 
@@ -187,7 +188,7 @@ public class ShelfViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new ShelfViewModel(rentals);
+        var viewModel = CreateViewModel(rentals);
         Shelf shelf = viewModel.Shelves[0];
         int originalCount = viewModel.Shelves.Count;
         Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
@@ -226,7 +227,7 @@ public class ShelfViewModelTests
     public void ShowInactiveShelves_WhenStatusFilterIsRented_ShowsOnlyInactiveShelves()
     {
         // Arrange
-        var viewModel = new ShelfViewModel(new ObservableCollection<Rental>());
+        var viewModel = CreateViewModel();
         Shelf inactiveShelf = viewModel.Shelves[0];
         inactiveShelf.IsActive = false;
         viewModel.SelectedStatusFilter = ShelfStatusFilter.Rented;
@@ -239,5 +240,40 @@ public class ShelfViewModelTests
         Assert.AreSame(inactiveShelf, viewModel.VisibleShelves[0].Shelf);
         Assert.IsFalse(inactiveShelf.IsActive);
         Assert.IsNull(viewModel.SelectedShelfRow);
+    }
+
+    private static ShelfViewModel CreateViewModel(
+    ObservableCollection<Rental>? rentals = null)
+    {
+        var shelfTypeRepository = new FakeShelfTypeRepository();
+
+        ShelfType sixShelves = new()
+        {
+            Name = "6 hylder"
+        };
+        ShelfType clothesRail = new()
+        {
+            Name = "3 hylder og bøjlestang"
+        };
+
+        shelfTypeRepository.Add(sixShelves);
+        shelfTypeRepository.Add(clothesRail);
+
+        var shelfRepository = new FakeShelfRepository();
+
+        shelfRepository.Add(new Shelf(sixShelves)
+        {
+            ShelfNumber = 1
+        });
+
+        shelfRepository.Add(new Shelf(clothesRail)
+        {
+            ShelfNumber = 2
+        });
+
+        return new ShelfViewModel(
+            rentals ?? new ObservableCollection<Rental>(),
+            shelfRepository,
+            shelfTypeRepository);
     }
 }
