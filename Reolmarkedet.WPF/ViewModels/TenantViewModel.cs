@@ -192,6 +192,13 @@ namespace Reolmarkedet.WPF.ViewModels
         {
             Rentals = rentals;
             _tenantRepository = tenantRepository;
+            // Load tenants from the repository into the Tenants collection
+            foreach (var tenant in _tenantRepository.GetAll())
+            {
+                Tenants.Add(tenant);
+            }
+            ApplySearch();
+
             AddTenantCommand = new RelayCommand(AddTenant, CanAddTenant);
             UpdateTenantCommand = new RelayCommand(UpdateTenant, CanUpdateTenant);
             CancelUpdateTenantCommand = new RelayCommand(CancelUpdateTenant, CanCancelUpdateTenant);
@@ -220,6 +227,8 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             tenant.IsActive = true;
+            _tenantRepository.Update(tenant);
+
             SelectedTenant = null;
             ValidationMessage = string.Empty;
             ApplySearch();
@@ -257,13 +266,13 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             tenant.IsActive = false;
+            _tenantRepository.Update(tenant);
+
             SelectedTenant = null;
             ValidationMessage = string.Empty;
             ApplySearch();
 
         }
-
-        private int _nextTenantId = 1;
 
         private bool CanAddTenant(object? parameter)
         {
@@ -285,15 +294,15 @@ namespace Reolmarkedet.WPF.ViewModels
 
             Tenant tenant = new Tenant()
             {
-                TenantId = _nextTenantId,
                 Name = Name,
                 Email = Email,
                 PhoneNumber = PhoneNumber,
             };
 
+            _tenantRepository.Add(tenant);
             Tenants.Add(tenant);
+
             ApplySearch();
-            _nextTenantId++;
 
             SelectedTenant = null;
             ClearFormFields();
@@ -303,7 +312,6 @@ namespace Reolmarkedet.WPF.ViewModels
         {
             return SelectedTenant is not null;
         }
-
 
         private void UpdateTenant(object? parameter)
         {
@@ -329,6 +337,8 @@ namespace Reolmarkedet.WPF.ViewModels
             tenant.Name = Name;
             tenant.PhoneNumber = string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber;
             tenant.Email = string.IsNullOrWhiteSpace(Email) ? null : Email;
+
+            _tenantRepository.Update(tenant);
 
             ApplySearch();
             SelectedTenant = null;
@@ -365,7 +375,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            _tenantRepository.Delete(tenant.TenantId);
             Tenants.Remove(tenant);
+
             ApplySearch();
             SelectedTenant = null;
             ClearFormFields();
