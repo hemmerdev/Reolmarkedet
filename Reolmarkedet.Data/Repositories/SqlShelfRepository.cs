@@ -1,7 +1,7 @@
 ﻿using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
 
-namespace Reolmarkedet.Data.Repositorires
+namespace Reolmarkedet.Data.Repositories
 {
     public class SqlShelfRepository : IRepository<Shelf>
     {
