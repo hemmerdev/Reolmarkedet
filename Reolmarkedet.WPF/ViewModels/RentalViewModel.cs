@@ -203,7 +203,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
-
         public DateTime MinimumStartDate => DateTime.Today;
 
         public DateTime? TerminationEndDate
@@ -361,6 +360,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     Rentals);
 
+                _rentalRepository.Update(rental);
             }
             catch (InvalidOperationException ex)
             {
@@ -411,6 +411,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     TerminationEndDate.Value,
                     Rentals);
+                _rentalRepository.Update(rental);
 
                 Refresh();
                 TerminationMessage = "Lejemålet blev ændret.";
@@ -461,6 +462,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     TerminationEndDate.Value,
                     Rentals);
+                _rentalRepository.Update(rental);
             }
             catch (ArgumentException ex)
             {
@@ -518,9 +520,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
-            if (endDate.HasValue && endDate.Value < startDate)
+            if (endDate.HasValue && endDate.Value <= startDate)
             {
-                RentalMessage = "Slutdatoen må ikke være før startdatoen.";
+                RentalMessage = "Slutdatoen skal være efter startdatoen.";
                 return;
             }
 
@@ -550,30 +552,17 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
 
-            // Find an unused ID, including IDs belonging to historical rentals.
-            int nextRentalId = 1;
-
-            foreach (Rental existingRental in Rentals)
-            {
-                if (existingRental.RentalId >= nextRentalId)
-                {
-                    nextRentalId = existingRental.RentalId + 1;
-                }
-            }
-
             // All validation passed. Create one rental for each selected shelf.
             foreach (Shelf shelf in shelvesToRent)
             {
                 Rental rental = new(tenant, shelf)
                 {
-                    RentalId = nextRentalId,
                     StartDate = startDate,
                     EndDate = endDate,
                     MonthlyRent = rentPerShelf
                 };
-
+                _rentalRepository.Add(rental);
                 Rentals.Add(rental);
-                nextRentalId++;
             }
 
             // Reset the draft for the next creation.
@@ -661,6 +650,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public void Refresh()
         {
+            TerminationMessage = string.Empty;
             RefreshActiveTenants();
             RefreshAvailableShelves();
             RefreshPrice();
