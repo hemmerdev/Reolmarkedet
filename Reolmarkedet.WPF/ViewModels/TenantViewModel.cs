@@ -192,6 +192,7 @@ namespace Reolmarkedet.WPF.ViewModels
         {
             Rentals = rentals;
             _tenantRepository = tenantRepository;
+
             // Load tenants from the repository into the Tenants collection
             foreach (var tenant in _tenantRepository.GetAll())
             {

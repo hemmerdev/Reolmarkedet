@@ -1,4 +1,5 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
@@ -16,8 +17,9 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Rental> Rentals { get; }
         public ObservableCollection<RentalRowViewModel> RentalRows { get; } = new();
 
-        // Service for rental-related operations
+
         private readonly RentalService _rentalService = new();
+        private readonly IRepository<Rental> _rentalRepository;
 
         // Private backing fields for properties
         private Tenant? _selectedTenant;
@@ -257,11 +259,50 @@ namespace Reolmarkedet.WPF.ViewModels
         public RentalViewModel(
             ObservableCollection<Tenant> tenants,
             ObservableCollection<Shelf> shelves,
-            ObservableCollection<Rental> rentals)
+            ObservableCollection<Rental> rentals,
+            IRepository<Rental> rentalRepository)
         {
             Tenants = tenants;
             Shelves = shelves;
             Rentals = rentals;
+            _rentalRepository = rentalRepository;
+
+            // Loads existing rentals from the repository and populates the Rentals collection
+            foreach (Rental rental in Rentals)
+            {
+                Tenant? matchingTenant = null;
+
+                foreach (Tenant tenant in Tenants)
+                {
+                    if (tenant.TenantId == rental.Tenant.TenantId)
+                    {
+                        matchingTenant = tenant;
+                        break;
+                    }
+                }
+
+                Shelf? matchingShelf = null;
+
+                foreach (Shelf shelf in Shelves)
+                {
+                    if (shelf.ShelfId == rental.Shelf.ShelfId)
+                    {
+                        matchingShelf = shelf;
+                        break;
+                    }
+                }
+
+                if (matchingTenant is null || matchingShelf is null)
+                {
+                    throw new InvalidOperationException(
+                        "Rental tenant or shelf could not be found");
+                }
+
+                rental.Tenant = matchingTenant;
+                rental.Shelf = matchingShelf;
+                Rentals.Add(rental);
+            }
+
             AddShelfToSelectionCommand =
                 new RelayCommand(AddShelfToSelection, CanAddShelfToSelection);
             RemoveShelfFromSelectionCommand =

@@ -179,6 +179,7 @@ namespace Reolmarkedet.WPF.ViewModels
             _shelfRepository = shelfRepository;
             _shelfTypeRepository = shelfTypeRepository;
 
+            // Load shelf types and shelves from the repositories
             foreach (ShelfType shelfType in _shelfTypeRepository.GetAll())
             {
                 ShelfTypes.Add(shelfType);

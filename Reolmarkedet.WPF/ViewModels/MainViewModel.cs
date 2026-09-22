@@ -48,7 +48,8 @@ namespace Reolmarkedet.WPF.ViewModels
         public MainViewModel(
             IRepository<Tenant> tenantRepository,
             IRepository<Shelf> shelfRepository,
-            IRepository<ShelfType> shelfTypeRepository)
+            IRepository<ShelfType> shelfTypeRepository,
+            IRepository<Rental> rentalRepository)
         {
             Dashboard = new DashboardViewModel();
             TenantManagement = new TenantViewModel(Rentals, tenantRepository);
@@ -60,7 +61,8 @@ namespace Reolmarkedet.WPF.ViewModels
             RentalManagement = new RentalViewModel(
                 TenantManagement.Tenants,
                 ShelfManagement.Shelves,
-                Rentals);
+                Rentals,
+                rentalRepository);
 
             CurrentViewModel = Dashboard;
 
