@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.Data.Database;
+using Reolmarkedet.Data.Repositories;
 using Reolmarkedet.WPF.ViewModels;
 using System.Windows;
 
@@ -32,7 +35,10 @@ namespace Reolmarkedet.WPF
 
             connectionTester.TestConnection();
 
-            MainViewModel mainViewModel = new();
+            IRepository<Tenant> tenantRepository =
+                new SqlTenantRepository(connectionString);
+
+            MainViewModel mainViewModel = new(tenantRepository);
 
             MainWindow mainWindow = new(mainViewModel);
             mainWindow.Show();

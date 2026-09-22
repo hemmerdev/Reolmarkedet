@@ -1,4 +1,5 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
 
@@ -44,10 +45,10 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand ShowShelfManagementCommand { get; }
         public RelayCommand ShowRentalManagementCommand { get; }
 
-        public MainViewModel()
+        public MainViewModel(IRepository<Tenant> tenantRepository)
         {
             Dashboard = new DashboardViewModel();
-            TenantManagement = new TenantViewModel(Rentals);
+            TenantManagement = new TenantViewModel(Rentals, tenantRepository);
             ShelfManagement = new ShelfViewModel(Rentals);
             RentalManagement = new RentalViewModel(
                 TenantManagement.Tenants,

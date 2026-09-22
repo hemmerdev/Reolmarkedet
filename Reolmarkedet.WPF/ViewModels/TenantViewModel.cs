@@ -1,4 +1,5 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
@@ -14,6 +15,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Rental> Rentals { get; }
 
         private readonly RentalService _rentalService = new();
+        private readonly IRepository<Tenant> _tenantRepository;
 
         private string _searchText = string.Empty;
         private string _name = string.Empty;
@@ -184,9 +186,12 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand DeactivateTenantCommand { get; }
         public RelayCommand ReactivateTenantCommand { get; }
 
-        public TenantViewModel(ObservableCollection<Rental> rentals)
+        public TenantViewModel(
+            ObservableCollection<Rental> rentals,
+            IRepository<Tenant> tenantRepository)
         {
             Rentals = rentals;
+            _tenantRepository = tenantRepository;
             AddTenantCommand = new RelayCommand(AddTenant, CanAddTenant);
             UpdateTenantCommand = new RelayCommand(UpdateTenant, CanUpdateTenant);
             CancelUpdateTenantCommand = new RelayCommand(CancelUpdateTenant, CanCancelUpdateTenant);
