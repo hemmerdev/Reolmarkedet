@@ -37,8 +37,15 @@ namespace Reolmarkedet.WPF
 
             IRepository<Tenant> tenantRepository =
                 new SqlTenantRepository(connectionString);
+            IRepository<Shelf> shelfRepository =
+                new SqlShelfRepository(connectionString);
+            IRepository<ShelfType> shelfTypeRepository =
+                new SqlShelfTypeRepository(connectionString);
 
-            MainViewModel mainViewModel = new(tenantRepository);
+            MainViewModel mainViewModel = new(
+                tenantRepository,
+                shelfRepository,
+                shelfTypeRepository);
 
             MainWindow mainWindow = new(mainViewModel);
             mainWindow.Show();

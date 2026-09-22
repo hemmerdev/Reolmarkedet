@@ -45,11 +45,18 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand ShowShelfManagementCommand { get; }
         public RelayCommand ShowRentalManagementCommand { get; }
 
-        public MainViewModel(IRepository<Tenant> tenantRepository)
+        public MainViewModel(
+            IRepository<Tenant> tenantRepository,
+            IRepository<Shelf> shelfRepository,
+            IRepository<ShelfType> shelfTypeRepository)
         {
             Dashboard = new DashboardViewModel();
             TenantManagement = new TenantViewModel(Rentals, tenantRepository);
-            ShelfManagement = new ShelfViewModel(Rentals);
+            ShelfManagement = new ShelfViewModel(
+                Rentals,
+                shelfRepository,
+                shelfTypeRepository);
+
             RentalManagement = new RentalViewModel(
                 TenantManagement.Tenants,
                 ShelfManagement.Shelves,

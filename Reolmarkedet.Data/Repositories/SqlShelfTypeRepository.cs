@@ -83,6 +83,7 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@ShelfTypeName", shelfType.Name);
 
                 connection.Open();
+
                 object? result = command.ExecuteScalar();
                 if (result is not int shelfTypeId)
                 {

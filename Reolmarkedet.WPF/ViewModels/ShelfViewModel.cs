@@ -1,4 +1,5 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
@@ -13,6 +14,9 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Rental> Rentals { get; }
 
         private readonly RentalService _rentalService = new();
+        private readonly IRepository<Shelf> _shelfRepository;
+        private readonly IRepository<ShelfType> _shelfTypeRepository;
+
         private string _newShelfTypeName = string.Empty;
         private ShelfType? _newShelfType;
         private ShelfType? _shelfTypeToDelete;
@@ -37,7 +41,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
-
 
         public string NewShelfTypeName
         {
@@ -166,9 +169,14 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand DeactivateShelfCommand { get; }
         public RelayCommand ReactivateShelfCommand { get; }
 
-        public ShelfViewModel(ObservableCollection<Rental> rentals)
+        public ShelfViewModel(
+            ObservableCollection<Rental> rentals,
+            IRepository<Shelf> shelfRepository,
+            IRepository<ShelfType> shelfTypeRepository)
         {
             Rentals = rentals;
+            _shelfRepository = shelfRepository;
+            _shelfTypeRepository = shelfTypeRepository;
 
             ShelfType sixShelves = new()
             {
