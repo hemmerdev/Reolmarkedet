@@ -52,6 +52,10 @@ namespace ReolMarkedet.Tests.Fakes
             storedRental.StartDate = rental.StartDate;
             storedRental.EndDate = rental.EndDate;
             storedRental.MonthlyRent = rental.MonthlyRent;
+            storedRental.Tenant = rental.Tenant;
+            storedRental.Shelf = rental.Shelf;
+            storedRental.TerminationNoticeDate =
+                rental.TerminationNoticeDate;
         }
 
         public void Delete(int id)
