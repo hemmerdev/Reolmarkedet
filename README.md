@@ -17,3 +17,11 @@
 The real `appsettings.json` is excluded from Git because connection settings may differ between developers.
 
 The initial schema script is intended for a new database. Do not rerun it when the tables already exist.
+
+## Reset development data
+
+To remove all local test data while keeping the database schema, close the application and execute:
+
+`Reolmarkedet.Data/Database/ResetDevelopmentData.sql`
+
+This permanently deletes all tenants, shelves, rentals, items, and sales from the local database. It then restores the two standard shelf types.
