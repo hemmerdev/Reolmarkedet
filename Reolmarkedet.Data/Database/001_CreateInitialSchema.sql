@@ -1,4 +1,13 @@
-﻿USE ReolmarkedetDB;
+﻿USE master;
+GO
+
+IF DB_ID(N'ReolmarkedetDB') IS NULL
+BEGIN
+    EXEC(N'CREATE DATABASE ReolmarkedetDB');
+END;
+GO
+
+USE ReolmarkedetDB;
 GO
 
 SET XACT_ABORT ON;
