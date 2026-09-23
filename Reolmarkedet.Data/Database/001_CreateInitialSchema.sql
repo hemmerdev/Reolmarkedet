@@ -31,11 +31,6 @@ CREATE TABLE dbo.SHELFTYPE (
 		CONSTRAINT UQ_SHELFTYPE_ShelfTypeName UNIQUE (ShelfTypeName)		
 	);
 
-INSERT INTO dbo.SHELFTYPE (ShelfTypeName)
-VALUES
-    (N'6 hylder'),
-    (N'3 hylder og bøjlestang');
-
 CREATE TABLE dbo.SHELF (
 	ShelfID INT PRIMARY KEY IDENTITY(1,1),
 	ShelfNumber INT NOT NULL,

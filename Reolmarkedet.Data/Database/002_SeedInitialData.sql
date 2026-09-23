@@ -1,6 +1,24 @@
 ﻿USE ReolmarkedetDB
 GO
 
+IF NOT EXISTS (
+	SELECT 1 
+	FROM dbo.SHELFTYPE 
+	WHERE ShelfTypeName = N'6 hylder')
+BEGIN
+	INSERT INTO dbo.SHELFTYPE (ShelfTypeName)
+	VALUES (N'6 hylder');
+END;
+
+IF NOT EXISTS (
+	SELECT 1 
+	FROM dbo.SHELFTYPE 
+	WHERE ShelfTypeName = N'3 hylder og bøjlestang')
+BEGIN
+	INSERT INTO dbo.SHELFTYPE (ShelfTypeName)
+	VALUES (N'3 hylder og bøjlestang');
+END;
+
 DECLARE @SixShelvesTypeID INT;
 DECLARE @ClothesRailTypeID INT;
 

@@ -2,8 +2,8 @@
 
 ## Local database setup
 
-1. Open `Reolmarkedet.Data/Database/001_CreateInitialSchema.sql` in SQL Server Management Studio.
-2. Execute the complete script. It creates `ReolmarkedetDB` if it does not already exist.
+1. Open and execute `Reolmarkedet.Data/Database/001_CreateInitialSchema.sql` in SQL Server Management Studio. It creates `ReolmarkedetDB` if it does not already exist.
+2. Open and execute `Reolmarkedet.Data/Database/002_SeedInitialData.sql` in SQL Server Management Studio. It adds two shelf types and 80 shelves.
 3. From the repository root, run:
 
    ```powershell
@@ -24,4 +24,4 @@ To remove all local test data while keeping the database schema, close the appli
 
 `Reolmarkedet.Data/Database/ResetDevelopmentData.sql`
 
-This permanently deletes all tenants, shelves, rentals, items, and sales from the local database. It then restores the two standard shelf types.
+This permanently deletes all tenants, shelves, rentals, items, sales, and shelf types. Execute `Reolmarkedet.Data/Database/002_SeedInitialData.sql` afterward to restore the two standard shelf types and 80 initial shelves.

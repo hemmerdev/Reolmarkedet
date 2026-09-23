@@ -21,13 +21,7 @@ BEGIN TRY
     DBCC CHECKIDENT ('dbo.RENTAL', RESEED, 0);
     DBCC CHECKIDENT ('dbo.SHELF', RESEED, 0);
     DBCC CHECKIDENT ('dbo.TENANT', RESEED, 0);
-    DBCC CHECKIDENT ('dbo.SHELFTYPE', RESEED, 0);
-
-    -- Restore the standard shelf types required by the application.
-    INSERT INTO dbo.SHELFTYPE (ShelfTypeName)
-    VALUES
-        (N'6 hylder'),
-        (N'3 hylder og bøjlestang');
+    DBCC CHECKIDENT ('dbo.SHELFTYPE', RESEED, 0);    
 
     COMMIT TRANSACTION;
 END TRY
