@@ -1,7 +1,9 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace Reolmarkedet.WPF.ViewModels
 {
@@ -13,6 +15,9 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Rental> Rentals { get; }
 
         private readonly RentalService _rentalService = new();
+        private readonly IRepository<Shelf> _shelfRepository;
+        private readonly IRepository<ShelfType> _shelfTypeRepository;
+
         private string _newShelfTypeName = string.Empty;
         private ShelfType? _newShelfType;
         private ShelfType? _shelfTypeToDelete;
@@ -37,7 +42,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
-
 
         public string NewShelfTypeName
         {
@@ -112,6 +116,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_newShelfType != value)
                 {
                     _newShelfType = value;
+                    ShelfTypeMessage = string.Empty;
                     OnPropertyChanged();
 
                     AddShelfCommand.RaiseCanExecuteChanged();
@@ -166,36 +171,45 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand DeactivateShelfCommand { get; }
         public RelayCommand ReactivateShelfCommand { get; }
 
-        public ShelfViewModel(ObservableCollection<Rental> rentals)
+        public ShelfViewModel(
+            ObservableCollection<Rental> rentals,
+            IRepository<Shelf> shelfRepository,
+            IRepository<ShelfType> shelfTypeRepository)
         {
             Rentals = rentals;
+            _shelfRepository = shelfRepository;
+            _shelfTypeRepository = shelfTypeRepository;
 
-            ShelfType sixShelves = new()
+            // Load shelf types and shelves from the repositories
+            foreach (ShelfType shelfType in _shelfTypeRepository.GetAll())
             {
-                ShelfTypeId = 1,
-                Name = "6 hylder"
-            };
+                ShelfTypes.Add(shelfType);
+            }
 
-            ShelfType threeShelvesWithClothesRail = new()
+            foreach (Shelf shelf in _shelfRepository.GetAll())
             {
-                ShelfTypeId = 2,
-                Name = "3 hylder og bøjlestang"
-            };
+                ShelfType? matchingShelfType = null;
 
-            ShelfTypes.Add(sixShelves);
-            ShelfTypes.Add(threeShelvesWithClothesRail);
+                // Find the corresponding ShelfType from the ShelfTypes collection
+                foreach (ShelfType shelfType in ShelfTypes)
+                {
+                    if (shelfType.ShelfTypeId == shelf.ShelfType.ShelfTypeId)
+                    {
+                        matchingShelfType = shelfType;
+                        break;
+                    }
+                }
 
-            Shelves.Add(new Shelf(sixShelves)
-            {
-                ShelfId = 1,
-                ShelfNumber = 1
-            });
+                if (matchingShelfType is null)
+                {
+                    throw new InvalidOperationException(
+                        "Shelf type could not be found");
+                }
 
-            Shelves.Add(new Shelf(threeShelvesWithClothesRail)
-            {
-                ShelfId = 2,
-                ShelfNumber = 2
-            });
+                shelf.ShelfType = matchingShelfType;
+                shelf.PropertyChanged += OnShelfPropertyChanged;
+                Shelves.Add(shelf);
+            }
 
             AddShelfTypeCommand = new RelayCommand(AddShelfType, CanAddShelfType);
             DeleteShelfTypeCommand = new RelayCommand(DeleteShelfType, CanDeleteShelfType);
@@ -209,6 +223,17 @@ namespace Reolmarkedet.WPF.ViewModels
             Rentals.CollectionChanged += (_, _) => ApplyShelfFilter();
 
             ApplyShelfFilter();
+        }
+
+        // Persists shelf-type changes made directly through the DataGrid dropdown.
+        private void OnShelfPropertyChanged(
+            object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is Shelf shelf &&
+                e.PropertyName == nameof(Shelf.ShelfType))
+            {
+                _shelfRepository.Update(shelf);
+            }
         }
 
         private bool CanReactivateShelf(object? parameter)
@@ -231,6 +256,8 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             shelf.IsActive = true;
+            _shelfRepository.Update(shelf);
+
             ShelfMessage = string.Empty;
             ApplyShelfFilter();
         }
@@ -265,6 +292,8 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             shelf.IsActive = false;
+            _shelfRepository.Update(shelf);
+
             ShelfMessage = string.Empty;
             ApplyShelfFilter();
 
@@ -289,7 +318,10 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            _shelfRepository.Delete(shelf.ShelfId);
+            shelf.PropertyChanged -= OnShelfPropertyChanged;
             Shelves.Remove(SelectedShelfRow.Shelf);
+
             SelectedShelfRow = null;
             ShelfMessage = string.Empty;
         }
@@ -301,7 +333,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 && NewShelfType is not null;
         }
 
-        private int _nextShelfId = 3;
         private void AddShelf(object? parameter)
         {
             if (!int.TryParse(NewShelfNumber, out int shelfNumber) ||
@@ -322,12 +353,13 @@ namespace Reolmarkedet.WPF.ViewModels
 
             Shelf newShelf = new Shelf(NewShelfType)
             {
-                ShelfId = _nextShelfId,
                 ShelfNumber = shelfNumber
             };
 
+            _shelfRepository.Add(newShelf);
+            newShelf.PropertyChanged += OnShelfPropertyChanged;
             Shelves.Add(newShelf);
-            _nextShelfId++;
+
 
             NewShelfNumber = string.Empty;
             ShelfMessage = string.Empty;
@@ -371,14 +403,15 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
 
             }
-            ShelfTypes.Remove(ShelfTypeToDelete);
-            // clear the selection after deletion
+
+            ShelfType shelfType = ShelfTypeToDelete;
+            _shelfTypeRepository.Delete(shelfType.ShelfTypeId);
+            ShelfTypes.Remove(shelfType);
+
             ShelfTypeToDelete = null;
             ShelfTypeMessage = string.Empty;
         }
 
-
-        private int _nextShelfTypeId = 3;
         private void AddShelfType(object? parameter)
         {
             if (string.IsNullOrWhiteSpace(NewShelfTypeName))
@@ -386,15 +419,29 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            string shelfTypeName = NewShelfTypeName.Trim();
+
+            foreach (ShelfType existingShelfTypes in ShelfTypes)
+            {
+                if (string.Equals(
+                    existingShelfTypes.Name,
+                    shelfTypeName,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    ShelfTypeMessage = "Reoltypen findes allerede.";
+                    return;
+                }
+            }
+
             ShelfType shelfType = new ShelfType()
             {
-                ShelfTypeId = _nextShelfTypeId,
-                Name = NewShelfTypeName.Trim()
+                Name = shelfTypeName
             };
 
+            _shelfTypeRepository.Add(shelfType);
             ShelfTypes.Add(shelfType);
-            _nextShelfTypeId++;
             NewShelfTypeName = string.Empty;
+            ShelfTypeMessage = string.Empty;
         }
 
 
@@ -445,6 +492,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public void Refresh()
         {
+            ShelfTypeMessage = string.Empty;
+            ShelfMessage = string.Empty;
             ApplyShelfFilter();
         }
     }

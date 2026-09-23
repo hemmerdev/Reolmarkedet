@@ -12,22 +12,22 @@ namespace Reolmarkedet.Data.Database
         }
 
 
-        public async Task TestConnectionAsync()
+        public void TestConnection()
         {
             // Create the connection 
-            await using SqlConnection connection = new(_connectionString);
+            using SqlConnection connection = new(_connectionString);
 
             // Open the connection
-            await connection.OpenAsync();
+            connection.Open();
 
             // Defines a simple query that ask the SQL server to return 1
             const string sql = "SELECT 1";
 
             // Creates a sql command 
-            await using SqlCommand command = new(sql, connection);
+            using SqlCommand command = new(sql, connection);
 
             // Executes the command and retrieves the result
-            object? result = await command.ExecuteScalarAsync();
+            object? result = command.ExecuteScalar();
 
             // Checks the result and throws an exception if it's not as expected
             if (result is not int value || value != 1)

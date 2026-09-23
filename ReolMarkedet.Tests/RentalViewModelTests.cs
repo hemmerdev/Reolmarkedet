@@ -1,5 +1,6 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.ViewModels;
+using ReolMarkedet.Tests.Fakes;
 using System.Collections.ObjectModel;
 
 namespace ReolMarkedet.Tests;
@@ -16,13 +17,14 @@ public class RentalViewModelTests
         ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
         Shelf firstShelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
         Shelf secondShelf = new(shelfType) { ShelfId = 2, ShelfNumber = 2 };
-
+        var rentalRepository = new FakeRentalRepository();
         List<Rental> existingRentals = new();
 
         RentalViewModel viewModel = new(
             new ObservableCollection<Tenant> { tenant },
             new ObservableCollection<Shelf> { firstShelf, secondShelf },
-            new ObservableCollection<Rental>(existingRentals))
+            new ObservableCollection<Rental>(existingRentals),
+            rentalRepository)
         {
             SelectedTenant = tenant,
             StartDate = new DateTime(2026, 10, 1),

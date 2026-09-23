@@ -1,4 +1,5 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
@@ -16,8 +17,9 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Rental> Rentals { get; }
         public ObservableCollection<RentalRowViewModel> RentalRows { get; } = new();
 
-        // Service for rental-related operations
+
         private readonly RentalService _rentalService = new();
+        private readonly IRepository<Rental> _rentalRepository;
 
         // Private backing fields for properties
         private Tenant? _selectedTenant;
@@ -201,7 +203,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
-
         public DateTime MinimumStartDate => DateTime.Today;
 
         public DateTime? TerminationEndDate
@@ -257,11 +258,50 @@ namespace Reolmarkedet.WPF.ViewModels
         public RentalViewModel(
             ObservableCollection<Tenant> tenants,
             ObservableCollection<Shelf> shelves,
-            ObservableCollection<Rental> rentals)
+            ObservableCollection<Rental> rentals,
+            IRepository<Rental> rentalRepository)
         {
             Tenants = tenants;
             Shelves = shelves;
             Rentals = rentals;
+            _rentalRepository = rentalRepository;
+
+            // Loads existing rentals from the repository and populates the Rentals collection
+            foreach (Rental rental in _rentalRepository.GetAll())
+            {
+                Tenant? matchingTenant = null;
+
+                foreach (Tenant tenant in Tenants)
+                {
+                    if (tenant.TenantId == rental.Tenant.TenantId)
+                    {
+                        matchingTenant = tenant;
+                        break;
+                    }
+                }
+
+                Shelf? matchingShelf = null;
+
+                foreach (Shelf shelf in Shelves)
+                {
+                    if (shelf.ShelfId == rental.Shelf.ShelfId)
+                    {
+                        matchingShelf = shelf;
+                        break;
+                    }
+                }
+
+                if (matchingTenant is null || matchingShelf is null)
+                {
+                    throw new InvalidOperationException(
+                        "Rental tenant or shelf could not be found");
+                }
+
+                rental.Tenant = matchingTenant;
+                rental.Shelf = matchingShelf;
+                Rentals.Add(rental);
+            }
+
             AddShelfToSelectionCommand =
                 new RelayCommand(AddShelfToSelection, CanAddShelfToSelection);
             RemoveShelfFromSelectionCommand =
@@ -320,6 +360,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     Rentals);
 
+                _rentalRepository.Update(rental);
             }
             catch (InvalidOperationException ex)
             {
@@ -370,6 +411,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     TerminationEndDate.Value,
                     Rentals);
+                _rentalRepository.Update(rental);
 
                 Refresh();
                 TerminationMessage = "Lejemålet blev ændret.";
@@ -420,6 +462,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     TerminationEndDate.Value,
                     Rentals);
+                _rentalRepository.Update(rental);
             }
             catch (ArgumentException ex)
             {
@@ -477,9 +520,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
-            if (endDate.HasValue && endDate.Value < startDate)
+            if (endDate.HasValue && endDate.Value <= startDate)
             {
-                RentalMessage = "Slutdatoen må ikke være før startdatoen.";
+                RentalMessage = "Slutdatoen skal være efter startdatoen.";
                 return;
             }
 
@@ -509,30 +552,17 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
 
-            // Find an unused ID, including IDs belonging to historical rentals.
-            int nextRentalId = 1;
-
-            foreach (Rental existingRental in Rentals)
-            {
-                if (existingRental.RentalId >= nextRentalId)
-                {
-                    nextRentalId = existingRental.RentalId + 1;
-                }
-            }
-
             // All validation passed. Create one rental for each selected shelf.
             foreach (Shelf shelf in shelvesToRent)
             {
                 Rental rental = new(tenant, shelf)
                 {
-                    RentalId = nextRentalId,
                     StartDate = startDate,
                     EndDate = endDate,
                     MonthlyRent = rentPerShelf
                 };
-
+                _rentalRepository.Add(rental);
                 Rentals.Add(rental);
-                nextRentalId++;
             }
 
             // Reset the draft for the next creation.
@@ -620,6 +650,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public void Refresh()
         {
+            TerminationMessage = string.Empty;
             RefreshActiveTenants();
             RefreshAvailableShelves();
             RefreshPrice();

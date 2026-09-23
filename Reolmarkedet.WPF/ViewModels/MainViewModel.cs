@@ -1,4 +1,5 @@
-﻿using Reolmarkedet.Core.Models;
+﻿using Reolmarkedet.Core.Interfaces;
+using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
 
@@ -44,43 +45,26 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand ShowShelfManagementCommand { get; }
         public RelayCommand ShowRentalManagementCommand { get; }
 
-        public MainViewModel()
+        public MainViewModel(
+            IRepository<Tenant> tenantRepository,
+            IRepository<Shelf> shelfRepository,
+            IRepository<ShelfType> shelfTypeRepository,
+            IRepository<Rental> rentalRepository)
         {
             Dashboard = new DashboardViewModel();
-            TenantManagement = new TenantViewModel(Rentals);
-            ShelfManagement = new ShelfViewModel(Rentals);
+            TenantManagement = new TenantViewModel(Rentals, tenantRepository);
+            ShelfManagement = new ShelfViewModel(
+                Rentals,
+                shelfRepository,
+                shelfTypeRepository);
+
             RentalManagement = new RentalViewModel(
                 TenantManagement.Tenants,
                 ShelfManagement.Shelves,
-                Rentals);
+                Rentals,
+                rentalRepository);
 
             CurrentViewModel = Dashboard;
-
-            // Development sample: create a tenant through the existing flow,
-            // so its ID counter and visible tenant list stay consistent.
-            TenantManagement.Name = "Testlejer";
-            TenantManagement.AddTenantCommand.Execute(null);
-
-            Tenant sampleTenant = TenantManagement.Tenants[0];
-            Shelf sampleShelf = ShelfManagement.Shelves[0];
-
-            Rental sampleRental = new(sampleTenant, sampleShelf)
-            {
-                RentalId = 1,
-                StartDate = DateTime.Today.AddMonths(-1),
-                EndDate = DateTime.Today.AddDays(-1),
-                MonthlyRent = 850m
-            };
-            Rental sampleRental2 = new(sampleTenant, sampleShelf)
-            {
-                RentalId = 2,
-                StartDate = DateTime.Today,
-                EndDate = null,
-                MonthlyRent = 850m
-            };
-
-            Rentals.Add(sampleRental);
-            Rentals.Add(sampleRental2);
 
             ShowDashboardCommand =
                 new RelayCommand(_ => CurrentViewModel = Dashboard);

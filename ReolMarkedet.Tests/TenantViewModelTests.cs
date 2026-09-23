@@ -11,7 +11,9 @@ public class TenantViewModelTests
     public void UpdateTenant_WhenNameIsBlank_LeavesTenantUnchanged()
     {
         // Arrange
-        TenantViewModel viewModel = new(new ObservableCollection<Rental>());
+        TenantViewModel viewModel = new(
+            new ObservableCollection<Rental>(),
+            new FakeTenantRepository());
         viewModel.Name = "John Doe";
         viewModel.AddTenantCommand.Execute(null);
 
@@ -32,7 +34,9 @@ public class TenantViewModelTests
     public void CancelUpdateTenant_WhenDraftHasChanges_LeavesTenantUnchanged()
     {
         // Arrange
-        TenantViewModel viewModel = new(new ObservableCollection<Rental>());
+        TenantViewModel viewModel = new(
+            new ObservableCollection<Rental>(),
+            new FakeTenantRepository());
         viewModel.Name = "John Doe";
         viewModel.AddTenantCommand.Execute(null);
 
@@ -54,7 +58,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals);
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
         viewModel.AddTenantCommand.Execute(null);
 
@@ -89,7 +93,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals);
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
         viewModel.AddTenantCommand.Execute(null);
 
@@ -124,7 +128,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals);
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
         viewModel.AddTenantCommand.Execute(null);
 
@@ -159,7 +163,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals);
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
         viewModel.AddTenantCommand.Execute(null);
 
