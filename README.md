@@ -12,7 +12,8 @@
 
 4. Open `Reolmarkedet.WPF/appsettings.json`.
 5. Change `Server` if your SQL Server instance is not `localhost`.
-6. Start the application.
+6. In Visual Studio, right click `Reolmarkedet.WPF` and select **Set as Startup Project**. 
+7. Start the application.
 
 The real `appsettings.json` is excluded from Git because connection settings may differ between developers.
 
