@@ -48,7 +48,8 @@ namespace Reolmarkedet.WPF
                 tenantRepository,
                 shelfRepository,
                 shelfTypeRepository,
-                rentalRepository);
+                rentalRepository,
+                new SqlItemRepository(connectionString));
 
             MainWindow mainWindow = new(mainViewModel);
             mainWindow.Show();

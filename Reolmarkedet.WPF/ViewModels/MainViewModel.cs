@@ -29,6 +29,7 @@ namespace Reolmarkedet.WPF.ViewModels
             TenantViewModel => NavigationPage.Tenants,
             ShelfViewModel => NavigationPage.Shelves,
             RentalViewModel => NavigationPage.Rentals,
+            ItemViewModel => NavigationPage.Items,
             _ => null
         };
 
@@ -38,8 +39,10 @@ namespace Reolmarkedet.WPF.ViewModels
         public TenantViewModel TenantManagement { get; }
         public ShelfViewModel ShelfManagement { get; }
         public RentalViewModel RentalManagement { get; }
+        public ItemViewModel ItemManagement { get; }
 
 
+        public RelayCommand ShowItemManagementCommand { get; }
         public RelayCommand ShowDashboardCommand { get; }
         public RelayCommand ShowTenantsCommand { get; }
         public RelayCommand ShowShelfManagementCommand { get; }
@@ -49,7 +52,8 @@ namespace Reolmarkedet.WPF.ViewModels
             IRepository<Tenant> tenantRepository,
             IRepository<Shelf> shelfRepository,
             IRepository<ShelfType> shelfTypeRepository,
-            IRepository<Rental> rentalRepository)
+            IRepository<Rental> rentalRepository,
+            IItemRepository itemRepository)
         {
             Dashboard = new DashboardViewModel();
             TenantManagement = new TenantViewModel(Rentals, tenantRepository);
@@ -65,6 +69,12 @@ namespace Reolmarkedet.WPF.ViewModels
                 rentalRepository);
 
             CurrentViewModel = Dashboard;
+            ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
+            ShowItemManagementCommand = new RelayCommand(_ =>
+            {
+                ItemManagement.Refresh();
+                CurrentViewModel = ItemManagement;
+            });
 
             ShowDashboardCommand =
                 new RelayCommand(_ => CurrentViewModel = Dashboard);

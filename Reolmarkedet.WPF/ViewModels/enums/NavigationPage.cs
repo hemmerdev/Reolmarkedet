@@ -5,6 +5,7 @@
         Dashboard,
         Tenants,
         Shelves,
-        Rentals
+        Rentals,
+        Items
     }
 }
