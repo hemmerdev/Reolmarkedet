@@ -219,7 +219,7 @@ namespace Reolmarkedet.Core.Services
                     "Lejemålet har allerede en slutdato");
             }
 
-            if (endDate.Date < rental.StartDate.Date)
+            if (endDate.Date <= rental.StartDate.Date)
             {
                 throw new ArgumentException(
                     "Slutdatoen må ikke være før startdatoen.");
