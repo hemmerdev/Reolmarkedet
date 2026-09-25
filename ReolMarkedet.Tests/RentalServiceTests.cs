@@ -286,7 +286,7 @@ public class RentalServiceTests
     }
 
     [TestMethod]
-    public void TerminateRental_NoticeOnSeptemberTwentyfirst_AllowsOctoberEnd()
+    public void TerminateRental_NoticeOnDecemberTwentyfirst_AllowsJanuaryEnd()
     {
         // Arrange 
         RentalService rentalService = new();
@@ -300,8 +300,8 @@ public class RentalServiceTests
         };
 
         List<Rental> existingRentals = new() { rental };
-        DateTime noticeDate = new(2026, 9, 21);
-        DateTime expectedEndDate = new(2026, 10, 31);
+        DateTime noticeDate = new(2026, 12, 21);
+        DateTime expectedEndDate = new(2027, 1, 31);
 
         // Act
         rentalService.TerminateRental(
