@@ -94,7 +94,13 @@
 
                     <TextBlock Text="{Binding Message}"
                                Style="{StaticResource MessageTextStyle}"
-                               Foreground="#F2CE82"
+                               Foreground="#F28B82"
+                               TextWrapping="Wrap"
+                               Margin="0,12,0,0"/>
+
+                    <TextBlock Text="{Binding ConfirmationMessage}"
+                               Style="{StaticResource MessageTextStyle}"
+                               Foreground="#B7DDBE"
                                TextWrapping="Wrap"
                                Margin="0,12,0,0"/>
 

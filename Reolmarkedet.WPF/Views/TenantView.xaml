@@ -166,10 +166,15 @@
                                         Converter={StaticResource BoolToVisibility}}"/>
                             </WrapPanel>
                         </Border>
-
-                        <TextBlock Text="{Binding ValidationMessage}" Foreground="#F28B82"
-                                   TextWrapping="Wrap" Margin="0,12,0,0" />
                     </StackPanel>
+
+                    <TextBlock Text="{Binding ValidationMessage}" Foreground="#F28B82"
+                               TextWrapping="Wrap" Margin="0,12,0,0"
+                               Style="{StaticResource MessageTextStyle}"/>
+                    <TextBlock Text="{Binding ConfirmationMessage}" Foreground="#B7DDBE"
+                               TextWrapping="Wrap" Margin="0,12,0,0"
+                               Style="{StaticResource MessageTextStyle}"/>
+
                 </StackPanel>
             </Border>
         </ScrollViewer>

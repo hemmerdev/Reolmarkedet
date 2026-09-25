@@ -233,12 +233,19 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Grid.Row="2"
-                       Text="{Binding TerminationMessage}"
-                       Foreground="#F28B82"
-                       Style="{StaticResource MessageTextStyle}"
-                       TextWrapping="Wrap"
-                       Margin="0,8,0,0" />
+            <StackPanel Grid.Row="2">
+                <TextBlock Text="{Binding TerminationMessage}"
+                           Foreground="#F28B82"
+                           Style="{StaticResource MessageTextStyle}"
+                           TextWrapping="Wrap"
+                           Margin="0,8,0,0" />
+
+                <TextBlock Text="{Binding TerminationConfirmationMessage}"
+                           Foreground="#B7DDBE"
+                           Style="{StaticResource MessageTextStyle}"
+                           TextWrapping="Wrap"
+                           Margin="0,8,0,0" />
+            </StackPanel>
         </Grid>
 
         <ScrollViewer Grid.Row="2" Grid.Column="2"
@@ -380,6 +387,11 @@
 
                     <TextBlock Text="{Binding RentalMessage}"
                                Foreground="#F28B82"
+                               Style="{StaticResource MessageTextStyle}"
+                               TextWrapping="Wrap" />
+
+                    <TextBlock Text="{Binding RentalConfirmationMessage}"
+                               Foreground="#B7DDBE"
                                Style="{StaticResource MessageTextStyle}"
                                TextWrapping="Wrap" />
                 </StackPanel>

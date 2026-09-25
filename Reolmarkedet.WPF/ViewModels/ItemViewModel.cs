@@ -23,11 +23,48 @@ public class ItemViewModel : ViewModelBase
     private RentalOption? _selectedRental;
     private string _description = "", _priceText = "", _message = "";
     private string _searchText = string.Empty;
+    private string _confirmationMessage = string.Empty;
 
-    public string Description { get => _description; set => Set(ref _description, value); }
-    public string PriceText { get => _priceText; set => Set(ref _priceText, value); }
+    public string Description
+    {
+        get => _description;
+        set
+        {
+            if (_description != value)
+            {
+                Set(ref _description, value);
+                ConfirmationMessage = string.Empty;
+            }
+        }
+    }
+    public string PriceText
+    {
+        get => _priceText;
+        set
+        {
+            if (_priceText != value)
+            {
+                Set(ref _priceText, value);
+                ConfirmationMessage = string.Empty;
+            }
+        }
+    }
+
     public string Message { get => _message; private set => Set(ref _message, value); }
-    public RentalOption? SelectedRental { get => _selectedRental; set => Set(ref _selectedRental, value); }
+    public string ConfirmationMessage { get => _confirmationMessage; private set => Set(ref _confirmationMessage, value); }
+    public RentalOption? SelectedRental
+    {
+        get => _selectedRental;
+        set
+        {
+            if (_selectedRental != value)
+            {
+                Set(ref _selectedRental, value);
+                ConfirmationMessage = string.Empty;
+            }
+        }
+    }
+
     public bool IsNew => SelectedItem is null;
     public bool IsEditing => !IsNew;
     public string FormTitle => IsNew ? "Registrer vare" : $"Rediger vare #{SelectedItem!.ItemId}";
@@ -39,6 +76,7 @@ public class ItemViewModel : ViewModelBase
             if (_searchText != value)
             {
                 _searchText = value;
+                ConfirmationMessage = string.Empty;
                 OnPropertyChanged();
                 ApplySearch();
             }
@@ -56,6 +94,7 @@ public class ItemViewModel : ViewModelBase
             PriceText = value?.Price.ToString("0.00", PriceCulture) ?? "";
             SelectedRental = RentalOptions.FirstOrDefault(r => r.Id == value?.RentalId);
             Message = "";
+            ConfirmationMessage = "";
 
             DeleteItemCommand.RaiseCanExecuteChanged();
         }
@@ -81,7 +120,7 @@ public class ItemViewModel : ViewModelBase
                 int itemId = SelectedItem.ItemId;
                 _service.Delete(itemId);
                 Reload();
-                Message = $"Vare #{itemId} er slettet.";
+                ConfirmationMessage = $"Vare er slettet.";
             }
         });
     }
@@ -166,14 +205,16 @@ public class ItemViewModel : ViewModelBase
         {
             Reload();
             SelectedItem = UnsoldItems.FirstOrDefault(i => i.ItemId == id);
-            Message = $"Vare #{id} er gemt.";
+            ConfirmationMessage = $"Vare er gemt.";
         }
         catch (DbException)
-        { Message = $"Vare #{id} er gemt, men listen kunne ikke opdateres. Skift visning og åbn varer igen for at opdatere listen"; }
+        { Message = $"Vare er gemt, men listen kunne ikke opdateres. Skift visning og åbn varer igen for at opdatere listen"; }
     }
 
     private void Run(Action action)
     {
+        ConfirmationMessage = string.Empty;
+        Message = string.Empty;
         try { action(); }
         catch (ArgumentException ex) { Message = ex.Message; }
         catch (InvalidOperationException ex) { Message = ex.Message; }

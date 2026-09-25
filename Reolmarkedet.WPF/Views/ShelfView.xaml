@@ -253,6 +253,12 @@
                                        Foreground="#F28B82"
                                        TextWrapping="Wrap"
                                        Margin="0,8,0,0" />
+
+                            <TextBlock Text="{Binding ShelfTypeConfirmationMessage}"
+                                       Style="{StaticResource MessageTextStyle}"
+                                       Foreground="#B7DDBE"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0" />
                         </StackPanel>
                     </Expander>
 
@@ -285,6 +291,12 @@
                     <TextBlock Text="{Binding ShelfMessage}"
                                Style="{StaticResource MessageTextStyle}"
                                Foreground="#F28B82"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,8" />
+
+                    <TextBlock Text="{Binding ShelfConfirmationMessage}"
+                               Style="{StaticResource MessageTextStyle}"
+                               Foreground="#B7DDBE"
                                TextWrapping="Wrap"
                                Margin="0,8,0,8" />
 
