@@ -31,7 +31,7 @@
                 <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Description}" Width="*" MinWidth="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat=N2, ConverterCulture=da-DK}" Width="85" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Lejemål" Binding="{Binding RentalId}" Width="70" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Stregkode" Binding="{Binding Barcode}" Width="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Stregkode" Binding="{Binding Barcode}" Width="SizeToCells" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -67,7 +67,17 @@
                     <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MaxLength="255" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
                     <TextBlock Text="Pris i kr."/>
                     <TextBox Text="{Binding PriceText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
-                    <TextBlock Text="Varenummer og stregkode tildeles automatisk ved oprettelse." TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <TextBlock Text="Varenummer og stregkode tildeles automatisk ved oprettelse." TextWrapping="Wrap" Margin="0,0,0,12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                     <WrapPanel>
                         <Button Content="Opret vare" Command="{Binding SaveCommand}"
                                 Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibility}}"
