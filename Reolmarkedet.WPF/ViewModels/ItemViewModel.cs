@@ -73,11 +73,14 @@ public class ItemViewModel : ViewModelBase
             Barcode = value?.Barcode ?? "";
             SelectedRental = RentalOptions.FirstOrDefault(r => r.Id == value?.RentalId);
             Message = "";
+
+            DeleteItemCommand.RaiseCanExecuteChanged();
         }
     }
     public RelayCommand SaveCommand { get; }
     public RelayCommand NewCommand { get; }
     public RelayCommand RefreshCommand { get; }
+    public RelayCommand DeleteItemCommand { get; }
 
     public ItemViewModel(IItemRepository items, IRepository<Rental> rentals)
     {
@@ -85,7 +88,28 @@ public class ItemViewModel : ViewModelBase
         SaveCommand = new(_ => Run(Save));
         NewCommand = new(_ => SelectedItem = null);
         RefreshCommand = new(_ => Refresh());
+        DeleteItemCommand = new(DeleteItem, CanDeleteItem);
     }
+
+    private void DeleteItem(object? parameter)
+    {
+        Run(() =>
+        {
+            if (SelectedItem != null)
+            {
+                int itemId = SelectedItem.ItemId;
+                _service.Delete(itemId);
+                Reload();
+                Message = $"Vare #{itemId} er slettet.";
+            }
+        });
+    }
+
+    private bool CanDeleteItem(object? parameter)
+    {
+        return SelectedItem is not null;
+    }
+
     public void Refresh() => Run(() => { Reload(); Message = ""; });
     private void Reload()
     {

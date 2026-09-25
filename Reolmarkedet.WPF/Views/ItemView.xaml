@@ -72,7 +72,13 @@
                     <TextBlock Text="Varenummer tildeles ved oprettelse. Stregkode og lejemål bevares ved redigering." TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <WrapPanel>
                         <Button Content="Gem vare" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"/>
-                        <Button Content="Ny / annuller" Command="{Binding NewCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,0,8"/>
+                        <Button Content="Ny / annuller" Command="{Binding NewCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,8"/>
+
+                        <Button Content="Slet valgt vare"
+                                Command="{Binding DeleteItemCommand}"
+                                Style="{StaticResource WarningButtonStyle}"
+                                Margin="0,0,0,8"/>
+
                     </WrapPanel>
                 </StackPanel>
             </Border>

@@ -58,6 +58,21 @@ public class ItemService(IItemRepository items, IRepository<Rental> rentals)
         });
     }
 
+    public void Delete(int itemId)
+    {
+        if (items.GetById(itemId) is null)
+        {
+            throw new InvalidOperationException("Varen findes ikke længere.");
+        }
+
+        if (items.IsSold(itemId))
+        {
+            throw new InvalidOperationException("Solgte varer kan ikke slettes, da de skal beholdes i systemet for historik.");
+        }
+
+        items.Delete(itemId);
+    }
+
     public static string NormalizeBarcode(string barcode)
     {
         string code = barcode.Trim(); // Removes scanner CR/LF suffixes, preserves leading zeroes and case.
