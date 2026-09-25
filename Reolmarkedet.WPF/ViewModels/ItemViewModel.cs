@@ -1,11 +1,11 @@
-using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Data.Common;
 using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using System.Collections.ObjectModel;
+using System.Data.Common;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace Reolmarkedet.WPF.ViewModels;
 
@@ -17,6 +17,7 @@ public class ItemViewModel : ViewModelBase
     private static readonly CultureInfo PriceCulture = CultureInfo.GetCultureInfo("da-DK");
     public ObservableCollection<Item> UnsoldItems { get; } = new();
     public ObservableCollection<RentalOption> RentalOptions { get; } = new();
+    public ObservableCollection<RentalOption> EligibleRentalOptions { get; } = new();
     private Item? _selectedItem;
     private RentalOption? _selectedRental;
     private string _description = "", _priceText = "", _barcode = "", _lookupBarcode = "", _message = "";
@@ -59,12 +60,36 @@ public class ItemViewModel : ViewModelBase
     public void Refresh() => Run(() => { Reload(); Message = ""; });
     private void Reload()
     {
-        // Fetch first: a connection error must not erase the current form/list.
-        var rentals = _rentals.GetAll().Select(r => new RentalOption(r.RentalId,
-            $"#{r.RentalId} · {r.Tenant.Name} · Reol {r.Shelf.ShelfNumber}")).ToList();
+        var rentals = _rentals.GetAll().ToList();
         var items = _items.GetUnsold().ToList();
+
         SelectedItem = null;
-        RentalOptions.Clear(); foreach (var rental in rentals) RentalOptions.Add(rental);
+        RentalOptions.Clear();
+        EligibleRentalOptions.Clear();
+
+        DateTime today = DateTime.Today;
+        foreach (Rental rental in rentals)
+        {
+            RentalOption option = new(
+                rental.RentalId,
+                $"#{rental.RentalId} - {rental.Tenant.Name} - Reol {rental.Shelf.ShelfNumber}");
+
+            RentalOptions.Add(option);
+
+            bool hasStarted = rental.StartDate.Date <= today;
+            bool hasNotEnded = rental.EndDate is null ||
+                rental.EndDate.Value.Date >= today;
+            bool bothActive = rental.Tenant.IsActive &&
+                rental.Shelf.IsActive;
+
+            if (hasStarted &&
+                hasNotEnded &&
+                bothActive)
+            {
+                EligibleRentalOptions.Add(option);
+            }
+        }
+
         UnsoldItems.Clear(); foreach (var item in items) UnsoldItems.Add(item);
     }
     private void Save()

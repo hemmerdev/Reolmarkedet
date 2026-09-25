@@ -7,8 +7,28 @@ public class ItemService(IItemRepository items, IRepository<Rental> rentals)
     public Item Register(int rentalId, string description, decimal price, string? barcode)
     {
         Validate(description, price);
-        if (rentals.GetById(rentalId) is null)
+
+        Rental? rental = rentals.GetById(rentalId) ??
             throw new ArgumentException("Vælg et eksisterende lejemål.");
+
+        if (rental.StartDate.Date > DateTime.Today.Date)
+        {
+            throw new InvalidOperationException(
+                "Lejemålet er ikke startet endnu.");
+        }
+
+        if (rental.EndDate is not null &&
+            rental.EndDate.Value.Date < DateTime.Today.Date)
+        {
+            throw new InvalidOperationException(
+                "Lejemålet er allerede afsluttet.");
+        }
+
+        if (!rental.Tenant.IsActive || !rental.Shelf.IsActive)
+        {
+            throw new InvalidOperationException(
+                "Varen kan kun registreres på et lejemål, hvor både lejer og reol er aktive.");
+        }
 
         string code = string.IsNullOrWhiteSpace(barcode)
             ? "RM" + Guid.NewGuid().ToString("N").ToUpperInvariant() : NormalizeBarcode(barcode);
@@ -28,8 +48,14 @@ public class ItemService(IItemRepository items, IRepository<Rental> rentals)
         if (items.IsSold(itemId)) throw new InvalidOperationException("Solgte varer kan ikke redigeres.");
 
         // Persist a copy so a failed write cannot change the displayed object.
-        items.Update(new Item { ItemId = itemId, RentalId = item.RentalId,
-            Barcode = item.Barcode, Description = description.Trim(), Price = price });
+        items.Update(new Item
+        {
+            ItemId = itemId,
+            RentalId = item.RentalId,
+            Barcode = item.Barcode,
+            Description = description.Trim(),
+            Price = price
+        });
     }
 
     public Item? FindByBarcode(string barcode) => items.GetByBarcode(NormalizeBarcode(barcode));

@@ -222,7 +222,7 @@ namespace Reolmarkedet.Core.Services
             if (endDate.Date <= rental.StartDate.Date)
             {
                 throw new ArgumentException(
-                    "Slutdatoen må ikke være før startdatoen.");
+                    "Slutdatoen skal være efter startdatoen.");
             }
 
             if (endDate.Date < noticeDate.Date)
@@ -272,10 +272,10 @@ namespace Reolmarkedet.Core.Services
                 throw new InvalidOperationException(
                     "Lejemålet er allerede afsluttet.");
             }
-            if (newEndDate.Date < rental.StartDate.Date)
+            if (newEndDate.Date <= rental.StartDate.Date)
             {
                 throw new ArgumentException(
-                    "Slutdatoen må ikke være før startdatoen.");
+                    "Slutdatoen skal være efter startdatoen.");
             }
             if (newEndDate.Date < currentDate.Date)
             {

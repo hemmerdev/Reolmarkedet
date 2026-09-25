@@ -42,8 +42,26 @@
                 <StackPanel>
                     <TextBlock Text="{Binding FormTitle}" FontSize="20" Margin="0,0,0,16"/>
                     <TextBlock Text="Lejemål"/>
-                    <ComboBox ItemsSource="{Binding RentalOptions}" SelectedItem="{Binding SelectedRental}" DisplayMemberPath="Label"
-                              IsEnabled="{Binding IsNew}" Style="{StaticResource InputComboBoxStyle}" Margin="0,4,0,12"/>
+
+                    <ComboBox SelectedItem="{Binding SelectedRental}"
+                              DisplayMemberPath="Label"
+                              IsEnabled="{Binding IsNew}"
+                              Margin="0,4,0,12">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox"
+                                   BasedOn="{StaticResource InputComboBoxStyle}">
+                                <Setter Property="ItemsSource"
+                                        Value="{Binding EligibleRentalOptions}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="ItemsSource"
+                                                Value="{Binding RentalOptions}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+
                     <TextBlock Text="Beskrivelse"/>
                     <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MaxLength="255" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
                     <TextBlock Text="Pris i kr. (fx 125,50)"/>
