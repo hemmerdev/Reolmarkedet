@@ -28,11 +28,13 @@ namespace Reolmarkedet.WPF.ViewModels
         private DateTime? _endDate;
         private string _monthlyRent = string.Empty;
         private string _rentalMessage = string.Empty;
+        private string _rentalConfirmationMessage = string.Empty;
         private decimal _standardMonthlyRent;
         private bool _isCustomPrice;
         private RentalRowViewModel? _selectedRentalRow;
         private DateTime? _terminationEndDate;
         private string _terminationMessage = string.Empty;
+        private string _terminationConfirmationMessage = string.Empty;
         private RentalStatusFilter _selectedRentalStatusFilter =
             RentalStatusFilter.Active;
 
@@ -45,6 +47,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedTenant != value)
                 {
                     _selectedTenant = value;
+                    RentalConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     RefreshPrice();
                     CreateRentalsCommand.RaiseCanExecuteChanged();
@@ -60,6 +63,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedShelf != value)
                 {
                     _selectedShelf = value;
+                    RentalConfirmationMessage = string.Empty;
                     OnPropertyChanged();
 
                     AddShelfToSelectionCommand.RaiseCanExecuteChanged();
@@ -75,6 +79,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_startDate != value)
                 {
                     _startDate = value;
+                    RentalConfirmationMessage = string.Empty;
+                    TerminationConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     RefreshAvailableShelves();
                     RefreshPrice();
@@ -90,6 +96,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_endDate != value)
                 {
                     _endDate = value;
+                    RentalConfirmationMessage = string.Empty;
+                    TerminationConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     RefreshAvailableShelves();
                     RefreshPrice();
@@ -105,6 +113,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_monthlyRent != value)
                 {
                     _monthlyRent = value;
+                    RentalConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(TotalMonthlyRent));
                 }
@@ -170,6 +179,19 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public string RentalConfirmationMessage
+        {
+            get => _rentalConfirmationMessage;
+            private set
+            {
+                if (_rentalConfirmationMessage != value)
+                {
+                    _rentalConfirmationMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool HasSelectedRental => SelectedRentalRow is not null;
         public bool ShowTerminateButton => CanTerminateRental(null);
         public bool ShowChangeEndDateButton => CanChangeTerminationEndDate(null);
@@ -187,6 +209,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedRentalRow != value)
                 {
                     _selectedRentalRow = value;
+                    TerminationConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(HasSelectedRental));
                     OnPropertyChanged(nameof(ShowTerminateButton));
@@ -195,6 +218,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     OnPropertyChanged(nameof(IsSelectedRentalHistorical));
 
                     TerminationEndDate = _selectedRentalRow?.EndDate;
+                    OnPropertyChanged(nameof(MinimumTerminationEndDate));
                     TerminationMessage = string.Empty;
 
                     TerminateRentalCommand.RaiseCanExecuteChanged();
@@ -203,7 +227,46 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
+
         public DateTime MinimumStartDate => DateTime.Today;
+        public DateTime MinimumTerminationEndDate
+        {
+            get
+            {
+                DateTime minimum = DateTime.Today;
+                if (SelectedRentalRow?.Rental is null)
+                {
+                    return minimum;
+                }
+                else if (SelectedRentalRow.Rental.TerminationNoticeDate.HasValue)
+                {
+                    DateTime noticeDate =
+                        SelectedRentalRow.Rental.TerminationNoticeDate.Value;
+                    minimum =
+                        _rentalService.GetEarliestTerminationEndDate(noticeDate);
+                }
+                else if (!SelectedRentalRow.Rental.EndDate.HasValue)
+                {
+                    minimum =
+                        _rentalService.GetEarliestTerminationEndDate(DateTime.Today);
+                }
+                else
+                {
+                    minimum = DateTime.Today;
+                }
+
+                if (minimum.Date < DateTime.Today)
+                {
+                    minimum = DateTime.Today;
+                }
+                if (minimum.Date <= SelectedRentalRow.Rental.StartDate.Date)
+                {
+                    minimum = SelectedRentalRow.Rental.StartDate.Date.AddDays(1);
+                }
+
+                return minimum;
+            }
+        }
 
         public DateTime? TerminationEndDate
         {
@@ -213,6 +276,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_terminationEndDate != value)
                 {
                     _terminationEndDate = value;
+                    TerminationConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -231,6 +295,19 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public string TerminationConfirmationMessage
+        {
+            get => _terminationConfirmationMessage;
+            private set
+            {
+                if (_terminationConfirmationMessage != value)
+                {
+                    _terminationConfirmationMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public RentalStatusFilter SelectedRentalStatusFilter
         {
             get => _selectedRentalStatusFilter;
@@ -239,6 +316,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedRentalStatusFilter != value)
                 {
                     _selectedRentalStatusFilter = value;
+                    TerminationConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     RefreshRentalRows();
                 }
@@ -345,6 +423,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void UndoTermination(object? parameter)
         {
+            TerminationConfirmationMessage = string.Empty;
+            RentalConfirmationMessage = string.Empty;
+
             Rental? rental = SelectedRentalRow?.Rental;
 
             if (rental is null || !Rentals.Contains(rental))
@@ -369,7 +450,7 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             Refresh();
-            TerminationMessage = "Lejemålet er ikke længere opsagt.";
+            TerminationConfirmationMessage = "Lejemålet er ikke længere opsagt.";
         }
 
         private bool CanChangeTerminationEndDate(object? parameter)
@@ -384,6 +465,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void ChangeTerminationEndDate(object? parameter)
         {
+            TerminationConfirmationMessage = string.Empty;
+            RentalConfirmationMessage = string.Empty;
+
             Rental? rental = SelectedRentalRow?.Rental;
 
             if (rental is null || !Rentals.Contains(rental))
@@ -414,7 +498,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 _rentalRepository.Update(rental);
 
                 Refresh();
-                TerminationMessage = "Lejemålet blev ændret.";
+                TerminationConfirmationMessage = "Lejemålet blev ændret.";
 
             }
             catch (ArgumentException ex)
@@ -441,6 +525,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void TerminateRental(object? parameter)
         {
+            TerminationConfirmationMessage = string.Empty;
+            RentalConfirmationMessage = string.Empty;
+
             Rental? rental = SelectedRentalRow?.Rental;
 
             if (rental is null || !Rentals.Contains(rental))
@@ -477,7 +564,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             SelectedRentalRow = null;
             Refresh();
-            TerminationMessage = "Lejemålet blev opsagt.";
+            TerminationConfirmationMessage = "Lejemålet blev opsagt.";
         }
 
         private bool CanCreateRentals(object? parameter)
@@ -489,6 +576,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void CreateRentals(object? parameter)
         {
+            RentalConfirmationMessage = string.Empty;
+            TerminationConfirmationMessage = string.Empty;
+
             Tenant? tenant = SelectedTenant;
 
             if (tenant is null ||
@@ -576,7 +666,7 @@ namespace Reolmarkedet.WPF.ViewModels
             Refresh();
 
             // Set feedback last because refreshing clears earlier messages.
-            RentalMessage = $"{shelvesToRent.Count} lejemål blev oprettet.";
+            RentalConfirmationMessage = $"{shelvesToRent.Count} lejemål blev oprettet.";
         }
 
         private bool CanUseStandardPrice(object? parameter)
@@ -651,6 +741,8 @@ namespace Reolmarkedet.WPF.ViewModels
         public void Refresh()
         {
             TerminationMessage = string.Empty;
+            TerminationConfirmationMessage = string.Empty;
+            RentalConfirmationMessage = string.Empty;
             RefreshActiveTenants();
             RefreshAvailableShelves();
             RefreshPrice();

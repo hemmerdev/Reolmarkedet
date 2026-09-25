@@ -13,6 +13,9 @@
         MinHeight="650" MinWidth="1200"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:ItemViewModel}">
+            <views:ItemView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <views:DashboardView/>
         </DataTemplate>
@@ -107,6 +110,18 @@
                     </Button.Style>
                 </Button>
 
+                <Button Content="Varer" Command="{Binding ShowItemManagementCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Items}">
+                                    <Setter Property="Background" Value="#505050"/>
+                                    <Setter Property="BorderBrush" Value="#999999"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </StackPanel>
         </Border>
 

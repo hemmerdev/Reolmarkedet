@@ -223,6 +223,133 @@ public class RentalServiceTests
     }
 
     [TestMethod]
+    public void TerminateRental_NoticeOnTwentieth_AllowsCurrentMonthEnd()
+    {
+        // Arrange 
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+
+        Rental rental = new(tenant, shelf)
+        {
+            StartDate = new(2026, 8, 18)
+        };
+
+        List<Rental> existingRentals = new() { rental };
+        DateTime noticeDate = new(2026, 9, 20);
+        DateTime expectedEndDate = new(2026, 9, 30);
+
+        // Act
+        rentalService.TerminateRental(
+            rental,
+            noticeDate,
+            expectedEndDate,
+            existingRentals);
+
+        // Assert
+        Assert.AreEqual(expectedEndDate, rental.EndDate);
+        Assert.AreEqual(noticeDate, rental.TerminationNoticeDate);
+
+    }
+
+    [TestMethod]
+    public void TerminateRental_NoticeOnTwentyfirst_RejectsCurrentMonthEnd()
+    {
+        // Arrange 
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+
+        Rental rental = new(tenant, shelf)
+        {
+            StartDate = new(2026, 8, 18)
+        };
+
+        List<Rental> existingRentals = new() { rental };
+        DateTime noticeDate = new(2026, 9, 21);
+        DateTime expectedEndDate = new(2026, 9, 30);
+
+        // Act & Assert
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            rentalService.TerminateRental(
+                rental,
+                noticeDate,
+                expectedEndDate,
+                existingRentals));
+
+
+        Assert.IsNull(rental.EndDate);
+        Assert.IsNull(rental.TerminationNoticeDate);
+
+    }
+
+    [TestMethod]
+    public void TerminateRental_NoticeOnDecemberTwentyfirst_AllowsJanuaryEnd()
+    {
+        // Arrange 
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+
+        Rental rental = new(tenant, shelf)
+        {
+            StartDate = new(2026, 8, 18)
+        };
+
+        List<Rental> existingRentals = new() { rental };
+        DateTime noticeDate = new(2026, 12, 21);
+        DateTime expectedEndDate = new(2027, 1, 31);
+
+        // Act
+        rentalService.TerminateRental(
+            rental,
+            noticeDate,
+            expectedEndDate,
+            existingRentals);
+
+        // Assert
+        Assert.AreEqual(expectedEndDate, rental.EndDate);
+        Assert.AreEqual(noticeDate, rental.TerminationNoticeDate);
+
+    }
+
+    [TestMethod]
+    public void ChangeTerminationEndDate_BeforeOriginalNoticeMinimum_LeavesDatesUnchanged()
+    {
+        // Arrange 
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        DateTime noticeDate = new(2026, 9, 21);
+        DateTime originalEndDate = new(2026, 11, 30);
+
+        Rental rental = new(tenant, shelf)
+        {
+            StartDate = new(2026, 8, 18),
+            EndDate = originalEndDate,
+            TerminationNoticeDate = noticeDate
+        };
+        List<Rental> existingRentals = new() { rental };
+
+        // Act & Assert
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            rentalService.ChangeTerminationEndDate(
+                rental,
+                new DateTime(2026, 9, 25),
+                new DateTime(2026, 9, 30),
+                existingRentals));
+
+
+        Assert.AreEqual(originalEndDate, rental.EndDate);
+        Assert.AreEqual(noticeDate, rental.TerminationNoticeDate);
+
+    }
+
+    [TestMethod]
     public void ChangeTerminationEndDate_WhenOverlappingAnotherRental_ThrowsAndLeavesDatesUnchanged()
     {
         RentalService rentalService = new();
@@ -260,4 +387,5 @@ public class RentalServiceTests
         CollectionAssert.Contains(existingRentals, rental);
         Assert.HasCount(2, existingRentals);
     }
+
 }

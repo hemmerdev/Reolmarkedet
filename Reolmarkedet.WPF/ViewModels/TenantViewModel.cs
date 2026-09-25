@@ -24,7 +24,7 @@ namespace Reolmarkedet.WPF.ViewModels
         private Tenant? _selectedTenant;
         private bool _showInactiveTenants;
         private string _validationMessage = string.Empty;
-
+        private string _confirmationMessage = string.Empty;
 
         public string SearchText
         {
@@ -34,6 +34,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_searchText != value)
                 {
                     _searchText = value;
+                    ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     ApplySearch();
                 }
@@ -48,6 +49,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_name != value)
                 {
                     _name = value;
+                    ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -61,6 +63,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_phoneNumber != value)
                 {
                     _phoneNumber = value;
+                    ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -74,6 +77,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_email != value)
                 {
                     _email = value;
+                    ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -94,7 +98,8 @@ namespace Reolmarkedet.WPF.ViewModels
                     OnPropertyChanged(nameof(ShowDeactivateButton));
                     OnPropertyChanged(nameof(ShowReactivateButton));
                     OnPropertyChanged(nameof(ShowInactivePrompt));
-                    ValidationMessage = string.Empty; // Clear validation message when a tenant is selected
+                    ValidationMessage = string.Empty;
+                    ConfirmationMessage = string.Empty; // Clear confirmation message when a tenant is selected
 
                     if (_selectedTenant is not null)
                     {
@@ -131,6 +136,8 @@ namespace Reolmarkedet.WPF.ViewModels
                     OnPropertyChanged(nameof(ShowInactivePrompt));
                     OnPropertyChanged(nameof(FormTitle));
                     SelectedTenant = null; // Clear the selected tenant when toggling the filter
+                    ValidationMessage = string.Empty;
+                    ConfirmationMessage = string.Empty;
                     ApplySearch();
                 }
             }
@@ -144,6 +151,18 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_validationMessage != value)
                 {
                     _validationMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public string ConfirmationMessage
+        {
+            get => _confirmationMessage;
+            set
+            {
+                if (_confirmationMessage != value)
+                {
+                    _confirmationMessage = value;
                     OnPropertyChanged();
                 }
             }
@@ -232,6 +251,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             SelectedTenant = null;
             ValidationMessage = string.Empty;
+            ConfirmationMessage = "Reollejeren er blevet genaktiveret.";
             ApplySearch();
         }
 
@@ -271,6 +291,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             SelectedTenant = null;
             ValidationMessage = string.Empty;
+            ConfirmationMessage = "Reollejeren er blevet deaktiveret.";
             ApplySearch();
 
         }
@@ -281,6 +302,8 @@ namespace Reolmarkedet.WPF.ViewModels
         }
         private void AddTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
+
             if (string.IsNullOrWhiteSpace(Name))
             {
                 ValidationMessage = "Navn må ikke være tomt.";
@@ -307,6 +330,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             SelectedTenant = null;
             ClearFormFields();
+            ConfirmationMessage = "Reollejeren er blevet oprettet.";
         }
 
         private bool CanUpdateTenant(object? parameter)
@@ -344,6 +368,8 @@ namespace Reolmarkedet.WPF.ViewModels
             ApplySearch();
             SelectedTenant = null;
             ClearFormFields();
+
+            ConfirmationMessage = "Reollejeren er blevet opdateret.";
         }
 
         private bool CanCancelUpdateTenant(object? parameter)
@@ -382,6 +408,7 @@ namespace Reolmarkedet.WPF.ViewModels
             ApplySearch();
             SelectedTenant = null;
             ClearFormFields();
+            ConfirmationMessage = "Reollejeren er blevet slettet.";
         }
 
         private void ClearFormFields()
@@ -390,6 +417,7 @@ namespace Reolmarkedet.WPF.ViewModels
             PhoneNumber = string.Empty;
             Email = string.Empty;
             ValidationMessage = string.Empty;
+            ConfirmationMessage = string.Empty;
         }
 
         private void ApplySearch()

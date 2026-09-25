@@ -24,6 +24,8 @@ namespace Reolmarkedet.WPF.ViewModels
         private string _shelfTypeMessage = string.Empty;
         private string _newShelfNumber = string.Empty;
         private string _shelfMessage = string.Empty;
+        private string _shelfConfirmationMessage = string.Empty;
+        private string _shelfTypeConfirmationMessage = string.Empty;
         private bool _showInactiveShelves;
         private ShelfRowViewModel? _selectedShelfRow;
         private ShelfStatusFilter _selectedStatusFilter = ShelfStatusFilter.All;
@@ -36,6 +38,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedStatusFilter != value)
                 {
                     _selectedStatusFilter = value;
+                    ShelfConfirmationMessage = string.Empty;
+                    ShelfMessage = string.Empty;
                     OnPropertyChanged();
 
                     ApplyShelfFilter();
@@ -51,6 +55,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_newShelfTypeName != value)
                 {
                     _newShelfTypeName = value;
+                    ShelfTypeConfirmationMessage = string.Empty;
+                    ShelfTypeMessage = string.Empty;
                     OnPropertyChanged();
 
                     AddShelfTypeCommand.RaiseCanExecuteChanged();
@@ -66,6 +72,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_shelfTypeToDelete != value)
                 {
                     _shelfTypeToDelete = value;
+                    ShelfTypeConfirmationMessage = string.Empty;
+                    ShelfTypeMessage = string.Empty;
                     OnPropertyChanged();
 
                     DeleteShelfTypeCommand.RaiseCanExecuteChanged();
@@ -91,6 +99,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_newShelfNumber != value)
                 {
                     _newShelfNumber = value;
+                    ShelfConfirmationMessage = string.Empty;
+                    ShelfTypeConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     ValidateShelfNumber();
                     AddShelfCommand.RaiseCanExecuteChanged();
@@ -104,6 +114,25 @@ namespace Reolmarkedet.WPF.ViewModels
             set
             {
                 _shelfMessage = value;
+                ShelfConfirmationMessage = string.Empty;
+                OnPropertyChanged();
+            }
+        }
+        public string ShelfConfirmationMessage
+        {
+            get => _shelfConfirmationMessage;
+            set
+            {
+                _shelfConfirmationMessage = value;
+                OnPropertyChanged();
+            }
+        }
+        public string ShelfTypeConfirmationMessage
+        {
+            get => _shelfTypeConfirmationMessage;
+            set
+            {
+                _shelfTypeConfirmationMessage = value;
                 OnPropertyChanged();
             }
         }
@@ -117,6 +146,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     _newShelfType = value;
                     ShelfTypeMessage = string.Empty;
+                    ShelfConfirmationMessage = string.Empty;
                     OnPropertyChanged();
 
                     AddShelfCommand.RaiseCanExecuteChanged();
@@ -132,6 +162,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_showInactiveShelves != value)
                 {
                     _showInactiveShelves = value;
+                    ShelfConfirmationMessage = string.Empty;
+                    ShelfMessage = string.Empty;
                     OnPropertyChanged();
                     ApplyShelfFilter();
                 }
@@ -146,6 +178,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedShelfRow != value)
                 {
                     _selectedShelfRow = value;
+                    ShelfConfirmationMessage = string.Empty;
+                    ShelfMessage = string.Empty;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(HasSelectedShelf));
                     OnPropertyChanged(nameof(ShowDeactivateButton));
@@ -244,6 +278,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void ReactivateShelf(object? parameter)
         {
+            ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = string.Empty;
+
             if (SelectedShelfRow is null)
             {
                 return;
@@ -260,6 +297,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             ShelfMessage = string.Empty;
             ApplyShelfFilter();
+            ShelfConfirmationMessage = "Reolen er blevet reaktiveret.";
         }
 
         private bool CanDeactivateShelf(object? parameter)
@@ -269,6 +307,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void DeactivateShelf(object? parameter)
         {
+            ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = string.Empty;
+
             if (SelectedShelfRow is null)
             {
                 return;
@@ -296,6 +337,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             ShelfMessage = string.Empty;
             ApplyShelfFilter();
+            ShelfConfirmationMessage = "Reolen er blevet deaktiveret.";
 
         }
 
@@ -306,6 +348,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void DeleteShelf(object? parameter)
         {
+            ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = string.Empty;
+
             if (SelectedShelfRow is null)
             {
                 return;
@@ -324,6 +369,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             SelectedShelfRow = null;
             ShelfMessage = string.Empty;
+            ShelfConfirmationMessage = "Reolen er blevet slettet.";
         }
 
         private bool CanAddShelf(object? parameter)
@@ -335,6 +381,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void AddShelf(object? parameter)
         {
+            ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = string.Empty;
+
             if (!int.TryParse(NewShelfNumber, out int shelfNumber) ||
                 shelfNumber <= 0 ||
                 NewShelfType is null)
@@ -364,6 +413,7 @@ namespace Reolmarkedet.WPF.ViewModels
             NewShelfNumber = string.Empty;
             ShelfMessage = string.Empty;
             NewShelfType = null;
+            ShelfConfirmationMessage = "Reolen er blevet tilføjet.";
         }
 
         private void ValidateShelfNumber()
@@ -389,6 +439,9 @@ namespace Reolmarkedet.WPF.ViewModels
         }
         private void DeleteShelfType(object? parameter)
         {
+            ShelfMessage = string.Empty;
+            ShelfConfirmationMessage = string.Empty;
+
             if (ShelfTypeToDelete is null)
             {
                 return;
@@ -410,10 +463,14 @@ namespace Reolmarkedet.WPF.ViewModels
 
             ShelfTypeToDelete = null;
             ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = "Reoltype er blevet slettet.";
         }
 
         private void AddShelfType(object? parameter)
         {
+            ShelfMessage = string.Empty;
+            ShelfConfirmationMessage = string.Empty;
+
             if (string.IsNullOrWhiteSpace(NewShelfTypeName))
             {
                 return;
@@ -442,6 +499,7 @@ namespace Reolmarkedet.WPF.ViewModels
             ShelfTypes.Add(shelfType);
             NewShelfTypeName = string.Empty;
             ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = "Reoltype er blevet oprettet.";
         }
 
 
@@ -493,7 +551,9 @@ namespace Reolmarkedet.WPF.ViewModels
         public void Refresh()
         {
             ShelfTypeMessage = string.Empty;
+            ShelfTypeConfirmationMessage = string.Empty;
             ShelfMessage = string.Empty;
+            ShelfConfirmationMessage = string.Empty;
             ApplyShelfFilter();
         }
     }
