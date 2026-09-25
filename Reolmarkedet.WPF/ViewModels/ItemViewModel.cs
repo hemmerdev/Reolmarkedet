@@ -16,20 +16,51 @@ public class ItemViewModel : ViewModelBase
     private readonly ItemService _service;
     private static readonly CultureInfo PriceCulture = CultureInfo.GetCultureInfo("da-DK");
     public ObservableCollection<Item> UnsoldItems { get; } = new();
+    public ObservableCollection<Item> VisibleItems { get; } = new();
     public ObservableCollection<RentalOption> RentalOptions { get; } = new();
     public ObservableCollection<RentalOption> EligibleRentalOptions { get; } = new();
     private Item? _selectedItem;
     private RentalOption? _selectedRental;
-    private string _description = "", _priceText = "", _barcode = "", _lookupBarcode = "", _message = "";
+    private string _description = "", _priceText = "", _barcode = "", _message = "";
+    private string _searchText = string.Empty;
+
     public string Description { get => _description; set => Set(ref _description, value); }
     public string PriceText { get => _priceText; set => Set(ref _priceText, value); }
     public string Barcode { get => _barcode; set => Set(ref _barcode, value); }
-    public string LookupBarcode { get => _lookupBarcode; set => Set(ref _lookupBarcode, value); }
     public string Message { get => _message; private set => Set(ref _message, value); }
     public RentalOption? SelectedRental { get => _selectedRental; set => Set(ref _selectedRental, value); }
     public bool IsNew => SelectedItem is null;
     public bool IsEditing => !IsNew;
     public string FormTitle => IsNew ? "Registrer vare" : $"Rediger vare #{SelectedItem!.ItemId}";
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText != value)
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                ApplySearch();
+            }
+        }
+    }
+
+    private void ApplySearch()
+    {
+        VisibleItems.Clear();
+        var trimmedText = SearchText.Trim();
+        foreach (var item in UnsoldItems)
+        {
+            if (string.IsNullOrEmpty(trimmedText) ||
+                item.Description.Contains(trimmedText, StringComparison.OrdinalIgnoreCase) ||
+                item.Barcode.Contains(trimmedText, StringComparison.OrdinalIgnoreCase))
+            {
+                VisibleItems.Add(item);
+            }
+        }
+    }
+
     public Item? SelectedItem
     {
         get => _selectedItem;
@@ -46,7 +77,6 @@ public class ItemViewModel : ViewModelBase
     }
     public RelayCommand SaveCommand { get; }
     public RelayCommand NewCommand { get; }
-    public RelayCommand FindCommand { get; }
     public RelayCommand RefreshCommand { get; }
 
     public ItemViewModel(IItemRepository items, IRepository<Rental> rentals)
@@ -54,7 +84,6 @@ public class ItemViewModel : ViewModelBase
         _items = items; _rentals = rentals; _service = new(items, rentals);
         SaveCommand = new(_ => Run(Save));
         NewCommand = new(_ => SelectedItem = null);
-        FindCommand = new(_ => Run(Find));
         RefreshCommand = new(_ => Refresh());
     }
     public void Refresh() => Run(() => { Reload(); Message = ""; });
@@ -91,6 +120,8 @@ public class ItemViewModel : ViewModelBase
         }
 
         UnsoldItems.Clear(); foreach (var item in items) UnsoldItems.Add(item);
+
+        ApplySearch();
     }
     private void Save()
     {
@@ -120,20 +151,7 @@ public class ItemViewModel : ViewModelBase
         catch (DbException)
         { Message = $"Vare #{id} er gemt, men listen kunne ikke opdateres. Prøv Opdater liste."; }
     }
-    private void Find()
-    {
-        SelectedItem = null; // A miss must not leave a previous match available for editing.
-        Item? item = _service.FindByBarcode(LookupBarcode);
-        if (item is null) { Message = "Ingen vare fundet med denne stregkode."; return; }
-        if (_items.IsSold(item.ItemId))
-        {
-            Message = $"Vare #{item.ItemId}: {item.Description} · {item.Price.ToString("0.00", PriceCulture)} kr. er solgt og kan ikke redigeres.";
-            return;
-        }
-        Reload();
-        SelectedItem = UnsoldItems.FirstOrDefault(i => i.ItemId == item.ItemId);
-        Message = SelectedItem is null ? "Varen er ikke længere usolgt. Opdater listen." : $"Vare #{item.ItemId} fundet.";
-    }
+
     private void Run(Action action)
     {
         try { action(); }

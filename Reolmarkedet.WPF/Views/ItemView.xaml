@@ -10,22 +10,22 @@
             <ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="340"/>
         </Grid.ColumnDefinitions>
         <TextBlock Text="Varer" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,20"/>
+
         <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,16">
-            <TextBlock Text="Skriv, indsæt eller scan stregkode — tryk Enter for at finde varen"/>
-            <DockPanel Margin="0,6,0,0">
-                <Button DockPanel.Dock="Right" Content="Find vare" Command="{Binding FindCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0"/>
-                <TextBox Text="{Binding LookupBarcode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBoxStyle}">
-                    <TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding FindCommand}"/></TextBox.InputBindings>
-                </TextBox>
-            </DockPanel>
+            <TextBlock Text="Søg efter usolgte varer (beskrivelse eller stregkode)"/>
+            <TextBox Text="{Binding SearchText,
+                     UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource InputTextBoxStyle}"
+                     Margin="0,6,0,0"/>
         </StackPanel>
+
         <Grid Grid.Row="2">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <DockPanel Margin="0,0,0,10">
                 <Button DockPanel.Dock="Right" Content="Opdater liste" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}"/>
                 <TextBlock Text="Usolgte varer" FontSize="20" VerticalAlignment="Center"/>
             </DockPanel>
-            <DataGrid Grid.Row="1" ItemsSource="{Binding UnsoldItems}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+            <DataGrid Grid.Row="1" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
                       SelectionMode="Single" SelectionUnit="FullRow" Style="{StaticResource ManagementDataGridStyle}">
                 <DataGrid.Columns>

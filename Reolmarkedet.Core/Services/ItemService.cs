@@ -58,7 +58,6 @@ public class ItemService(IItemRepository items, IRepository<Rental> rentals)
         });
     }
 
-    public Item? FindByBarcode(string barcode) => items.GetByBarcode(NormalizeBarcode(barcode));
     public static string NormalizeBarcode(string barcode)
     {
         string code = barcode.Trim(); // Removes scanner CR/LF suffixes, preserves leading zeroes and case.
