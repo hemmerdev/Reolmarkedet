@@ -205,7 +205,7 @@
                             <DatePicker SelectedDate="{Binding TerminationEndDate, Mode=TwoWay}"
                                         Width="180"
                                         Margin="0,0,12,8"
-                                        DisplayDateStart="{Binding MinimumStartDate, Mode=OneWay}"
+                                        DisplayDateStart="{Binding MinimumTerminationEndDate, Mode=OneWay}"
                                         Style="{StaticResource InputDatePickerStyle}" />
 
                             <Button Content="Opsig lejemål"

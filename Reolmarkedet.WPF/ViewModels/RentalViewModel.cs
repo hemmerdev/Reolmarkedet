@@ -218,6 +218,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     OnPropertyChanged(nameof(IsSelectedRentalHistorical));
 
                     TerminationEndDate = _selectedRentalRow?.EndDate;
+                    OnPropertyChanged(nameof(MinimumTerminationEndDate));
                     TerminationMessage = string.Empty;
 
                     TerminateRentalCommand.RaiseCanExecuteChanged();
@@ -228,6 +229,44 @@ namespace Reolmarkedet.WPF.ViewModels
         }
 
         public DateTime MinimumStartDate => DateTime.Today;
+        public DateTime MinimumTerminationEndDate
+        {
+            get
+            {
+                DateTime minimum = DateTime.Today;
+                if (SelectedRentalRow?.Rental is null)
+                {
+                    return minimum;
+                }
+                else if (SelectedRentalRow.Rental.TerminationNoticeDate.HasValue)
+                {
+                    DateTime noticeDate =
+                        SelectedRentalRow.Rental.TerminationNoticeDate.Value;
+                    minimum =
+                        _rentalService.GetEarliestTerminationEndDate(noticeDate);
+                }
+                else if (!SelectedRentalRow.Rental.EndDate.HasValue)
+                {
+                    minimum =
+                        _rentalService.GetEarliestTerminationEndDate(DateTime.Today);
+                }
+                else
+                {
+                    minimum = DateTime.Today;
+                }
+
+                if (minimum.Date < DateTime.Today)
+                {
+                    minimum = DateTime.Today;
+                }
+                if (minimum.Date <= SelectedRentalRow.Rental.StartDate.Date)
+                {
+                    minimum = SelectedRentalRow.Rental.StartDate.Date.AddDays(1);
+                }
+
+                return minimum;
+            }
+        }
 
         public DateTime? TerminationEndDate
         {

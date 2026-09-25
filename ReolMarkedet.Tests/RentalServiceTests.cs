@@ -223,6 +223,37 @@ public class RentalServiceTests
     }
 
     [TestMethod]
+    public void TerminateRental_NoticeOnTwentieth_AllowsCurrentMonthEnd()
+    {
+        // Arrange 
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+
+        Rental rental = new(tenant, shelf)
+        {
+            StartDate = new(2026, 8, 18)
+        };
+
+        List<Rental> existingRentals = new() { rental };
+        DateTime noticeDate = new(2026, 9, 20);
+        DateTime expectedEndDate = new(2026, 9, 30);
+
+        // Act
+        rentalService.TerminateRental(
+            rental,
+            noticeDate,
+            expectedEndDate,
+            existingRentals);
+
+        // Assert
+        Assert.AreEqual(expectedEndDate, rental.EndDate);
+        Assert.AreEqual(noticeDate, rental.TerminationNoticeDate);
+
+    }
+
+    [TestMethod]
     public void ChangeTerminationEndDate_WhenOverlappingAnotherRental_ThrowsAndLeavesDatesUnchanged()
     {
         RentalService rentalService = new();
@@ -260,4 +291,5 @@ public class RentalServiceTests
         CollectionAssert.Contains(existingRentals, rental);
         Assert.HasCount(2, existingRentals);
     }
+
 }

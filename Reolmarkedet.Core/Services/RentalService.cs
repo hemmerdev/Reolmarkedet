@@ -206,6 +206,21 @@ namespace Reolmarkedet.Core.Services
             return shelfCount;
         }
 
+        public DateTime GetEarliestTerminationEndDate(DateTime noticeDate)
+        {
+            DateTime firstOfMonth = new DateTime(noticeDate.Year, noticeDate.Month, 1);
+
+            if (noticeDate.Day <= 20)
+            {
+                return firstOfMonth.AddMonths(1).AddDays(-1);
+            }
+            else
+            {
+                return firstOfMonth.AddMonths(2).AddDays(-1);
+            }
+
+        }
+
         public void TerminateRental(
             Rental rental,
             DateTime noticeDate,
@@ -218,17 +233,23 @@ namespace Reolmarkedet.Core.Services
                 throw new InvalidOperationException(
                     "Lejemålet har allerede en slutdato");
             }
-
             if (endDate.Date <= rental.StartDate.Date)
             {
                 throw new ArgumentException(
                     "Slutdatoen skal være efter startdatoen.");
             }
-
             if (endDate.Date < noticeDate.Date)
             {
                 throw new ArgumentException(
                     "Slutdatoen må ikke være i fortiden");
+            }
+
+            DateTime earliestEndDate = GetEarliestTerminationEndDate(noticeDate);
+
+            if (endDate.Date < earliestEndDate.Date)
+            {
+                throw new ArgumentException(
+                        $"Sidste lejedag kan tidligst være den {earliestEndDate:dd-MM-yyyy}.");
             }
 
             List<Rental> otherRentals = new();
@@ -281,6 +302,15 @@ namespace Reolmarkedet.Core.Services
             {
                 throw new ArgumentException(
                     "Slutdatoen må ikke være i fortiden");
+            }
+            if (rental.TerminationNoticeDate.HasValue)
+            {
+                DateTime earliestEndDate = GetEarliestTerminationEndDate(rental.TerminationNoticeDate.Value);
+                if (newEndDate.Date < earliestEndDate.Date)
+                {
+                    throw new ArgumentException(
+                        $"Sidste lejedag kan tidligst være den {earliestEndDate:dd-MM-yyyy}.");
+                }
             }
 
             List<Rental> otherRentals = new();
@@ -344,5 +374,6 @@ namespace Reolmarkedet.Core.Services
             rental.EndDate = null;
             rental.TerminationNoticeDate = null;
         }
+
     }
 }
