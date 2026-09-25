@@ -21,12 +21,11 @@ public class ItemViewModel : ViewModelBase
     public ObservableCollection<RentalOption> EligibleRentalOptions { get; } = new();
     private Item? _selectedItem;
     private RentalOption? _selectedRental;
-    private string _description = "", _priceText = "", _barcode = "", _message = "";
+    private string _description = "", _priceText = "", _message = "";
     private string _searchText = string.Empty;
 
     public string Description { get => _description; set => Set(ref _description, value); }
     public string PriceText { get => _priceText; set => Set(ref _priceText, value); }
-    public string Barcode { get => _barcode; set => Set(ref _barcode, value); }
     public string Message { get => _message; private set => Set(ref _message, value); }
     public RentalOption? SelectedRental { get => _selectedRental; set => Set(ref _selectedRental, value); }
     public bool IsNew => SelectedItem is null;
@@ -46,21 +45,6 @@ public class ItemViewModel : ViewModelBase
         }
     }
 
-    private void ApplySearch()
-    {
-        VisibleItems.Clear();
-        var trimmedText = SearchText.Trim();
-        foreach (var item in UnsoldItems)
-        {
-            if (string.IsNullOrEmpty(trimmedText) ||
-                item.Description.Contains(trimmedText, StringComparison.OrdinalIgnoreCase) ||
-                item.Barcode.Contains(trimmedText, StringComparison.OrdinalIgnoreCase))
-            {
-                VisibleItems.Add(item);
-            }
-        }
-    }
-
     public Item? SelectedItem
     {
         get => _selectedItem;
@@ -70,7 +54,6 @@ public class ItemViewModel : ViewModelBase
             OnPropertyChanged(); OnPropertyChanged(nameof(IsNew)); OnPropertyChanged(nameof(IsEditing)); OnPropertyChanged(nameof(FormTitle));
             Description = value?.Description ?? "";
             PriceText = value?.Price.ToString("0.00", PriceCulture) ?? "";
-            Barcode = value?.Barcode ?? "";
             SelectedRental = RentalOptions.FirstOrDefault(r => r.Id == value?.RentalId);
             Message = "";
 
@@ -79,7 +62,6 @@ public class ItemViewModel : ViewModelBase
     }
     public RelayCommand SaveCommand { get; }
     public RelayCommand NewCommand { get; }
-    public RelayCommand RefreshCommand { get; }
     public RelayCommand DeleteItemCommand { get; }
 
     public ItemViewModel(IItemRepository items, IRepository<Rental> rentals)
@@ -87,7 +69,6 @@ public class ItemViewModel : ViewModelBase
         _items = items; _rentals = rentals; _service = new(items, rentals);
         SaveCommand = new(_ => Run(Save));
         NewCommand = new(_ => SelectedItem = null);
-        RefreshCommand = new(_ => Refresh());
         DeleteItemCommand = new(DeleteItem, CanDeleteItem);
     }
 
@@ -108,6 +89,21 @@ public class ItemViewModel : ViewModelBase
     private bool CanDeleteItem(object? parameter)
     {
         return SelectedItem is not null;
+    }
+
+    private void ApplySearch()
+    {
+        VisibleItems.Clear();
+        var trimmedText = SearchText.Trim();
+        foreach (var item in UnsoldItems)
+        {
+            if (string.IsNullOrEmpty(trimmedText) ||
+                item.Description.Contains(trimmedText, StringComparison.OrdinalIgnoreCase) ||
+                item.Barcode.Contains(trimmedText, StringComparison.OrdinalIgnoreCase))
+            {
+                VisibleItems.Add(item);
+            }
+        }
     }
 
     public void Refresh() => Run(() => { Reload(); Message = ""; });
@@ -157,7 +153,7 @@ public class ItemViewModel : ViewModelBase
         if (SelectedItem is null)
         {
             if (SelectedRental is null) throw new ArgumentException("Vælg et lejemål.");
-            id = _service.Register(SelectedRental.Id, Description, price, Barcode).ItemId;
+            id = _service.Register(SelectedRental.Id, Description, price, null).ItemId;
         }
         else
         {
@@ -173,7 +169,7 @@ public class ItemViewModel : ViewModelBase
             Message = $"Vare #{id} er gemt.";
         }
         catch (DbException)
-        { Message = $"Vare #{id} er gemt, men listen kunne ikke opdateres. Prøv Opdater liste."; }
+        { Message = $"Vare #{id} er gemt, men listen kunne ikke opdateres. Skift visning og åbn varer igen for at opdatere listen"; }
     }
 
     private void Run(Action action)

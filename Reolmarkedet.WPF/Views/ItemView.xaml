@@ -3,42 +3,43 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="340"/>
+            <ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="320"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Text="Varer" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,20"/>
+        <TextBlock Grid.ColumnSpan="3"
+                   Text="Varer"
+                   FontSize="28" FontWeight="SemiBold"
+                   Margin="0,0,0,24"/>
 
-        <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,16">
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,12">
             <TextBlock Text="Søg efter usolgte varer (beskrivelse eller stregkode)"/>
             <TextBox Text="{Binding SearchText,
                      UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource InputTextBoxStyle}"
-                     Margin="0,6,0,0"/>
+                     Margin="0,4,0,0"/>
         </StackPanel>
 
-        <Grid Grid.Row="2">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <DockPanel Margin="0,0,0,10">
-                <Button DockPanel.Dock="Right" Content="Opdater liste" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}"/>
-                <TextBlock Text="Usolgte varer" FontSize="20" VerticalAlignment="Center"/>
-            </DockPanel>
-            <DataGrid Grid.Row="1" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
-                      SelectionMode="Single" SelectionUnit="FullRow" Style="{StaticResource ManagementDataGridStyle}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Varenr." Binding="{Binding ItemId}" Width="65" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                    <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Description}" Width="*" MinWidth="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                    <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat=N2, ConverterCulture=da-DK}" Width="85" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                    <DataGridTextColumn Header="Lejemål" Binding="{Binding RentalId}" Width="70" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                    <DataGridTextColumn Header="Stregkode" Binding="{Binding Barcode}" Width="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
-        <ScrollViewer Grid.Row="2" Grid.Column="2" VerticalScrollBarVisibility="Auto">
-            <Border Background="#292929" BorderBrush="#595959" BorderThickness="1" Padding="18" VerticalAlignment="Top">
+        <DataGrid Grid.Row="2" Grid.Column="0" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+                  SelectionMode="Single" SelectionUnit="FullRow" Style="{StaticResource ManagementDataGridStyle}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Varenr." Binding="{Binding ItemId}" Width="65" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Description}" Width="*" MinWidth="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat=N2, ConverterCulture=da-DK}" Width="85" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Lejemål" Binding="{Binding RentalId}" Width="70" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Stregkode" Binding="{Binding Barcode}" Width="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <ScrollViewer Grid.Row="2" Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Focusable="False">
+            <Border Background="#292929" BorderBrush="#595959" BorderThickness="1" Padding="18" VerticalAlignment="Top"
+                    CornerRadius="3">
                 <StackPanel>
                     <TextBlock Text="{Binding FormTitle}" FontSize="20" Margin="0,0,0,16"/>
                     <TextBlock Text="Lejemål"/>
@@ -64,25 +65,41 @@
 
                     <TextBlock Text="Beskrivelse"/>
                     <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MaxLength="255" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
-                    <TextBlock Text="Pris i kr. (fx 125,50)"/>
+                    <TextBlock Text="Pris i kr."/>
                     <TextBox Text="{Binding PriceText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
-                    <TextBlock Text="Stregkode (tom = genereres automatisk)" TextWrapping="Wrap"/>
-                    <TextBox Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding IsEditing}" MaxLength="50"
-                             Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
-                    <TextBlock Text="Varenummer tildeles ved oprettelse. Stregkode og lejemål bevares ved redigering." TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <TextBlock Text="Varenummer og stregkode tildeles automatisk ved oprettelse." TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <WrapPanel>
-                        <Button Content="Gem vare" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"/>
-                        <Button Content="Ny / annuller" Command="{Binding NewCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,8"/>
+                        <Button Content="Opret vare" Command="{Binding SaveCommand}"
+                                Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibility}}"
+                                Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
 
-                        <Button Content="Slet valgt vare"
-                                Command="{Binding DeleteItemCommand}"
-                                Style="{StaticResource WarningButtonStyle}"
-                                Margin="0,0,0,8"/>
+                        <Button Content="Opdater vare" Command="{Binding SaveCommand}"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
+                                Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+
+                        <Button Content="Annuller" Command="{Binding NewCommand}"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
+                                Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
 
                     </WrapPanel>
+
+                    <Border BorderBrush="#595959" BorderThickness="0,1,0,0"
+                            Margin="0,16,0,0" Padding="0,12,0,0"
+                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                        <Button Content="Slet vare"
+                                Command="{Binding DeleteItemCommand}"
+                                Style="{StaticResource WarningButtonStyle}"
+                                HorizontalAlignment="Left"/>
+                    </Border>
+
+                    <TextBlock Text="{Binding Message}"
+                               Style="{StaticResource MessageTextStyle}"
+                               Foreground="#F2CE82"
+                               TextWrapping="Wrap"
+                               Margin="0,12,0,0"/>
+
                 </StackPanel>
             </Border>
         </ScrollViewer>
-        <TextBlock Grid.Row="3" Grid.ColumnSpan="3" Text="{Binding Message}" TextWrapping="Wrap" Foreground="#F2CE82" Margin="0,16,0,0"/>
     </Grid>
 </UserControl>
