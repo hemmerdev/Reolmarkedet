@@ -8,6 +8,8 @@ namespace Reolmarkedet.WPF.ViewModels
     public class SaleViewModel : ViewModelBase
     {
         private readonly SalesService _salesService;
+        private readonly IRepository<Rental> _rentalRepository;
+        private Rental? _selectedRental;
         private string _searchText = string.Empty;
         private string _salePriceText = string.Empty;
         private string _notes = string.Empty;
@@ -64,7 +66,15 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (_selectedItem != value)
                 {
                     _selectedItem = value;
+
+                    if (_selectedItem is null)
+                    {
+                        _selectedRental = null;
+                    }
+
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(TenantName));
+                    OnPropertyChanged(nameof(ShelfNumber));
                     SalePriceText = SelectedItem?.Price.ToString("0.00") ?? string.Empty;
                     Notes = string.Empty;
                     SaleMessage = string.Empty;
@@ -101,14 +111,19 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public string TenantName => _selectedRental?.Tenant.Name ?? string.Empty;
+        public int? ShelfNumber => _selectedRental?.Shelf.ShelfNumber;
+
         public RelayCommand FindItemCommand { get; }
         public RelayCommand RegisterSaleCommand { get; }
 
         public SaleViewModel(
             IItemRepository itemRepository,
-            IRepository<Sale> saleRepository)
+            IRepository<Sale> saleRepository,
+            IRepository<Rental> rentalRepository)
         {
             _salesService = new SalesService(itemRepository, saleRepository);
+            _rentalRepository = rentalRepository;
 
             FindItemCommand = new RelayCommand(FindItem, CanFindItem);
             RegisterSaleCommand = new RelayCommand(RegisterSale, CanRegisterSale);
@@ -171,7 +186,17 @@ namespace Reolmarkedet.WPF.ViewModels
 
             try
             {
-                SelectedItem = _salesService.FindItem(SearchText);
+                Item item = _salesService.FindItem(SearchText);
+                Rental? rental = _rentalRepository.GetById(item.RentalId);
+
+                if (rental is null)
+                {
+                    SaleMessage = "Ingen lejeaftale fundet for varen.";
+                    return;
+                }
+
+                _selectedRental = rental;
+                SelectedItem = item;
             }
             catch (ArgumentException ex)
             {

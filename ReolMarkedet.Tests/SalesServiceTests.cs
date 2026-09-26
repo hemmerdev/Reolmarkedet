@@ -65,7 +65,7 @@ public class SalesServiceTests
         // Act and Assert
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             salesService.RegisterSale(
-                item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Second attempt"));
+                item.ItemId, 90.0m, new DateOnly(2026, 9, 27), "Second attempt"));
 
 
         Assert.AreEqual(1, saleRepository.GetAll().Count());

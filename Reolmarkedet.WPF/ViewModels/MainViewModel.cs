@@ -74,7 +74,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             CurrentViewModel = Dashboard;
             ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
-            SaleManagement = new SaleViewModel(itemRepository, saleRepository);
+            SaleManagement = new SaleViewModel(itemRepository, saleRepository, rentalRepository);
 
             ShowDashboardCommand =
                 new RelayCommand(_ => CurrentViewModel = Dashboard);
