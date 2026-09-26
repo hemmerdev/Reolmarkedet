@@ -7,6 +7,6 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="24">
-        <TextBlock Text="Overblik" FontSize="24" Margin="16" />
+        <TextBlock Text="Overblik" FontSize="28" FontWeight="SemiBold" />
     </Grid>
 </UserControl>
