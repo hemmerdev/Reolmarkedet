@@ -23,15 +23,35 @@
                      Margin="0,4,0,0"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="2" Grid.Column="0" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+        <DataGrid Grid.Row="2" Grid.Column="0" ItemsSource="{Binding VisibleItems}" SelectedItem="{Binding SelectedItemRow, Mode=TwoWay}"
                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Single" SelectionUnit="FullRow" Style="{StaticResource ManagementDataGridStyle}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Varenr." Binding="{Binding ItemId}" Width="65" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Description}" Width="*" MinWidth="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat='{}{0:N2} kr.', ConverterCulture=da-DK}" Width="SizeToCells" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Lejemål" Binding="{Binding RentalId}" Width="70" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Stregkode" Binding="{Binding Barcode}" Width="SizeToCells" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Description}" Width="2*" MinWidth="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat='{}{0:N2} kr.', ConverterCulture=da-DK}" Width="110" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Reol"
+                                    Binding="{Binding ShelfNumber}"
+                                    Width="60"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Reollejer"
+                                    Binding="{Binding TenantName}"
+                                    Width="*"
+                                    MinWidth="120"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Stregkode"
+                                    Binding="{Binding Barcode}"
+                                    Width="170">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"
+                               BasedOn="{StaticResource ManagementCellTextStyle}">
+                            <Setter Property="ToolTip" Value="{Binding Barcode}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
             </DataGrid.Columns>
         </DataGrid>
 

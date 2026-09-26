@@ -14,9 +14,11 @@ public class ItemViewModel : ViewModelBase
     private readonly IItemRepository _items;
     private readonly IRepository<Rental> _rentals;
     private readonly ItemService _service;
+    private readonly List<ItemRowViewModel> _itemRows = new();
+    private ItemRowViewModel? _selectedItemRow;
     private static readonly CultureInfo PriceCulture = CultureInfo.GetCultureInfo("da-DK");
     public ObservableCollection<Item> UnsoldItems { get; } = new();
-    public ObservableCollection<Item> VisibleItems { get; } = new();
+    public ObservableCollection<ItemRowViewModel> VisibleItems { get; } = new();
     public ObservableCollection<RentalOption> RentalOptions { get; } = new();
     public ObservableCollection<RentalOption> EligibleRentalOptions { get; } = new();
     private Item? _selectedItem;
@@ -65,6 +67,19 @@ public class ItemViewModel : ViewModelBase
         }
     }
 
+    public ItemRowViewModel? SelectedItemRow
+    {
+        get => _selectedItemRow;
+        set
+        {
+            if (_selectedItemRow != value)
+            {
+                Set(ref _selectedItemRow, value);
+                SelectedItem = value?.Item;
+            }
+        }
+    }
+
     public bool IsNew => SelectedItem is null;
     public bool IsEditing => !IsNew;
     public string FormTitle => IsNew ? "Registrer vare" : $"Rediger vare #{SelectedItem!.ItemId}";
@@ -89,6 +104,10 @@ public class ItemViewModel : ViewModelBase
         set
         {
             _selectedItem = value;
+
+            _selectedItemRow = _itemRows.FirstOrDefault(
+                row => row.Item == value);
+            OnPropertyChanged(nameof(SelectedItemRow));
             OnPropertyChanged(); OnPropertyChanged(nameof(IsNew)); OnPropertyChanged(nameof(IsEditing)); OnPropertyChanged(nameof(FormTitle));
             Description = value?.Description ?? "";
             PriceText = value?.Price.ToString("0.00", PriceCulture) ?? "";
@@ -134,7 +153,7 @@ public class ItemViewModel : ViewModelBase
     {
         VisibleItems.Clear();
         var trimmedText = SearchText.Trim();
-        foreach (var item in UnsoldItems)
+        foreach (var item in _itemRows)
         {
             if (string.IsNullOrEmpty(trimmedText) ||
                 item.Description.Contains(trimmedText, StringComparison.OrdinalIgnoreCase) ||
@@ -150,6 +169,26 @@ public class ItemViewModel : ViewModelBase
     {
         var rentals = _rentals.GetAll().ToList();
         var items = _items.GetUnsold().ToList();
+        List<ItemRowViewModel> itemRows = new();
+
+        foreach (var item in items)
+        {
+            Rental? rental = rentals.FirstOrDefault(
+                rental => rental.RentalId == item.RentalId);
+            if (rental is null)
+            {
+                throw new InvalidOperationException(
+                    $"Lejemålet til vare {item.ItemId} blev ikke fundet.");
+            }
+
+            itemRows.Add(new ItemRowViewModel(item, rental));
+        }
+
+        _itemRows.Clear();
+        foreach (var itemRow in itemRows)
+        {
+            _itemRows.Add(itemRow);
+        }
 
         SelectedItem = null;
         RentalOptions.Clear();
@@ -204,7 +243,6 @@ public class ItemViewModel : ViewModelBase
         try
         {
             Reload();
-            SelectedItem = UnsoldItems.FirstOrDefault(i => i.ItemId == id);
             ConfirmationMessage = $"Vare er gemt.";
         }
         catch (DbException)
