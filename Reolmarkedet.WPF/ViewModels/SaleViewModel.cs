@@ -28,8 +28,12 @@ namespace Reolmarkedet.WPF.ViewModels
         private Item? _selectedItem;
         private string _saleConfirmationMessage = string.Empty;
         private string _saleMessage = string.Empty;
+        private string _saleSearchText = string.Empty;
+        private DateTime? _saleFromDate;
+        private DateTime? _saleToDate;
 
         public ObservableCollection<SaleRowViewModel> Sales { get; } = new();
+        public ObservableCollection<SaleRowViewModel> VisibleSales { get; } = new();
         public ObservableCollection<RentalRowViewModel> RentalOptions { get; } = new();
         public ObservableCollection<Item> ItemOptions { get; } = new();
         public ObservableCollection<BasketItemViewModel> BasketItems { get; } = new();
@@ -60,6 +64,21 @@ namespace Reolmarkedet.WPF.ViewModels
                     FindItemCommand.RaiseCanExecuteChanged();
                     SaleMessage = string.Empty;
                     SaleConfirmationMessage = string.Empty;
+                }
+            }
+        }
+
+        public string SaleSearchText
+        {
+            get => _saleSearchText;
+            set
+            {
+                if (_saleSearchText != value)
+                {
+                    _saleSearchText = value;
+                    OnPropertyChanged();
+                    ApplySaleFilter();
+                    ClearSaleFiltersCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -207,10 +226,41 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public DateTime? SaleFromDate
+        {
+            get => _saleFromDate;
+            set
+            {
+                if (_saleFromDate != value)
+                {
+                    _saleFromDate = value;
+                    OnPropertyChanged();
+                    ApplySaleFilter();
+                    ClearSaleFiltersCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public DateTime? SaleToDate
+        {
+            get => _saleToDate;
+            set
+            {
+                if (_saleToDate != value)
+                {
+                    _saleToDate = value;
+                    OnPropertyChanged();
+                    ApplySaleFilter();
+                    ClearSaleFiltersCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         public RelayCommand FindItemCommand { get; }
         public RelayCommand RegisterSaleCommand { get; }
         public RelayCommand AddToBasketCommand { get; }
         public RelayCommand RemoveFromBasketCommand { get; }
+        public RelayCommand ClearSaleFiltersCommand { get; }
 
 
         public SaleViewModel(
@@ -228,7 +278,7 @@ namespace Reolmarkedet.WPF.ViewModels
             RegisterSaleCommand = new RelayCommand(RegisterSale, CanRegisterSale);
             AddToBasketCommand = new RelayCommand(AddToBasket, CanAddToBasket);
             RemoveFromBasketCommand = new RelayCommand(RemoveFromBasket, CanRemoveFromBasket);
-
+            ClearSaleFiltersCommand = new RelayCommand(ClearSaleFilters, CanClearSaleFilters);
             // This tells WPF to recalculate the BasketTotal property whenever an item is added or removed from the basket.
             BasketItems.CollectionChanged += (_, _) =>
             {
@@ -236,6 +286,22 @@ namespace Reolmarkedet.WPF.ViewModels
                 AddToBasketCommand.RaiseCanExecuteChanged();
                 RegisterSaleCommand.RaiseCanExecuteChanged();
             };
+
+            Sales.CollectionChanged += (_, _) => ApplySaleFilter();
+        }
+
+        private bool CanClearSaleFilters(object? parameter)
+        {
+            return !string.IsNullOrEmpty(SaleSearchText) ||
+                   SaleFromDate.HasValue ||
+                   SaleToDate.HasValue;
+        }
+
+        private void ClearSaleFilters(object? parameter)
+        {
+            SaleSearchText = string.Empty;
+            SaleFromDate = null;
+            SaleToDate = null;
         }
 
         private bool CanRemoveFromBasket(object? parameter)
@@ -350,7 +416,7 @@ namespace Reolmarkedet.WPF.ViewModels
                         row.SalePrice,
                         saleDate,
                         row.Notes);
-                    Sales.Add(new SaleRowViewModel(sale, row.Item, row.Rental));
+                    Sales.Insert(0, new SaleRowViewModel(sale, row.Item, row.Rental));
                     RemoveSoldItemFromOptions(row.Item);
                     BasketItems.Remove(row);
                 }
@@ -426,9 +492,12 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void LoadSales()
         {
-            List<Sale> sales = new List<Sale>(_saleRepository.GetAll());
-            List<Item> items = new List<Item>(_itemRepository.GetAll());
-            List<Rental> rentals = new List<Rental>(_rentalRepository.GetAll());
+            List<Sale> sales = _saleRepository.GetAll()
+                .OrderByDescending(sale => sale.SaleDate)
+                .ThenByDescending(sale => sale.SaleId)
+                .ToList();
+            List<Item> items = _itemRepository.GetAll().ToList();
+            List<Rental> rentals = _rentalRepository.GetAll().ToList();
             List<SaleRowViewModel> rows = new();
 
             foreach (Sale sale in sales)
@@ -535,6 +604,35 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             FilterItemsForRental();
+        }
+
+        private void ApplySaleFilter()
+        {
+            string searchText = SaleSearchText.Trim();
+            VisibleSales.Clear();
+            foreach (var row in Sales)
+            {
+                bool matchesSearch =
+                    (string.IsNullOrWhiteSpace(searchText) ||
+                     row.ItemDescription.Contains(
+                         searchText, StringComparison.OrdinalIgnoreCase) ||
+                     row.TenantName.Contains(
+                         searchText, StringComparison.OrdinalIgnoreCase) ||
+                     row.ShelfNumber.ToString() == searchText);
+
+                bool matchesFromDate =
+                    !SaleFromDate.HasValue ||
+                    row.SaleDate >= DateOnly.FromDateTime(SaleFromDate.Value);
+
+                bool matchesToDate =
+                    !SaleToDate.HasValue ||
+                    row.SaleDate <= DateOnly.FromDateTime(SaleToDate.Value);
+
+                if (matchesSearch && matchesFromDate && matchesToDate)
+                {
+                    VisibleSales.Add(row);
+                }
+            }
         }
 
         public void Refresh()
