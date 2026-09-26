@@ -52,31 +52,72 @@
                     VerticalAlignment="Top">
                 <StackPanel>
                     <StackPanel>
-                        <TextBlock Text="Indtast varenummer eller stregkode"/>
+                        <TextBlock Text="Vælg reol og reollejer"/>
 
-                        <Grid Margin="0,4,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding RentalOptions}"
+                                  SelectedItem="{Binding SelectedRentalOption, Mode=TwoWay}"
+                                  Style="{StaticResource InputComboBoxStyle}"
+                                  Margin="0,4,0,12">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding ShelfNumber, Mode=OneWay, StringFormat='Reol {0}'}"/>
+                                        <Run Text=" — "/>
+                                        <Run Text="{Binding TenantName, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
-                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource InputTextBoxStyle}">
-                                <TextBox.InputBindings>
-                                    <KeyBinding Key="Enter" Command="{Binding FindItemCommand}"/>
-                                </TextBox.InputBindings>
-                            </TextBox>
+                        <TextBlock Text="Vælg usolgt vare"/>
 
-                            <Button Grid.Column="1"
-                                    Content="Find vare"
-                                    Command="{Binding FindItemCommand}"
-                                    Style="{StaticResource ActionButtonStyle}"
-                                    Margin="12,0,0,0"/>
-                        </Grid>
+                        <ComboBox ItemsSource="{Binding ItemOptions}"
+                                  SelectedItem="{Binding SelectedItemOption, Mode=TwoWay}"
+                                  Style="{StaticResource InputComboBoxStyle}"
+                                  Margin="0,4,0,20">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Description, Mode=OneWay}"/>
+                                        <Run Text=" — "/>
+                                        <Run Text="{Binding Price, Mode=OneWay, StringFormat='{}{0:0.00} kr.'}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Expander Header="Find via varenummer eller stregkode"
+                                  Foreground="#EEEEEE"
+                                  IsExpanded="False">
+                            <StackPanel Margin="0,8,0,0">
+
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource InputTextBoxStyle}">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Command="{Binding FindItemCommand}"/>
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+
+                                    <Button Grid.Column="1"
+                                            Content="Find vare"
+                                            Command="{Binding FindItemCommand}"
+                                            Style="{StaticResource ActionButtonStyle}"
+                                            Margin="12,0,0,0"/>
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+
 
                         <TextBlock Text="{Binding SaleMessage}"
                                    Foreground="#F28B82"
                                    TextWrapping="Wrap"
+                                   Style="{StaticResource MessageTextStyle}"
                                    Margin="0,8,0,0"/>
 
                         <TextBlock Text="{Binding SaleConfirmationMessage}"
@@ -98,19 +139,8 @@
                         </Border.Style>
 
                         <StackPanel>
-                            <TextBlock Text="Valgt vare"
+                            <TextBlock Text="Salgsoplysninger"
                                        FontSize="20"
-                                       Margin="0,0,0,16"/>
-
-                            <TextBlock Text="{Binding SelectedItem.Description}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,16"/>
-
-                            <TextBlock Text="{Binding ShelfNumber, StringFormat='Reol: {0}'}"
-                                       Margin="0,0,0,4"/>
-
-                            <TextBlock Text="{Binding TenantName, StringFormat='Reollejer: {0}'}"
-                                       TextWrapping="Wrap"
                                        Margin="0,0,0,16"/>
 
                             <TextBlock Text="Salgspris (kr.)"/>

@@ -33,6 +33,11 @@ namespace Reolmarkedet.Core.Services
                 throw new InvalidOperationException(
                     $"Varenummer eller stregkode '{trimmedSearch}' blev ikke fundet.");
             }
+            if (itemRepository.IsSold(item.ItemId))
+            {
+                throw new InvalidOperationException(
+                    "Varen er allerede solgt.");
+            }
 
             return item;
         }
