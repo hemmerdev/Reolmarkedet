@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Globalization;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -141,6 +142,11 @@ namespace Reolmarkedet.WPF.ViewModels
                         {
                             SaleMessage = ex.Message;
                         }
+                        catch (DbException)
+                        {
+                            SaleMessage =
+                                "Varens lejemål kunne ikke hentes fra databasen. Prøv at vælge varen igen.";
+                        }
                     }
                 }
             }
@@ -244,6 +250,11 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 SaleMessage = ex.Message;
             }
+            catch (DbException)
+            {
+                SaleMessage = "Salget kunne ikke registreres i databasen. " +
+                    "Kontrollér salgsoversigten, før du prøver igen.";
+            }
         }
 
         private bool CanFindItem(object? parameter)
@@ -277,6 +288,10 @@ namespace Reolmarkedet.WPF.ViewModels
             catch (InvalidOperationException ex)
             {
                 SaleMessage = ex.Message;
+            }
+            catch (DbException)
+            {
+                SaleMessage = "Varen kunne ikke hentes fra databasen. Prøv igen.";
             }
         }
 
@@ -410,6 +425,14 @@ namespace Reolmarkedet.WPF.ViewModels
             catch (InvalidOperationException ex)
             {
                 SaleMessage = ex.Message;
+            }
+            catch (DbException)
+            {
+                RentalOptions.Clear();
+                ItemOptions.Clear();
+                SaleMessage =
+                        "Salgsoversigten og varevalget kunne ikke opdateres fra databasen. " +
+                        "Åbn salgsvisningen igen for at prøve igen.";
             }
         }
     }

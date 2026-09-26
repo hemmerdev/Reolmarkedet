@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Globalization;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -444,6 +445,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            DateTime? originalEndDate = rental.EndDate;
+            DateTime? originalNoticeDate = rental.TerminationNoticeDate;
+
             try
             {
                 _rentalService.UndoTermination(
@@ -456,6 +460,14 @@ namespace Reolmarkedet.WPF.ViewModels
             catch (InvalidOperationException ex)
             {
                 TerminationMessage = ex.Message;
+                return;
+            }
+            catch (DbException)
+            {
+                // Revert the changes if the update fails
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
+                TerminationMessage = "Fortrydelsen af opsigelsen kunne ikke gemmes i databasen. Prøv igen.";
                 return;
             }
 
@@ -498,6 +510,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            DateTime? originalEndDate = rental.EndDate;
+
             try
             {
                 _rentalService.ChangeTerminationEndDate(
@@ -507,8 +521,6 @@ namespace Reolmarkedet.WPF.ViewModels
                     Rentals);
                 _rentalRepository.Update(rental);
 
-                Refresh();
-                TerminationConfirmationMessage = "Lejemålet blev ændret.";
 
             }
             catch (ArgumentException ex)
@@ -520,8 +532,17 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 TerminationMessage = ex.Message;
                 return;
-
             }
+            catch (DbException)
+            {
+                // Revert the changes if the update fails
+                rental.EndDate = originalEndDate;
+                TerminationMessage = "Den ændrede slutdato kunne ikke gemmes i databasen. Prøv igen";
+                return;
+            }
+
+            Refresh();
+            TerminationConfirmationMessage = "Lejemålet blev ændret.";
         }
 
         private bool CanTerminateRental(object? parameter)
@@ -552,6 +573,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            DateTime? originalEndDate = rental.EndDate;
+            DateTime? originalNoticeDate = rental.TerminationNoticeDate;
+
             try
             {
                 _rentalService.TerminateRental(
@@ -569,6 +593,14 @@ namespace Reolmarkedet.WPF.ViewModels
             catch (InvalidOperationException ex)
             {
                 TerminationMessage = ex.Message;
+                return;
+            }
+            catch (DbException)
+            {
+                // Revert the changes if the update fails
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
+                TerminationMessage = "Opsigelsen kunne ikke gemmes i databasen. Prøv igen.";
                 return;
             }
 
@@ -668,8 +700,20 @@ namespace Reolmarkedet.WPF.ViewModels
                     EndDate = endDate,
                     MonthlyRent = rentPerShelf
                 };
-                _rentalRepository.Add(rental);
+
+                try
+                {
+                    _rentalRepository.Add(rental);
+                }
+                catch (DbException)
+                {
+                    RentalMessage =
+                        $"Lejemålet for reol {shelf.ShelfNumber} kunne ikke oprettes. " +
+                        $"Eventuelle tidligere oprettede lejemål er gemt. Kontrollér oversigten før du prøver igen.";
+                    return;
+                }
                 Rentals.Add(rental);
+                SelectedShelves.Remove(shelf);
             }
 
             // Reset the draft for the next creation.

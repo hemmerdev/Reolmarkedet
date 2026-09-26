@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Net.Mail;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -234,6 +235,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void ReactivateTenant(object? obj)
         {
+            ConfirmationMessage = string.Empty;
             if (SelectedTenant is null)
             {
                 return;
@@ -247,7 +249,17 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             tenant.IsActive = true;
-            _tenantRepository.Update(tenant);
+
+            try
+            {
+                _tenantRepository.Update(tenant);
+            }
+            catch (DbException)
+            {
+                tenant.IsActive = false; // Revert the change if the update fails
+                ValidationMessage = "Reollejeren kunne ikke genaktiveres i databasen. Prøv igen.";
+                return;
+            }
 
             SelectedTenant = null;
             ValidationMessage = string.Empty;
@@ -263,6 +275,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void DeactivateTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
             if (SelectedTenant is null)
             {
                 return;
@@ -287,7 +300,17 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             tenant.IsActive = false;
-            _tenantRepository.Update(tenant);
+
+            try
+            {
+                _tenantRepository.Update(tenant);
+            }
+            catch (DbException)
+            {
+                tenant.IsActive = true;
+                ValidationMessage = "Reollejeren kunne ikke deaktiveres i databasen. Prøv igen.";
+                return;
+            }
 
             SelectedTenant = null;
             ValidationMessage = string.Empty;
@@ -323,9 +346,17 @@ namespace Reolmarkedet.WPF.ViewModels
                 PhoneNumber = PhoneNumber,
             };
 
-            _tenantRepository.Add(tenant);
-            Tenants.Add(tenant);
+            try
+            {
+                _tenantRepository.Add(tenant);
+            }
+            catch (DbException)
+            {
+                ValidationMessage = "Reollejeren kunne ikke oprettes i databasen. Prøv igen.";
+                return;
+            }
 
+            Tenants.Add(tenant);
             ApplySearch();
 
             SelectedTenant = null;
@@ -340,6 +371,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void UpdateTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
             Tenant? tenant = SelectedTenant;
             if (tenant is null)
             {
@@ -359,11 +391,26 @@ namespace Reolmarkedet.WPF.ViewModels
 
             ValidationMessage = string.Empty;
 
+            string originalName = tenant.Name;
+            string? originalPhoneNumber = tenant.PhoneNumber;
+            string? originalEmail = tenant.Email;
+
             tenant.Name = Name;
             tenant.PhoneNumber = string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber;
             tenant.Email = string.IsNullOrWhiteSpace(Email) ? null : Email;
 
-            _tenantRepository.Update(tenant);
+            try
+            {
+                _tenantRepository.Update(tenant);
+            }
+            catch (DbException)
+            {
+                tenant.Name = originalName;
+                tenant.PhoneNumber = originalPhoneNumber;
+                tenant.Email = originalEmail;
+                ValidationMessage = "Ændringerne kunne ikke gemmes i databasen. Prøv igen.";
+                return;
+            }
 
             ApplySearch();
             SelectedTenant = null;
@@ -390,6 +437,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void DeleteTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
             Tenant? tenant = SelectedTenant;
             if (tenant is null)
             {
@@ -402,7 +450,16 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
-            _tenantRepository.Delete(tenant.TenantId);
+            try
+            {
+                _tenantRepository.Delete(tenant.TenantId);
+            }
+            catch (DbException)
+            {
+                ValidationMessage = "Reollejeren kunne ikke slettes fra databasen. Prøv igen.";
+                return;
+            }
+
             Tenants.Remove(tenant);
 
             ApplySearch();
