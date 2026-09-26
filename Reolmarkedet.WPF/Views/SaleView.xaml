@@ -13,103 +13,169 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="24"/>
+            <ColumnDefinition Width="320"/>
+        </Grid.ColumnDefinitions>
+
         <TextBlock Grid.Row="0"
+                   Grid.ColumnSpan="3"
                    Text="Salg"
-
                    FontSize="28"
-                   FontWeight="SemiBold"/>
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,24"/>
 
-        <StackPanel Grid.Row="1"
-                    Width="480"
-                    HorizontalAlignment="Left"
-                    Margin="0,0,0,24">
+        <TextBlock Grid.Row="1"
+                   Grid.Column="0"
+                   Text="Registrerede salg"
+                   FontSize="20"
+                   VerticalAlignment="Top"
+                   Margin="0,0,0,16"/>
 
-            <TextBlock Text="Søg med varenummer eller stregkode"/>
+        <TextBlock Grid.Row="1"
+                   Grid.Column="2"
+                   Text="Registrer nyt salg"
+                   FontSize="20"
+                   Margin="0,0,0,16"/>
 
-            <Grid Margin="0,4,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <ScrollViewer Grid.Row="2"
+                      Grid.Column="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Focusable="False">
+            <Border Background="#292929"
+                    BorderBrush="#595959"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="18"
+                    VerticalAlignment="Top">
+                <StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Indtast varenummer eller stregkode"/>
 
-                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource InputTextBoxStyle}">
-                    <TextBox.InputBindings>
-                        <KeyBinding Key="Enter" Command="{Binding FindItemCommand}"/>
-                    </TextBox.InputBindings>
-                </TextBox>
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="1"
-                        Content="Find vare"
-                        Command="{Binding FindItemCommand}"
-                        Style="{StaticResource ActionButtonStyle}"
-                        Margin="12,0,0,0"/>
-            </Grid>
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource InputTextBoxStyle}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding FindItemCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
 
-            <TextBlock Text="{Binding SaleMessage}"
-                       Foreground="#F28B82"
-                       TextWrapping="Wrap"
-                       Margin="0,8,0,0"/>
+                            <Button Grid.Column="1"
+                                    Content="Find vare"
+                                    Command="{Binding FindItemCommand}"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Margin="12,0,0,0"/>
+                        </Grid>
 
-            <TextBlock Text="{Binding SaleConfirmationMessage}"
-                       Style="{StaticResource MessageTextStyle}"
-                       Foreground="#B7DDBE"
-                       TextWrapping="Wrap"
-                       Margin="0,8,0,0"/>
-        </StackPanel>
+                        <TextBlock Text="{Binding SaleMessage}"
+                                   Foreground="#F28B82"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0"/>
 
-        <Border Grid.Row="2"
-                Width="480"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="#292929"
-                BorderBrush="#595959"
-                BorderThickness="1"
-                CornerRadius="3"
-                Padding="18">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
+                        <TextBlock Text="{Binding SaleConfirmationMessage}"
+                                   Style="{StaticResource MessageTextStyle}"
+                                   Foreground="#B7DDBE"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
 
-            <StackPanel>
-                <TextBlock Text="Registrer salg"
-                           FontSize="20"
-                           Margin="0,0,0,16"/>
+                    <Border Margin="0,24,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
 
-                <TextBlock Text="{Binding SelectedItem.Description}"
-                           TextWrapping="Wrap"
-                           Margin="0,0,0,16"/>
+                        <StackPanel>
+                            <TextBlock Text="Valgt vare"
+                                       FontSize="20"
+                                       Margin="0,0,0,16"/>
 
-                <TextBlock Text="{Binding ShelfNumber, StringFormat='Reol: {0}'}"
-                           Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SelectedItem.Description}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,16"/>
 
-                <TextBlock Text="{Binding TenantName, StringFormat='Reollejer: {0}'}"
-                           TextWrapping="Wrap"
-                           Margin="0,0,0,16"/>
+                            <TextBlock Text="{Binding ShelfNumber, StringFormat='Reol: {0}'}"
+                                       Margin="0,0,0,4"/>
 
-                <TextBlock Text="Salgspris (kr.)"/>
-                <TextBox Text="{Binding SalePriceText,
-                         UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource InputTextBoxStyle}"
-                         Margin="0,4,0,12"/>
+                            <TextBlock Text="{Binding TenantName, StringFormat='Reollejer: {0}'}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,16"/>
 
-                <TextBlock Text="Bemærkninger (valgfrit)"/>
-                <TextBox Text="{Binding Notes,
-                         UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource InputTextBoxStyle}"
-                         Margin="0,4,0,16"/>
+                            <TextBlock Text="Salgspris (kr.)"/>
+                            <TextBox Text="{Binding SalePriceText,
+                                     UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource InputTextBoxStyle}"
+                                     Margin="0,4,0,12"/>
 
-                <Button Content="Registrer salg"
-                        Command="{Binding RegisterSaleCommand}"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        HorizontalAlignment="Left"/>
-            </StackPanel>
-        </Border>
+                            <TextBlock Text="Bemærkninger (valgfrit)"/>
+                            <TextBox Text="{Binding Notes,
+                                     UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource InputTextBoxStyle}"
+                                     Margin="0,4,0,16"/>
+
+                            <Button Content="Registrer salg"
+                                    Command="{Binding RegisterSaleCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <DataGrid Grid.Row="2"
+                  Grid.Column="0"
+                  ItemsSource="{Binding Sales}"
+                  Style="{StaticResource ManagementDataGridStyle}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Dato"
+                                    Width="90"
+                                    Binding="{Binding SaleDate, StringFormat=dd-MM-yyyy}"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Vare"
+                                    Width="*"
+                                    Binding="{Binding ItemDescription}"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Reol"
+                                    Width="50"
+                                    Binding="{Binding ShelfNumber}"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Reollejer"
+                                    Width="*"
+                                    Binding="{Binding TenantName}"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Salgspris"
+                                    Width="100"
+                                    Binding="{Binding SalePrice, StringFormat='{}{0:0.00} kr.'}"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTextColumn Header="Bemærkninger"
+                                    Width="*"
+                                    Binding="{Binding Notes}"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

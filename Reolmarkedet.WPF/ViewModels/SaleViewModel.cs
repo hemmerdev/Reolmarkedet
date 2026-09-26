@@ -2,6 +2,7 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using System.Collections.ObjectModel;
 
 namespace Reolmarkedet.WPF.ViewModels
 {
@@ -9,6 +10,8 @@ namespace Reolmarkedet.WPF.ViewModels
     {
         private readonly SalesService _salesService;
         private readonly IRepository<Rental> _rentalRepository;
+        private readonly IItemRepository _itemRepository;
+        private readonly IRepository<Sale> _saleRepository;
         private Rental? _selectedRental;
         private string _searchText = string.Empty;
         private string _salePriceText = string.Empty;
@@ -16,6 +19,8 @@ namespace Reolmarkedet.WPF.ViewModels
         private Item? _selectedItem;
         private string _saleConfirmationMessage = string.Empty;
         private string _saleMessage = string.Empty;
+
+        public ObservableCollection<SaleRowViewModel> Sales { get; } = new();
 
         public string SearchText
         {
@@ -122,8 +127,11 @@ namespace Reolmarkedet.WPF.ViewModels
             IRepository<Sale> saleRepository,
             IRepository<Rental> rentalRepository)
         {
-            _salesService = new SalesService(itemRepository, saleRepository);
+            _itemRepository = itemRepository;
+            _saleRepository = saleRepository;
             _rentalRepository = rentalRepository;
+
+            _salesService = new SalesService(_itemRepository, _saleRepository);
 
             FindItemCommand = new RelayCommand(FindItem, CanFindItem);
             RegisterSaleCommand = new RelayCommand(RegisterSale, CanRegisterSale);
@@ -131,7 +139,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private bool CanRegisterSale(object? parameter)
         {
-            return SelectedItem is not null;
+            return SelectedItem is not null &&
+                   _selectedRental is not null;
         }
 
         private void RegisterSale(object? parameter)
@@ -139,7 +148,8 @@ namespace Reolmarkedet.WPF.ViewModels
             SaleMessage = string.Empty;
             SaleConfirmationMessage = string.Empty;
 
-            if (SelectedItem is null)
+            if (SelectedItem is null ||
+                _selectedRental is null)
             {
                 return;
             }
@@ -152,11 +162,12 @@ namespace Reolmarkedet.WPF.ViewModels
 
             try
             {
-                _salesService.RegisterSale(
+                Sale sale = _salesService.RegisterSale(
                     SelectedItem.ItemId,
                     salePrice,
                     DateOnly.FromDateTime(DateTime.Today),
                     Notes);
+                Sales.Add(new SaleRowViewModel(sale, SelectedItem, _selectedRental));
 
                 SelectedItem = null;
                 SearchText = string.Empty;
@@ -201,6 +212,55 @@ namespace Reolmarkedet.WPF.ViewModels
             catch (ArgumentException ex)
             {
                 SaleMessage = ex.Message;
+            }
+            catch (InvalidOperationException ex)
+            {
+                SaleMessage = ex.Message;
+            }
+        }
+
+        private void LoadSales()
+        {
+            List<Sale> sales = new List<Sale>(_saleRepository.GetAll());
+            List<Item> items = new List<Item>(_itemRepository.GetAll());
+            List<Rental> rentals = new List<Rental>(_rentalRepository.GetAll());
+            List<SaleRowViewModel> rows = new();
+
+            foreach (Sale sale in sales)
+            {
+                Item? item = items.FirstOrDefault(i => i.ItemId == sale.ItemId);
+                if (item is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Varen til salg {sale.SaleId} blev ikke fundet.");
+                }
+
+                Rental? rental = rentals.FirstOrDefault(r => r.RentalId == item.RentalId);
+                if (rental is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Lejemålet til salg {sale.SaleId} blev ikke fundet.");
+                }
+
+                rows.Add(new SaleRowViewModel(sale, item, rental));
+            }
+
+            Sales.Clear();
+            foreach (SaleRowViewModel row in rows)
+            {
+                Sales.Add(row);
+            }
+        }
+
+        public void Refresh()
+        {
+            SelectedItem = null;
+            SearchText = string.Empty;
+            SaleMessage = string.Empty;
+            SaleConfirmationMessage = string.Empty;
+            try
+            {
+                LoadSales();
             }
             catch (InvalidOperationException ex)
             {
