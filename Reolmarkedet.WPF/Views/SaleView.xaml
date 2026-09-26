@@ -33,17 +33,14 @@
                    VerticalAlignment="Top"
                    Margin="0,0,0,16"/>
 
-        <TextBlock Grid.Row="1"
-                   Grid.Column="2"
-                   Text="Registrer nyt salg"
-                   FontSize="20"
-                   Margin="0,0,0,16"/>
 
         <ScrollViewer Grid.Row="2"
                       Grid.Column="2"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Focusable="False">
+
+
             <Border Background="#292929"
                     BorderBrush="#595959"
                     BorderThickness="1"
@@ -51,44 +48,14 @@
                     Padding="18"
                     VerticalAlignment="Top">
                 <StackPanel>
+                    <TextBlock Text="Registrer køb"
+                               FontSize="20"
+                               Margin="0,0,0,16"/>
                     <StackPanel>
-                        <TextBlock Text="Vælg reol og reollejer"/>
-
-                        <ComboBox ItemsSource="{Binding RentalOptions}"
-                                  SelectedItem="{Binding SelectedRentalOption, Mode=TwoWay}"
-                                  Style="{StaticResource InputComboBoxStyle}"
-                                  Margin="0,4,0,12">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock>
-                                        <Run Text="{Binding ShelfNumber, Mode=OneWay, StringFormat='Reol {0}'}"/>
-                                        <Run Text=" — "/>
-                                        <Run Text="{Binding TenantName, Mode=OneWay}"/>
-                                    </TextBlock>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-
-                        <TextBlock Text="Vælg usolgt vare"/>
-
-                        <ComboBox ItemsSource="{Binding ItemOptions}"
-                                  SelectedItem="{Binding SelectedItemOption, Mode=TwoWay}"
-                                  Style="{StaticResource InputComboBoxStyle}"
-                                  Margin="0,4,0,20">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock>
-                                        <Run Text="{Binding Description, Mode=OneWay}"/>
-                                        <Run Text=" — "/>
-                                        <Run Text="{Binding Price, Mode=OneWay, StringFormat='{}{0:0.00} kr.'}"/>
-                                    </TextBlock>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-
                         <Expander Header="Find via varenummer eller stregkode"
                                   Foreground="#EEEEEE"
-                                  IsExpanded="False">
+                                  IsExpanded="False"
+                                  Margin="0,0,0,16">
                             <StackPanel Margin="0,8,0,0">
 
                                 <Grid Margin="0,4,0,0">
@@ -112,24 +79,61 @@
                                 </Grid>
                             </StackPanel>
                         </Expander>
+                        <TextBlock Text="Vælg reol og reollejer"/>
+
+                        <ComboBox ItemsSource="{Binding RentalOptions}"
+                                  SelectedItem="{Binding SelectedRentalOption, Mode=TwoWay}"
+                                  Style="{StaticResource InputComboBoxStyle}"
+                                  Margin="0,4,0,12">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding ShelfNumber, Mode=OneWay, StringFormat='Reol {0}'}"/>
+                                        <Run Text=" — "/>
+                                        <Run Text="{Binding TenantName, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Vælg usolgt vare"/>
+
+                        <ComboBox ItemsSource="{Binding ItemOptions}"
+                                  SelectedItem="{Binding SelectedItemOption, Mode=TwoWay}"
+                                  Margin="0,4,0,0">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox"
+                                       BasedOn="{StaticResource InputComboBoxStyle}">
+                                    <Style.Triggers>
+                                        <Trigger Property="HasItems" Value="False">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Description, Mode=OneWay}"/>
+                                        <Run Text=" — "/>
+                                        <Run Text="{Binding Price, Mode=OneWay, StringFormat='{}{0:0.00} kr.', ConverterCulture='da-DK'}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
 
-                    <Border Margin="0,24,0,0">
+                    <Border Margin="0,16,0,0">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Setter Property="IsEnabled" Value="False"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-
                         <StackPanel>
-                            <TextBlock Text="Salgsoplysninger"
-                                       FontSize="20"
-                                       Margin="0,0,0,16"/>
-
                             <TextBlock Text="Salgspris (kr.)"/>
                             <TextBox Text="{Binding SalePriceText,
                                      UpdateSourceTrigger=PropertyChanged}"
@@ -142,12 +146,89 @@
                                      Style="{StaticResource InputTextBoxStyle}"
                                      Margin="0,4,0,16"/>
 
-                            <Button Content="Registrer salg"
-                                    Command="{Binding RegisterSaleCommand}"
-                                    Style="{StaticResource PrimaryButtonStyle}"
-                                    HorizontalAlignment="Left"/>
+                            <Button Content="Tilføj til kurv"
+                                    Command="{Binding AddToBasketCommand}"
+                                    Style="{StaticResource ActionButtonStyle}"/>
                         </StackPanel>
                     </Border>
+
+                    <StackPanel Margin="0,24,0,0">
+
+                        <TextBlock Text="Varer i kurven:"
+                                   Margin="0,0,0,4"/>
+
+                        <TextBlock Text="Ingen varer i kurven. Vælg en vare og klik Tilføj til kurv."
+                                   Foreground="#AAAAAA"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding BasketItems.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <ItemsControl ItemsSource="{Binding BasketItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#333333"
+                                            BorderBrush="#404040"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            Padding="8"
+                                            Margin="0,0,0,6">
+
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right"
+                                                    Content="Fjern"
+                                                    Command="{Binding DataContext.RemoveFromBasketCommand,
+                                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource ActionButtonStyle}"
+                                                    Margin="12,0,0,0"/>
+
+                                            <TextBlock DockPanel.Dock="Right"
+                                                       Text="{Binding SalePrice,
+                                                       ConverterCulture=da-DK,
+                                                       StringFormat='{}{0:N2} kr.'}"
+                                                       Margin="12,0,0,0"
+                                                       VerticalAlignment="Center"/>
+
+                                            <TextBlock Text="{Binding Description}"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border BorderBrush="#404040"
+                                BorderThickness="0,1,0,0"
+                                Padding="0,12,0,0"
+                                Margin="0,12,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Samlet pris"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBlock Text="{Binding BasketTotal,
+                                           ConverterCulture=da-DK,
+                                           StringFormat='{}{0:N2} kr.'}"
+                                           Margin="0,4,0,0"
+                                           FontSize="24"
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="Registrer køb"
+                                Command="{Binding RegisterSaleCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"/>
+                    </StackPanel>
 
                     <TextBlock Text="{Binding SaleMessage}"
                                Foreground="#F28B82"
@@ -198,7 +279,7 @@
 
                 <DataGridTextColumn Header="Salgspris"
                                     Width="100"
-                                    Binding="{Binding SalePrice, StringFormat='{}{0:0.00} kr.'}"
+                                    Binding="{Binding SalePrice, StringFormat='{}{0:0.00} kr.', ConverterCulture='da-DK'}"
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
                 <DataGridTextColumn Header="Bemærkninger"

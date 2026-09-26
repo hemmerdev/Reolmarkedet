@@ -150,6 +150,7 @@ public class SaleViewModelTests
         saleViewModel.SelectedItemOption = saleViewModel.ItemOptions.Single();
 
         // Act
+        saleViewModel.AddToBasketCommand.Execute(null);
         saleViewModel.RegisterSaleCommand.Execute(null);
 
         // Assert

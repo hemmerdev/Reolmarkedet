@@ -32,6 +32,20 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<SaleRowViewModel> Sales { get; } = new();
         public ObservableCollection<RentalRowViewModel> RentalOptions { get; } = new();
         public ObservableCollection<Item> ItemOptions { get; } = new();
+        public ObservableCollection<BasketItemViewModel> BasketItems { get; } = new();
+
+        public decimal BasketTotal
+        {
+            get
+            {
+                decimal total = 0;
+                foreach (var item in BasketItems)
+                {
+                    total += item.SalePrice;
+                }
+                return total;
+            }
+        }
 
         public string SearchText
         {
@@ -103,6 +117,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     SaleConfirmationMessage = string.Empty;
 
                     RegisterSaleCommand.RaiseCanExecuteChanged();
+                    AddToBasketCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -194,6 +209,9 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public RelayCommand FindItemCommand { get; }
         public RelayCommand RegisterSaleCommand { get; }
+        public RelayCommand AddToBasketCommand { get; }
+        public RelayCommand RemoveFromBasketCommand { get; }
+
 
         public SaleViewModel(
             IItemRepository itemRepository,
@@ -208,15 +226,54 @@ namespace Reolmarkedet.WPF.ViewModels
 
             FindItemCommand = new RelayCommand(FindItem, CanFindItem);
             RegisterSaleCommand = new RelayCommand(RegisterSale, CanRegisterSale);
+            AddToBasketCommand = new RelayCommand(AddToBasket, CanAddToBasket);
+            RemoveFromBasketCommand = new RelayCommand(RemoveFromBasket, CanRemoveFromBasket);
+
+            // This tells WPF to recalculate the BasketTotal property whenever an item is added or removed from the basket.
+            BasketItems.CollectionChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(BasketTotal));
+                AddToBasketCommand.RaiseCanExecuteChanged();
+                RegisterSaleCommand.RaiseCanExecuteChanged();
+            };
         }
 
-        private bool CanRegisterSale(object? parameter)
+        private bool CanRemoveFromBasket(object? parameter)
         {
-            return SelectedItem is not null &&
-                   _selectedRental is not null;
+            // Ensure that the parameter is a BasketItemViewModel and that it exists in the BasketItems collection.
+            return parameter is BasketItemViewModel basketItem &&
+                   BasketItems.Contains(basketItem);
         }
 
-        private void RegisterSale(object? parameter)
+        private void RemoveFromBasket(object? parameter)
+        {
+            if (parameter is BasketItemViewModel basketItem &&
+                BasketItems.Contains(basketItem))
+            {
+                BasketItems.Remove(basketItem);
+                // After removing the item from the basket, check if it should be added back to the ItemOptions list.
+                Item? item = _unsoldItems.FirstOrDefault(
+                    item => item.ItemId == basketItem.ItemId);
+                if (item is not null &&
+                    item.RentalId == SelectedRentalOption?.RentalId &&
+                    !ItemOptions.Any(option => option.ItemId == item.ItemId))
+                {
+                    ItemOptions.Add(item);
+                }
+
+                SaleConfirmationMessage = "Varen er blevet fjernet fra kurven.";
+            }
+        }
+
+        private bool CanAddToBasket(object? parameter)
+        {
+            // Ensure that an item is selected, a rental is selected, and the item is not already in the basket.
+            return SelectedItem is not null &&
+                   _selectedRental is not null &&
+                   !BasketItems.Any(row => row.ItemId == SelectedItem.ItemId);
+        }
+
+        private void AddToBasket(object? parameter)
         {
             SaleMessage = string.Empty;
             SaleConfirmationMessage = string.Empty;
@@ -224,6 +281,11 @@ namespace Reolmarkedet.WPF.ViewModels
             if (SelectedItem is null ||
                 _selectedRental is null)
             {
+                return;
+            }
+            if (BasketItems.Any(row => row.ItemId == SelectedItem.ItemId))
+            {
+                SaleMessage = "Varen er allerede i kurven.";
                 return;
             }
             // Explicit Danish format avoids silently interpreting 12.50 as 1250.
@@ -243,32 +305,85 @@ namespace Reolmarkedet.WPF.ViewModels
 
             try
             {
-                Item soldItem = SelectedItem;
-                Sale sale = _salesService.RegisterSale(
-                    soldItem.ItemId,
-                    salePrice,
-                    DateOnly.FromDateTime(DateTime.Today),
-                    Notes);
-                Sales.Add(new SaleRowViewModel(sale, soldItem, _selectedRental));
-                RemoveSoldItemFromOptions(soldItem);
+                SalesService.ValidateSale(Notes, salePrice);
 
+                BasketItems.Add(new BasketItemViewModel(
+                    SelectedItem, _selectedRental, salePrice, Notes));
+                FilterItemsForRental();
+
+                SelectedItemOption = null;
                 SelectedItem = null;
                 SearchText = string.Empty;
-                SaleConfirmationMessage = "Salget er blevet registreret.";
+                SaleConfirmationMessage = "Varen er blevet tilføjet til kurven.";
             }
             catch (ArgumentException ex)
             {
                 SaleMessage = ex.Message;
             }
-            catch (InvalidOperationException ex)
+        }
+
+        private bool CanRegisterSale(object? parameter)
+        {
+            return BasketItems.Count > 0;
+        }
+
+        private void RegisterSale(object? parameter)
+        {
+            SaleMessage = string.Empty;
+            SaleConfirmationMessage = string.Empty;
+
+            if (BasketItems.Count == 0)
             {
-                SaleMessage = ex.Message;
+                return;
             }
-            catch (DbException)
+
+            List<BasketItemViewModel> basketItems =
+                BasketItems.ToList();
+
+            DateOnly saleDate = DateOnly.FromDateTime(DateTime.Today);
+            foreach (var row in basketItems)
             {
-                SaleMessage = "Salget kunne ikke registreres i databasen. " +
-                    "Kontrollér salgsoversigten, før du prøver igen.";
+                try
+                {
+                    Sale sale = _salesService.RegisterSale(
+                        row.ItemId,
+                        row.SalePrice,
+                        saleDate,
+                        row.Notes);
+                    Sales.Add(new SaleRowViewModel(sale, row.Item, row.Rental));
+                    RemoveSoldItemFromOptions(row.Item);
+                    BasketItems.Remove(row);
+                }
+                catch (ArgumentException ex)
+                {
+                    SaleMessage =
+                       $"Vare {row.ItemId} kunne ikke registreres: {ex.Message} " +
+                       "Tidligere registrerede salg er gemt. " +
+                       "Kontrollér oversigten før du prøver igen.";
+                    return;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    SaleMessage =
+                        $"Vare {row.ItemId} kunne ikke registreres: {ex.Message} " +
+                        "Tidligere registrerede salg er gemt. " +
+                        "Kontrollér oversigten før du prøver igen.";
+                    return;
+                }
+                catch (DbException)
+                {
+                    SaleMessage =
+                        $"Købet kunne ikke færdigregistreres ved vare {row.ItemId}. " +
+                        "Tidligere registrerede salg er gemt. " +
+                        "Kontrollér oversigten før du prøver igen.";
+                    return;
+                }
+
             }
+
+            SelectedItem = null;
+            SearchText = string.Empty;
+            SaleConfirmationMessage = "Købet er blevet registreret.";
         }
 
         private bool CanFindItem(object? parameter)
@@ -374,7 +489,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
             foreach (var item in _unsoldItems)
             {
-                if (item.RentalId == SelectedRentalOption.RentalId)
+                if (item.RentalId == SelectedRentalOption.RentalId &&
+                    !BasketItems.Any(row => row.ItemId == item.ItemId))
                 {
                     ItemOptions.Add(item);
                 }

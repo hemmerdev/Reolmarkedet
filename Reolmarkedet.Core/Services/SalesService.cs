@@ -73,7 +73,7 @@ namespace Reolmarkedet.Core.Services
             return sale;
         }
 
-        private static void ValidateSale(string? notes, decimal salePrice)
+        public static void ValidateSale(string? notes, decimal salePrice)
         {
             if (notes?.Length > 500)
             {
