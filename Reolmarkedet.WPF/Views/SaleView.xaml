@@ -112,19 +112,6 @@
                                 </Grid>
                             </StackPanel>
                         </Expander>
-
-
-                        <TextBlock Text="{Binding SaleMessage}"
-                                   Foreground="#F28B82"
-                                   TextWrapping="Wrap"
-                                   Style="{StaticResource MessageTextStyle}"
-                                   Margin="0,8,0,0"/>
-
-                        <TextBlock Text="{Binding SaleConfirmationMessage}"
-                                   Style="{StaticResource MessageTextStyle}"
-                                   Foreground="#B7DDBE"
-                                   TextWrapping="Wrap"
-                                   Margin="0,8,0,0"/>
                     </StackPanel>
 
                     <Border Margin="0,24,0,0">
@@ -161,6 +148,19 @@
                                     HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Border>
+
+                    <TextBlock Text="{Binding SaleMessage}"
+                               Foreground="#F28B82"
+                               TextWrapping="Wrap"
+                               Style="{StaticResource MessageTextStyle}"
+                               Margin="0,12,0,0"/>
+
+                    <TextBlock Text="{Binding SaleConfirmationMessage}"
+                               Style="{StaticResource MessageTextStyle}"
+                               Foreground="#B7DDBE"
+                               TextWrapping="Wrap"
+                               Margin="0,12,0,0"/>
+
                 </StackPanel>
             </Border>
         </ScrollViewer>

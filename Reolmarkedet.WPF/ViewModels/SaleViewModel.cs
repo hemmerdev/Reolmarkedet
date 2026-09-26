@@ -44,6 +44,8 @@ namespace Reolmarkedet.WPF.ViewModels
                     OnPropertyChanged();
 
                     FindItemCommand.RaiseCanExecuteChanged();
+                    SaleMessage = string.Empty;
+                    SaleConfirmationMessage = string.Empty;
                 }
             }
         }
@@ -57,6 +59,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     _salePriceText = value;
                     OnPropertyChanged();
+                    SaleMessage = string.Empty;
+                    SaleConfirmationMessage = string.Empty;
                 }
             }
         }
@@ -70,6 +74,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     _notes = value;
                     OnPropertyChanged();
+                    SaleMessage = string.Empty;
+                    SaleConfirmationMessage = string.Empty;
                 }
             }
         }
@@ -157,6 +163,10 @@ namespace Reolmarkedet.WPF.ViewModels
             get => _saleMessage;
             private set
             {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    SaleConfirmationMessage = string.Empty;
+                }
                 if (_saleMessage != value)
                 {
                     _saleMessage = value;
@@ -170,6 +180,10 @@ namespace Reolmarkedet.WPF.ViewModels
             get => _saleConfirmationMessage;
             private set
             {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    SaleMessage = string.Empty;
+                }
                 if (_saleConfirmationMessage != value)
                 {
                     _saleConfirmationMessage = value;
