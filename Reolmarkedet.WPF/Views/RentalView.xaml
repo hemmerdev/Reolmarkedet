@@ -149,6 +149,7 @@
 
                     <DataGridTextColumn Header="Månedlig leje"
                                         Binding="{Binding MonthlyRent,
+                                        ConverterCulture='da-DK',
                                         StringFormat='{}{0:N2} kr.'}"
                                         Width="120"
                                         ElementStyle="{StaticResource ManagementCellTextStyle}" />
@@ -373,6 +374,7 @@
                                        FontWeight="SemiBold" />
 
                             <TextBlock Text="{Binding TotalMonthlyRent,
+                                       ConverterCulture='da-DK',
                                        StringFormat='{}{0:N2} kr.',
                                        TargetNullValue='Ugyldig pris'}"
                                        Margin="0,4,0,0"

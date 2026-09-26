@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 namespace Reolmarkedet.WPF.ViewModels
 {
@@ -12,6 +13,8 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly IRepository<Rental> _rentalRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IRepository<Sale> _saleRepository;
+        private static readonly CultureInfo PriceCulture
+            = CultureInfo.GetCultureInfo("da-DK");
 
         private List<Item> _unsoldItems = new();
         private RentalRowViewModel? _selectedRentalOption;
@@ -86,7 +89,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
                     OnPropertyChanged();
 
-                    SalePriceText = SelectedItem?.Price.ToString("0.00") ?? string.Empty;
+                    SalePriceText =
+                        SelectedItem?.Price.ToString("0.00", PriceCulture) ?? string.Empty;
                     Notes = string.Empty;
                     SaleMessage = string.Empty;
                     SaleConfirmationMessage = string.Empty;
@@ -202,10 +206,18 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 return;
             }
-
-            if (!decimal.TryParse(SalePriceText, out decimal salePrice))
+            // Explicit Danish format avoids silently interpreting 12.50 as 1250.
+            if (!decimal.TryParse(
+                SalePriceText,
+                NumberStyles.AllowLeadingWhite |
+                NumberStyles.AllowTrailingWhite |
+                NumberStyles.AllowLeadingSign |
+                NumberStyles.AllowDecimalPoint,
+                PriceCulture,
+                out decimal salePrice))
             {
-                SaleMessage = "Salgsprisen skal være et gyldigt tal.";
+                SaleMessage =
+                    "Angiv en pris med decimalkomma, fx 125,50 (uden tusindtalsseparator).";
                 return;
             }
 

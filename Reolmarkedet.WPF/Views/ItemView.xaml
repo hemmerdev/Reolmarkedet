@@ -29,7 +29,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Varenr." Binding="{Binding ItemId}" Width="65" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Description}" Width="*" MinWidth="160" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat=N2, ConverterCulture=da-DK}" Width="85" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Pris" Binding="{Binding Price, StringFormat='{}{0:N2} kr.', ConverterCulture=da-DK}" Width="SizeToCells" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Lejemål" Binding="{Binding RentalId}" Width="70" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Stregkode" Binding="{Binding Barcode}" Width="SizeToCells" ElementStyle="{StaticResource ManagementCellTextStyle}"/>
             </DataGrid.Columns>

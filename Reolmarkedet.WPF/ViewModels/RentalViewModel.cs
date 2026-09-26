@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 namespace Reolmarkedet.WPF.ViewModels
 {
@@ -20,6 +21,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private readonly RentalService _rentalService = new();
         private readonly IRepository<Rental> _rentalRepository;
+        private static readonly CultureInfo PriceCulture =
+            CultureInfo.GetCultureInfo("da-DK");
 
         // Private backing fields for properties
         private Tenant? _selectedTenant;
@@ -128,7 +131,14 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     return 0m;
                 }
-                if (!decimal.TryParse(MonthlyRent, out decimal rentPerShelf) ||
+                if (!decimal.TryParse(
+                    MonthlyRent,
+                    NumberStyles.AllowLeadingWhite |
+                    NumberStyles.AllowTrailingWhite |
+                    NumberStyles.AllowLeadingSign |
+                    NumberStyles.AllowDecimalPoint,
+                    PriceCulture,
+                    out decimal rentPerShelf) ||
                     rentPerShelf <= 0)
                 {
                     return null;
@@ -619,10 +629,17 @@ namespace Reolmarkedet.WPF.ViewModels
             // Update the standard price, preserving an entered custom price.
             RefreshPrice();
 
-            if (!decimal.TryParse(MonthlyRent, out decimal rentPerShelf) ||
+            if (!decimal.TryParse(
+                MonthlyRent,
+                NumberStyles.AllowLeadingWhite |
+                NumberStyles.AllowTrailingWhite |
+                NumberStyles.AllowLeadingSign |
+                NumberStyles.AllowDecimalPoint,
+                PriceCulture,
+                out decimal rentPerShelf) ||
                 rentPerShelf <= 0)
             {
-                RentalMessage = "Månedlig leje skal være et positivt tal.";
+                RentalMessage = "Månedlig leje skal være et positivt tal. Brug decimalkomma, fx 850,00.";
                 return;
             }
 
@@ -683,7 +700,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             IsCustomPrice = false;
             // Reset the monthly rent to the standard price
-            MonthlyRent = StandardMonthlyRent.ToString("0.00");
+            MonthlyRent = StandardMonthlyRent.ToString("0.00", PriceCulture);
         }
 
         private bool CanEnableCustomPrice(object? parameter)
@@ -856,7 +873,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             if (!IsCustomPrice)
             {
-                MonthlyRent = StandardMonthlyRent.ToString("0.00");
+                MonthlyRent = StandardMonthlyRent.ToString("0.00", PriceCulture);
             }
         }
 
