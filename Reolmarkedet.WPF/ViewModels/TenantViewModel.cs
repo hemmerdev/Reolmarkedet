@@ -52,6 +52,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     _name = value;
                     ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -66,6 +67,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     _phoneNumber = value;
                     ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -80,6 +82,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     _email = value;
                     ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -366,7 +369,10 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private bool CanUpdateTenant(object? parameter)
         {
-            return SelectedTenant is not null;
+            return SelectedTenant is not null &&
+                   (Name != SelectedTenant.Name ||
+                    PhoneNumber != (SelectedTenant.PhoneNumber ?? string.Empty) ||
+                    Email != (SelectedTenant.Email ?? string.Empty));
         }
 
         private void UpdateTenant(object? parameter)

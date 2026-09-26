@@ -36,6 +36,8 @@ public class ItemViewModel : ViewModelBase
             {
                 Set(ref _description, value);
                 ConfirmationMessage = string.Empty;
+
+                SaveCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -48,6 +50,8 @@ public class ItemViewModel : ViewModelBase
             {
                 Set(ref _priceText, value);
                 ConfirmationMessage = string.Empty;
+
+                SaveCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -116,6 +120,7 @@ public class ItemViewModel : ViewModelBase
             ConfirmationMessage = "";
 
             DeleteItemCommand.RaiseCanExecuteChanged();
+            SaveCommand.RaiseCanExecuteChanged();
         }
     }
     public RelayCommand SaveCommand { get; }
@@ -125,9 +130,30 @@ public class ItemViewModel : ViewModelBase
     public ItemViewModel(IItemRepository items, IRepository<Rental> rentals)
     {
         _items = items; _rentals = rentals; _service = new(items, rentals);
-        SaveCommand = new(_ => Run(Save));
+        SaveCommand = new(_ => Run(Save), CanSave);
         NewCommand = new(_ => SelectedItem = null);
         DeleteItemCommand = new(DeleteItem, CanDeleteItem);
+    }
+
+    private bool CanSave(object? parameter)
+    {
+        if (SelectedItem is null)
+            return true;
+
+        if (Description != SelectedItem.Description)
+            return true;
+
+        if (!decimal.TryParse(
+            PriceText,
+            NumberStyles.AllowLeadingWhite |
+            NumberStyles.AllowTrailingWhite |
+           NumberStyles.AllowLeadingSign |
+           NumberStyles.AllowDecimalPoint,
+            PriceCulture,
+            out decimal price))
+            return true;
+
+        return price != SelectedItem.Price;
     }
 
     private void DeleteItem(object? parameter)

@@ -469,6 +469,13 @@ namespace Reolmarkedet.WPF.ViewModels
             try
             {
                 Item item = _salesService.FindItem(SearchText);
+
+                if (BasketItems.Any(row => row.ItemId == item.ItemId))
+                {
+                    SaleMessage = "Varen er allerede i kurven.";
+                    return;
+                }
+
                 SelectedRentalOption = RentalOptions.FirstOrDefault(
                     rental => rental.RentalId == item.RentalId);
 

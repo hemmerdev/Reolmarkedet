@@ -83,9 +83,7 @@
                         Style="{StaticResource ActionButtonStyle}"
                         Margin="0,4,0,0"/>
             </Grid>
-
         </StackPanel>
-
 
         <ScrollViewer Grid.Row="2"
                       Grid.Column="2"
@@ -341,5 +339,32 @@
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <TextBlock Grid.Row="2"
+                   Grid.Column="0"
+                   Margin="16,56,16,0"
+                   VerticalAlignment="Top"
+                   Foreground="#AAAAAA"
+                   TextWrapping="Wrap"
+                   IsHitTestVisible="False">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Setter Property="Text"
+                            Value="Ingen salg matcher de valgte filtre."/>
+
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding VisibleSales.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding Sales.Count}" Value="0">
+                            <Setter Property="Text"
+                                    Value="Der er endnu ikke registreret nogen salg."/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
     </Grid>
 </UserControl>
