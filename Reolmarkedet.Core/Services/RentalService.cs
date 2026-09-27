@@ -184,6 +184,19 @@ namespace Reolmarkedet.Core.Services
             };
         }
 
+        public decimal GetStandardMonthlyRentForNewShelves(
+            int existingShelfCount,
+            int newShelfCount)
+        {
+            decimal totalRent = 0;
+            for (int i = 0; i < newShelfCount; i++)
+            {
+                int position = existingShelfCount + i + 1;
+                totalRent += GetStandardMonthlyRentPerShelf(position);
+            }
+            return totalRent;
+        }
+
         public int GetRentedShelfCountForTenant(
             Tenant tenant,
             DateTime date,

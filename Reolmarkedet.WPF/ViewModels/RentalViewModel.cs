@@ -18,6 +18,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Shelf> SelectedShelves { get; } = new();
         public ObservableCollection<Rental> Rentals { get; }
         public ObservableCollection<RentalRowViewModel> RentalRows { get; } = new();
+        public ObservableCollection<SelectedShelfRowViewModel> SelectedShelfRows { get; } = new();
 
 
         private readonly RentalService _rentalService = new();
@@ -132,6 +133,17 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     return 0m;
                 }
+                if (!IsCustomPrice)
+                {
+                    decimal total = 0m;
+
+                    foreach (SelectedShelfRowViewModel row in SelectedShelfRows)
+                    {
+                        total += row.MonthlyRent;
+                    }
+
+                    return total;
+                }
                 if (!decimal.TryParse(
                     MonthlyRent,
                     NumberStyles.AllowLeadingWhite |
@@ -171,6 +183,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     _isCustomPrice = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalMonthlyRent));
                     EnableCustomPriceCommand.RaiseCanExecuteChanged();
                     UseStandardPriceCommand.RaiseCanExecuteChanged();
                 }
@@ -894,6 +907,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void RefreshPrice()
         {
+            SelectedShelfRows.Clear();
+            // Check if the necessary information is available to calculate the standard monthly rent
             if (SelectedTenant is null ||
                 StartDate is null ||
                 SelectedShelves.Count == 0)
@@ -907,13 +922,23 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
+            // Count existing rentals on the chosen start date
             int existingShelfCount = _rentalService.GetRentedShelfCountForTenant(
                 SelectedTenant, StartDate.Value, Rentals);
 
-            int totalShelfCount = existingShelfCount + SelectedShelves.Count;
+            // Set the first new pricing positon and build one display row for each selected shelf
+            int position = existingShelfCount + 1;
+            foreach (Shelf shelf in SelectedShelves)
+            {
+                decimal monthlyRent =
+                    _rentalService.GetStandardMonthlyRentPerShelf(position);
 
-            StandardMonthlyRent =
-                _rentalService.GetStandardMonthlyRentPerShelf(totalShelfCount);
+                SelectedShelfRowViewModel row = new(shelf, monthlyRent);
+                SelectedShelfRows.Add(row);
+
+                position++;
+            }
+            OnPropertyChanged(nameof(TotalMonthlyRent));
 
             if (!IsCustomPrice)
             {

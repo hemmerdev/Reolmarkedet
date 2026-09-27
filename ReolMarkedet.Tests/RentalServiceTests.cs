@@ -388,4 +388,27 @@ public class RentalServiceTests
         Assert.HasCount(2, existingRentals);
     }
 
+    [TestMethod]
+    [DataRow(0, 1, 850)]
+    [DataRow(0, 2, 1675)]
+    [DataRow(0, 3, 2500)]
+    [DataRow(1, 2, 1650)]
+    [DataRow(2, 2, 1625)]
+    [DataRow(3, 2, 1600)]
+    public void GetStandardMonthlyRentForNewShelves_ReturnsTotalForEachPricingPosition(
+    int existingShelfCount,
+    int newShelfCount,
+    int expectedTotal)
+    {
+        // Arrange
+        RentalService rentalService = new();
+
+        // Act
+        decimal totalRent = rentalService.GetStandardMonthlyRentForNewShelves(
+            existingShelfCount,
+            newShelfCount);
+
+        // Assert
+        Assert.AreEqual((decimal)expectedTotal, totalRent);
+    }
 }
