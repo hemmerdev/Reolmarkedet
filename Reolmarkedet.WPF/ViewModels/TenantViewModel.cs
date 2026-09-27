@@ -2,6 +2,7 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.ViewModels.enums;
 using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.Net.Mail;
@@ -14,6 +15,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Tenant> Tenants { get; } = new();
         public ObservableCollection<Tenant> VisibleTenants { get; } = new();
         public ObservableCollection<Rental> Rentals { get; }
+        public ObservableCollection<RentalRowViewModel> TenantRentalRows { get; } = new();
 
         private readonly RentalService _rentalService = new();
         private readonly IRepository<Tenant> _tenantRepository;
@@ -150,6 +152,8 @@ namespace Reolmarkedet.WPF.ViewModels
                         ClearFormFields();
                     }
 
+                    RefreshTenantRentals();
+
                     AddTenantCommand.RaiseCanExecuteChanged();
                     UpdateTenantCommand.RaiseCanExecuteChanged();
                     CancelUpdateTenantCommand.RaiseCanExecuteChanged();
@@ -178,6 +182,38 @@ namespace Reolmarkedet.WPF.ViewModels
                     ConfirmationMessage = string.Empty;
                     ApplySearch();
                 }
+            }
+        }
+
+        public int ActiveShelfCount
+        {
+            get
+            {
+                int activeShelfCount = 0;
+                foreach (var row in TenantRentalRows)
+                {
+                    if (row.Status == RentalStatus.Active)
+                    {
+                        activeShelfCount++;
+                    }
+                }
+                return activeShelfCount;
+            }
+        }
+
+        public decimal CurrentMonthlyRent
+        {
+            get
+            {
+                decimal currentMonthlyRent = 0;
+                foreach (var row in TenantRentalRows)
+                {
+                    if (row.Status == RentalStatus.Active)
+                    {
+                        currentMonthlyRent += row.MonthlyRent;
+                    }
+                }
+                return currentMonthlyRent;
             }
         }
 
@@ -625,6 +661,69 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             return true;
+        }
+
+        private void RefreshTenantRentals()
+        {
+            TenantRentalRows.Clear();
+
+            OnPropertyChanged(nameof(ActiveShelfCount));
+            OnPropertyChanged(nameof(CurrentMonthlyRent));
+
+            DateTime today = DateTime.Today;
+            if (SelectedTenant is null)
+            {
+                return;
+            }
+
+            List<RentalRowViewModel> tenantRentalRows = new();
+            foreach (var rental in Rentals)
+            {
+                if (rental.Tenant.TenantId == SelectedTenant.TenantId)
+                {
+                    DateTime priceDate = today;
+
+                    if (rental.StartDate.Date > today) // future rentals price are calculated based on their start date
+                    {
+                        priceDate = rental.StartDate.Date;
+                    }
+                    else if (rental.EndDate.HasValue &&
+                        rental.EndDate.Value.Date < today) // rental has already ended, price is calculated based on the end date
+                    {
+                        priceDate = rental.EndDate.Value.Date;
+                    }
+
+                    decimal monthlyRent = _rentalService.GetMonthlyRentForDate(
+                        rental, priceDate, Rentals);
+                    tenantRentalRows.Add(new RentalRowViewModel(rental, monthlyRent));
+                }
+            }
+
+            // Sort the tenantRentalRows based on the defined status order
+            RentalStatus[] statusOrder =
+            {
+                RentalStatus.Active,
+                RentalStatus.Upcoming,
+                RentalStatus.Historical
+            };
+            foreach (RentalStatus status in statusOrder)
+            {
+                foreach (RentalRowViewModel row in tenantRentalRows)
+                {
+                    if (row.Status == status)
+                    {
+                        TenantRentalRows.Add(row);
+                    }
+                }
+            }
+
+            OnPropertyChanged(nameof(ActiveShelfCount));
+            OnPropertyChanged(nameof(CurrentMonthlyRent));
+        }
+
+        public void Refresh()
+        {
+            RefreshTenantRentals();
         }
 
         private string? GetPhoneNumberValidationMessage(string phoneNumber)

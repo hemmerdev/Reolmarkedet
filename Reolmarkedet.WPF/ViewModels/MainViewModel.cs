@@ -79,7 +79,11 @@ namespace Reolmarkedet.WPF.ViewModels
             ShowDashboardCommand =
                 new RelayCommand(_ => CurrentViewModel = Dashboard);
             ShowTenantsCommand =
-                new RelayCommand(_ => CurrentViewModel = TenantManagement);
+                new RelayCommand(_ =>
+                {
+                    TenantManagement.Refresh();
+                    CurrentViewModel = TenantManagement;
+                });
             ShowShelfManagementCommand = new RelayCommand(_ =>
                 {
                     ShelfManagement.Refresh();
