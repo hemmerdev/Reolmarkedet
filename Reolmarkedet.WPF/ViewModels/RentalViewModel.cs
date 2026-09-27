@@ -34,7 +34,6 @@ namespace Reolmarkedet.WPF.ViewModels
         private string _monthlyRent = string.Empty;
         private string _rentalMessage = string.Empty;
         private string _rentalConfirmationMessage = string.Empty;
-        private decimal _standardMonthlyRent;
         private bool _isCustomPrice;
         private RentalRowViewModel? _selectedRentalRow;
         private DateTime? _terminationEndDate;
@@ -158,19 +157,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
 
                 return rentPerShelf * SelectedShelves.Count;
-            }
-        }
-
-        public decimal StandardMonthlyRent
-        {
-            get => _standardMonthlyRent;
-            private set
-            {
-                if (_standardMonthlyRent != value)
-                {
-                    _standardMonthlyRent = value;
-                    OnPropertyChanged();
-                }
             }
         }
 
@@ -674,26 +660,31 @@ namespace Reolmarkedet.WPF.ViewModels
             // Update the standard price, preserving an entered custom price.
             RefreshPrice();
 
-            if (!decimal.TryParse(
-                MonthlyRent,
-                NumberStyles.AllowLeadingWhite |
-                NumberStyles.AllowTrailingWhite |
-                NumberStyles.AllowLeadingSign |
-                NumberStyles.AllowDecimalPoint,
-                PriceCulture,
-                out decimal rentPerShelf) ||
-                rentPerShelf <= 0)
+            decimal rentPerShelf = 0m;
+            if (IsCustomPrice)
             {
-                RentalMessage = "Månedlig leje skal være et positivt tal. Brug decimalkomma, fx 850,00.";
-                return;
+                if (!decimal.TryParse(
+                    MonthlyRent,
+                    NumberStyles.AllowLeadingWhite |
+                    NumberStyles.AllowTrailingWhite |
+                    NumberStyles.AllowLeadingSign |
+                    NumberStyles.AllowDecimalPoint,
+                    PriceCulture,
+                    out rentPerShelf) ||
+                    rentPerShelf <= 0)
+                {
+                    RentalMessage = "Månedlig leje skal være et positivt tal. Brug decimalkomma, fx 850,00.";
+                    return;
+                }
             }
 
             // Copy the selection so later collection changes cannot affect this loop.
-            List<Shelf> shelvesToRent = new(SelectedShelves);
+            List<SelectedShelfRowViewModel> shelvesToRent = new(SelectedShelfRows);
 
             // Check every shelf before adding any rentals.
-            foreach (Shelf shelf in shelvesToRent)
+            foreach (SelectedShelfRowViewModel shelfRow in shelvesToRent)
             {
+                Shelf shelf = shelfRow.Shelf;
                 if (!Shelves.Contains(shelf) ||
                     !_rentalService.IsShelfAvailable(
                         shelf, startDate, endDate, Rentals))
@@ -704,14 +695,23 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
 
+
             // All validation passed. Create one rental for each selected shelf.
-            foreach (Shelf shelf in shelvesToRent)
+            foreach (SelectedShelfRowViewModel shelfRow in shelvesToRent)
             {
+                Shelf shelf = shelfRow.Shelf;
+                decimal monthlyRent = shelfRow.MonthlyRent;
+
+                if (IsCustomPrice)
+                {
+                    monthlyRent = rentPerShelf;
+                }
+
                 Rental rental = new(tenant, shelf)
                 {
                     StartDate = startDate,
                     EndDate = endDate,
-                    MonthlyRent = rentPerShelf
+                    MonthlyRent = monthlyRent
                 };
 
                 try
@@ -757,7 +757,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             IsCustomPrice = false;
             // Reset the monthly rent to the standard price
-            MonthlyRent = StandardMonthlyRent.ToString("0.00", PriceCulture);
+            RefreshPrice();
         }
 
         private bool CanEnableCustomPrice(object? parameter)
@@ -913,10 +913,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 StartDate is null ||
                 SelectedShelves.Count == 0)
             {
-                StandardMonthlyRent = 0m;
                 if (!IsCustomPrice)
                 {
-                    MonthlyRent = "0.00";
+                    MonthlyRent = string.Empty;
                 }
 
                 return;
@@ -942,7 +941,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             if (!IsCustomPrice)
             {
-                MonthlyRent = StandardMonthlyRent.ToString("0.00", PriceCulture);
+                MonthlyRent = string.Empty;
             }
         }
 

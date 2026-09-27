@@ -55,7 +55,8 @@ public class RentalViewModelTests
             Assert.AreSame(tenant, rental.Tenant);
             Assert.AreEqual(new DateTime(2026, 10, 1), rental.StartDate);
             Assert.IsNull(rental.EndDate);
-            Assert.AreEqual(825m, rental.MonthlyRent);
         }
+        Assert.AreEqual(850m, firstRental.MonthlyRent);
+        Assert.AreEqual(825m, secondRental.MonthlyRent);
     }
 }

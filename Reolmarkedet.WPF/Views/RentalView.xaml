@@ -332,14 +332,27 @@
                                                 Margin="8,0,0,0"
                                                 Style="{StaticResource ActionButtonStyle}"
                                                 Command="{Binding DataContext.RemoveShelfFromSelectionCommand,
-                                                RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding Shelf}"/>
 
                                         <TextBlock DockPanel.Dock="Right"
                                                    Text="{Binding MonthlyRent,
                                                    ConverterCulture=da-DK,
                                                    StringFormat='{}{0:N2} kr.'}"
                                                    Margin="12,0,0,0"
-                                                   VerticalAlignment="Center"/>
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DataContext.IsCustomPrice,
+                                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
                                         <TextBlock Text="{Binding ShelfNumber, StringFormat='Reol {0}'}"
                                                    VerticalAlignment="Center" />
@@ -349,7 +362,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <TextBlock Text="Aftalt månedlig leje pr. reol (kr.)"/>
+                    <TextBlock Text="Specialpris pr. reol (kr.)"/>
 
                     <TextBox Text="{Binding MonthlyRent,
                              Mode=TwoWay,
