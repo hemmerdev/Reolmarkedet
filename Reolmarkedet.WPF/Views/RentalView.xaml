@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:Reolmarkedet.WPF.Views"
              xmlns:vm="clr-namespace:Reolmarkedet.WPF.ViewModels"
              xmlns:enums="clr-namespace:Reolmarkedet.WPF.ViewModels.enums"
+             xmlns:coreEnums="clr-namespace:Reolmarkedet.Core.Models.enums;assembly=Reolmarkedet.Core"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="24">
@@ -171,7 +172,7 @@
                                FontSize="20"
                                Margin="0,0,0,4" />
 
-                    <TextBlock Margin="0,0,0,16"
+                    <TextBlock Margin="0,0,0,12"
                                TextWrapping="Wrap">
                         <Run Text="{Binding SelectedRentalRow.ShelfNumber,
                              Mode=OneWay, StringFormat='Reol {0}'}" />
@@ -179,6 +180,11 @@
                         <Run Text="{Binding SelectedRentalRow.TenantName,
                              Mode=OneWay}" />
                     </TextBlock>
+
+                    <TextBlock Text="{Binding SelectedRentalRow.InitialPaymentMethodText,
+                               StringFormat='Betalingsform ved oprettelse: {0}'}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,16" />
 
                     <TextBlock Text="Lejemålet er afsluttet og kan ikke ændres."
                                Foreground="#AAAAAA"
@@ -444,6 +450,36 @@
                                        TextWrapping="Wrap"
                                        FontSize="24"
                                        FontWeight="SemiBold" />
+
+                            <TextBlock Text="Betalingsform for første periode"
+                                       Margin="0,12,0,0" />
+
+                            <ComboBox ItemsSource="{Binding PaymentMethods}"
+                                      SelectedItem="{Binding SelectedPaymentMethod, Mode=TwoWay}"
+                                      Style="{StaticResource InputComboBoxStyle}"
+                                      Margin="0,4,0,0">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="{Binding}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding}"
+                                                                     Value="{x:Static coreEnums:PaymentMethod.Cash}">
+                                                            <Setter Property="Text" Value="Kontant" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}"
+                                                                     Value="{x:Static coreEnums:PaymentMethod.Card}">
+                                                            <Setter Property="Text" Value="Kort" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
 
                             <TextBlock Text="Samlet månedlig leje"
                                        TextWrapping="Wrap"

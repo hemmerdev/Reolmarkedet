@@ -1,4 +1,5 @@
 ﻿using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.WPF.ViewModels.enums;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -12,6 +13,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public DateTime StartDate => Rental.StartDate;
         public DateTime? EndDate => Rental.EndDate;
         public decimal MonthlyRent { get; }
+        public string InitialPaymentMethodText { get; }
         public RentalStatus Status
         {
             get
@@ -37,6 +39,13 @@ namespace Reolmarkedet.WPF.ViewModels
         {
             Rental = rental;
             MonthlyRent = monthlyRent;
+            InitialPaymentMethodText = rental.InitialPaymentMethod switch
+            {
+                PaymentMethod.Cash => "Kontant",
+                PaymentMethod.Card => "Kort",
+                PaymentMethod.MobilePay => "MobilePay",
+                _ => "Ikke angivet"
+            };
         }
     }
 }

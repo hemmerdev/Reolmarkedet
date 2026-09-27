@@ -57,6 +57,8 @@ namespace ReolMarkedet.Tests.Fakes
             storedRental.TerminationNoticeDate =
                 rental.TerminationNoticeDate;
             storedRental.IsCustomPrice = rental.IsCustomPrice;
+            storedRental.InitialPaymentMethod =
+                rental.InitialPaymentMethod;
         }
 
         public void Delete(int id)

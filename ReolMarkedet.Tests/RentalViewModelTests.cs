@@ -1,4 +1,5 @@
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.WPF.ViewModels;
 using ReolMarkedet.Tests.Fakes;
 using System.Collections.ObjectModel;
@@ -27,6 +28,7 @@ public class RentalViewModelTests
             rentalRepository)
         {
             SelectedTenant = tenant,
+            SelectedPaymentMethod = PaymentMethod.Card,
             StartDate = new DateTime(2026, 10, 1),
             EndDate = null
         };
@@ -53,9 +55,11 @@ public class RentalViewModelTests
         foreach (Rental rental in viewModel.Rentals)
         {
             Assert.AreSame(tenant, rental.Tenant);
+            Assert.AreEqual(PaymentMethod.Card, rental.InitialPaymentMethod);
             Assert.AreEqual(new DateTime(2026, 10, 1), rental.StartDate);
             Assert.IsNull(rental.EndDate);
         }
+        Assert.IsNull(viewModel.SelectedPaymentMethod);
         Assert.AreEqual(850m, firstRental.MonthlyRent);
         Assert.AreEqual(825m, secondRental.MonthlyRent);
     }
@@ -77,6 +81,7 @@ public class RentalViewModelTests
             rentalRepository)
         {
             SelectedTenant = tenant,
+            SelectedPaymentMethod = PaymentMethod.Card,
             StartDate = new DateTime(2026, 10, 16),
             EndDate = null
         };

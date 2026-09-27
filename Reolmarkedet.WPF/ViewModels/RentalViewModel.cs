@@ -1,5 +1,6 @@
 ﻿using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
@@ -19,7 +20,12 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Rental> Rentals { get; }
         public ObservableCollection<RentalRowViewModel> RentalRows { get; } = new();
         public ObservableCollection<SelectedShelfRowViewModel> SelectedShelfRows { get; } = new();
-
+        public ObservableCollection<PaymentMethod> PaymentMethods { get; } = new()
+        {
+            PaymentMethod.Cash,
+            PaymentMethod.Card,
+            PaymentMethod.MobilePay
+        };
 
         private readonly RentalService _rentalService = new();
         private readonly IRepository<Rental> _rentalRepository;
@@ -41,6 +47,7 @@ namespace Reolmarkedet.WPF.ViewModels
         private string _terminationConfirmationMessage = string.Empty;
         private RentalStatusFilter _selectedRentalStatusFilter =
             RentalStatusFilter.Active;
+        private PaymentMethod? _selectedPaymentMethod;
 
         // Public properties for binding to the view
         public Tenant? SelectedTenant
@@ -123,6 +130,23 @@ namespace Reolmarkedet.WPF.ViewModels
                     OnPropertyChanged(nameof(FirstPeriodTotal));
                     OnPropertyChanged(nameof(FirstPeriodText));
                     OnPropertyChanged(nameof(MonthlyPaymentText));
+                }
+            }
+        }
+
+        public PaymentMethod? SelectedPaymentMethod
+        {
+            get => _selectedPaymentMethod;
+            set
+            {
+                if (_selectedPaymentMethod != value)
+                {
+                    _selectedPaymentMethod = value;
+                    OnPropertyChanged();
+                    RentalConfirmationMessage = string.Empty;
+                    RentalMessage = string.Empty;
+
+                    CreateRentalsCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -737,7 +761,8 @@ namespace Reolmarkedet.WPF.ViewModels
         {
             return SelectedTenant is not null &&
                    SelectedTenant.IsActive &&
-                   SelectedShelves.Count > 0;
+                   SelectedShelves.Count > 0 &&
+                   SelectedPaymentMethod.HasValue;
         }
 
         private void CreateRentals(object? parameter)
@@ -760,7 +785,11 @@ namespace Reolmarkedet.WPF.ViewModels
                 RentalMessage = "Vælg mindst én reol.";
                 return;
             }
-
+            if (SelectedPaymentMethod is null)
+            {
+                RentalMessage = "Vælg en betalingsmetode for første periode.";
+                return;
+            }
             if (StartDate is null)
             {
                 RentalMessage = "Vælg en startdato.";
@@ -838,7 +867,8 @@ namespace Reolmarkedet.WPF.ViewModels
                     StartDate = startDate,
                     EndDate = endDate,
                     MonthlyRent = monthlyRent,
-                    IsCustomPrice = this.IsCustomPrice
+                    IsCustomPrice = this.IsCustomPrice,
+                    InitialPaymentMethod = SelectedPaymentMethod.Value
                 };
 
                 try
@@ -866,6 +896,7 @@ namespace Reolmarkedet.WPF.ViewModels
             IsCustomPrice = false;
             SelectedShelves.Clear();
             SelectedTenant = null;
+            SelectedPaymentMethod = null;
             SelectedShelf = null;
             EndDate = null;
             StartDate = DateTime.Today;
