@@ -654,7 +654,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 bool itemExists = _unsoldItems.Any(i => i.RentalId == rental.RentalId);
                 if (itemExists)
                 {
-                    RentalOptions.Add(new RentalRowViewModel(rental));
+                    RentalOptions.Add(
+                        new RentalRowViewModel(rental, rental.MonthlyRent));
                 }
             }
         }

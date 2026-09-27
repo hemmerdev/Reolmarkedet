@@ -9,6 +9,7 @@
         public DateTime? EndDate { get; set; }
         public DateTime? TerminationNoticeDate { get; set; }
         public decimal MonthlyRent { get; set; }
+        public bool IsCustomPrice { get; set; }
 
         public Rental(Tenant tenant, Shelf shelf)
         {

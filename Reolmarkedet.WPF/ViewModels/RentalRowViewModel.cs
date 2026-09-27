@@ -11,7 +11,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public int ShelfNumber => Rental.Shelf.ShelfNumber;
         public DateTime StartDate => Rental.StartDate;
         public DateTime? EndDate => Rental.EndDate;
-        public decimal MonthlyRent => Rental.MonthlyRent;
+        public decimal MonthlyRent { get; }
         public RentalStatus Status
         {
             get
@@ -33,9 +33,10 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
-        public RentalRowViewModel(Rental rental)
+        public RentalRowViewModel(Rental rental, decimal monthlyRent)
         {
             Rental = rental;
+            MonthlyRent = monthlyRent;
         }
     }
 }

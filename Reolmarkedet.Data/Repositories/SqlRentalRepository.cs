@@ -16,10 +16,10 @@ namespace Reolmarkedet.Data.Repositories
             var rentals = new List<Rental>();
             string query =
                 @"SELECT r.RentalId, r.StartDate, r.EndDate, 
-                r.TerminationNoticeDate, r.MonthlyRent, 
+                r.TerminationNoticeDate, r.MonthlyRent,
                 t.TenantId, t.Name, t.Phone, t.Email, t.IsActive, 
                 s.ShelfId, s.ShelfNumber, s.IsActive, 
-                st.ShelfTypeId, st.ShelfTypeName 
+                st.ShelfTypeId, st.ShelfTypeName, r.IsCustomPrice
                 FROM dbo.RENTAL AS r 
                 INNER JOIN dbo.TENANT AS t 
                     ON r.TenantId = t.TenantId 
@@ -51,10 +51,10 @@ namespace Reolmarkedet.Data.Repositories
             Rental? rental = null;
             string query =
                 @"SELECT r.RentalId, r.StartDate, r.EndDate, 
-                r.TerminationNoticeDate, r.MonthlyRent, 
+                r.TerminationNoticeDate, r.MonthlyRent,
                 t.TenantId, t.Name, t.Phone, t.Email, t.IsActive, 
                 s.ShelfId, s.ShelfNumber, s.IsActive, 
-                st.ShelfTypeId, st.ShelfTypeName 
+                st.ShelfTypeId, st.ShelfTypeName, r.IsCustomPrice
                 FROM dbo.RENTAL AS r 
                 INNER JOIN dbo.TENANT AS t 
                     ON r.TenantId = t.TenantId 
@@ -86,11 +86,11 @@ namespace Reolmarkedet.Data.Repositories
         {
             string query = @"INSERT INTO dbo.RENTAL
                                 (StartDate, EndDate, TerminationNoticeDate,
-                                 MonthlyRent, TenantID, ShelfID)
+                                 MonthlyRent, TenantID, ShelfID, IsCustomPrice)
                             OUTPUT INSERTED.RentalID
                             VALUES
                                 (@StartDate, @EndDate, @TerminationNoticeDate,
-                                 @MonthlyRent, @TenantID, @ShelfID)";
+                                 @MonthlyRent, @TenantID, @ShelfID, @IsCustomPrice)";
 
             using (SqlConnection connection = new(_connectionString))
             {
@@ -102,6 +102,7 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@MonthlyRent", rental.MonthlyRent);
                 command.Parameters.AddWithValue("@TenantID", rental.Tenant.TenantId);
                 command.Parameters.AddWithValue("@ShelfID", rental.Shelf.ShelfId);
+                command.Parameters.AddWithValue("@IsCustomPrice", rental.IsCustomPrice);
 
                 connection.Open();
                 object? result = command.ExecuteScalar();
@@ -124,7 +125,8 @@ namespace Reolmarkedet.Data.Repositories
                                 TerminationNoticeDate = @TerminationNoticeDate,
                                 MonthlyRent = @MonthlyRent,
                                 TenantId = @TenantId,
-                                ShelfId = @ShelfId
+                                ShelfId = @ShelfId,
+                                IsCustomPrice = @IsCustomPrice
                             WHERE RentalId = @RentalId";
 
             using (SqlConnection connection = new(_connectionString))
@@ -138,6 +140,7 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@TenantId", rental.Tenant.TenantId);
                 command.Parameters.AddWithValue("@ShelfId", rental.Shelf.ShelfId);
                 command.Parameters.AddWithValue("@RentalId", rental.RentalId);
+                command.Parameters.AddWithValue("@IsCustomPrice", rental.IsCustomPrice);
 
                 connection.Open();
 
@@ -199,7 +202,8 @@ namespace Reolmarkedet.Data.Repositories
                 EndDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
                 TerminationNoticeDate =
                     reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-                MonthlyRent = reader.GetDecimal(4)
+                MonthlyRent = reader.GetDecimal(4),
+                IsCustomPrice = reader.GetBoolean(15)
             };
         }
     }

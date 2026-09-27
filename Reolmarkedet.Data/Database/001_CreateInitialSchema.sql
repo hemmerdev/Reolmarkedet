@@ -48,6 +48,8 @@ CREATE TABLE dbo.RENTAL (
 	RentalID INT PRIMARY KEY IDENTITY(1,1),
 	StartDate DATE NOT NULL,
 	MonthlyRent DECIMAL(10, 2) NOT NULL CHECK (MonthlyRent >= 0),
+	IsCustomPrice BIT NOT NULL
+		CONSTRAINT DF_RENTAL_IsCustomPrice DEFAULT (0),
 	EndDate DATE NULL, 
 	TerminationNoticeDate DATE NULL,
 	TenantID INT NOT NULL,

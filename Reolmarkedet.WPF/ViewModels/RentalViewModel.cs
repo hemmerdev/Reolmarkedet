@@ -711,7 +711,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     StartDate = startDate,
                     EndDate = endDate,
-                    MonthlyRent = monthlyRent
+                    MonthlyRent = monthlyRent,
+                    IsCustomPrice = this.IsCustomPrice
                 };
 
                 try
@@ -967,9 +968,25 @@ namespace Reolmarkedet.WPF.ViewModels
                         rental.EndDate.Value.Date < today,
                     _ => false
                 };
+
                 if (matchesFilter)
                 {
-                    RentalRows.Add(new RentalRowViewModel(rental));
+                    DateTime priceDate = today;
+
+                    if (rental.StartDate.Date > today) // future rentals price are calculated based on their start date
+                    {
+                        priceDate = rental.StartDate.Date;
+                    }
+                    else if (rental.EndDate.HasValue &&
+                        rental.EndDate.Value.Date < today) // rental has already ended, price is calculated based on the end date
+                    {
+                        priceDate = rental.EndDate.Value.Date;
+                    }
+
+                    decimal monthlyRent = _rentalService.GetMonthlyRentForDate(
+                        rental, priceDate, Rentals);
+
+                    RentalRows.Add(new RentalRowViewModel(rental, monthlyRent));
                 }
             }
         }

@@ -411,4 +411,91 @@ public class RentalServiceTests
         // Assert
         Assert.AreEqual((decimal)expectedTotal, totalRent);
     }
+
+    [TestMethod]
+    public void GetMonthlyRentForDate_WhenEarlierRentalEnds_UpdatesStandardPriceForLaterDate()
+    {
+        // Arrange
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+
+        Shelf firstShelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        Shelf secondShelf = new(shelfType) { ShelfId = 2, ShelfNumber = 2 };
+
+        Rental firstRental = new(tenant, firstShelf)
+        {
+            RentalId = 1,
+            StartDate = new DateTime(2026, 9, 1),
+            EndDate = new DateTime(2026, 10, 31),
+            MonthlyRent = 850m,
+            IsCustomPrice = false
+        };
+
+        Rental secondRental = new(tenant, secondShelf)
+        {
+            RentalId = 2,
+            StartDate = new DateTime(2026, 9, 2),
+            MonthlyRent = 825m,
+            IsCustomPrice = false
+        };
+
+        // Reverse order to check that the method orders rentals itself.
+        List<Rental> rentals = new() { secondRental, firstRental };
+
+        // Act
+        decimal octoberRent = rentalService.GetMonthlyRentForDate(
+            secondRental, new DateTime(2026, 10, 31), rentals);
+
+        decimal novemberRent = rentalService.GetMonthlyRentForDate(
+            secondRental, new DateTime(2026, 11, 1), rentals);
+
+        // Assert
+        Assert.AreEqual(825m, octoberRent);
+        Assert.AreEqual(850m, novemberRent);
+        Assert.AreEqual(825m, secondRental.MonthlyRent);
+    }
+    [TestMethod]
+    public void GetMonthlyRentForDate_WhenEarlierRentalEnds_PreservesCustomPrice()
+    {
+        // Arrange
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+
+        Shelf firstShelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        Shelf secondShelf = new(shelfType) { ShelfId = 2, ShelfNumber = 2 };
+
+        Rental firstRental = new(tenant, firstShelf)
+        {
+            RentalId = 1,
+            StartDate = new DateTime(2026, 9, 1),
+            EndDate = new DateTime(2026, 10, 31),
+            MonthlyRent = 850m,
+            IsCustomPrice = false
+        };
+
+        Rental secondRental = new(tenant, secondShelf)
+        {
+            RentalId = 2,
+            StartDate = new DateTime(2026, 9, 2),
+            MonthlyRent = 700m,
+            IsCustomPrice = true
+        };
+
+        // Reverse order to check that the method orders rentals itself.
+        List<Rental> rentals = new() { secondRental, firstRental };
+
+        // Act
+        decimal octoberRent = rentalService.GetMonthlyRentForDate(
+            secondRental, new DateTime(2026, 10, 31), rentals);
+
+        decimal novemberRent = rentalService.GetMonthlyRentForDate(
+            secondRental, new DateTime(2026, 11, 1), rentals);
+
+        // Assert
+        Assert.AreEqual(700m, octoberRent);
+        Assert.AreEqual(700m, novemberRent);
+        Assert.AreEqual(700m, secondRental.MonthlyRent);
+    }
 }

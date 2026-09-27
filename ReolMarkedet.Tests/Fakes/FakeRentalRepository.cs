@@ -56,6 +56,7 @@ namespace ReolMarkedet.Tests.Fakes
             storedRental.Shelf = rental.Shelf;
             storedRental.TerminationNoticeDate =
                 rental.TerminationNoticeDate;
+            storedRental.IsCustomPrice = rental.IsCustomPrice;
         }
 
         public void Delete(int id)

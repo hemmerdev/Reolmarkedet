@@ -197,6 +197,52 @@ namespace Reolmarkedet.Core.Services
             return totalRent;
         }
 
+        // Calculates one rentals monthly price for a date
+        public decimal GetMonthlyRentForDate(
+            Rental rental,
+            DateTime date,
+            IEnumerable<Rental> rentals)
+        {
+            // An agreed price does not change when other rentals end.
+            if (rental.IsCustomPrice)
+            {
+                return rental.MonthlyRent;
+            }
+
+            // All active rentals for this tenant including those with special prices.
+            List<Rental> activeRentals = new();
+            foreach (Rental existingRental in rentals)
+            {
+                bool sameTenant = rental.Tenant.TenantId == existingRental.Tenant.TenantId;
+                bool hasStarted = existingRental.StartDate.Date <= date.Date;
+                bool hasNotEnded = existingRental.EndDate is null ||
+                    existingRental.EndDate.Value.Date >= date.Date;
+
+                if (sameTenant && hasStarted && hasNotEnded)
+                {
+                    activeRentals.Add(existingRental);
+                }
+            }
+
+            // Earlier rentals get earlier pricing positions; IDs break ties on the same day.
+            activeRentals = activeRentals
+                .OrderBy(r => r.StartDate.Date)
+                .ThenBy(r => r.RentalId)
+                .ToList();
+
+            // Pricing positions start at 1, while list indexes start at 0.
+            for (int i = 1; i <= activeRentals.Count; i++)
+            {
+                if (activeRentals[i - 1].RentalId == rental.RentalId)
+                {
+                    return GetStandardMonthlyRentPerShelf(i);
+                }
+            }
+
+            throw new InvalidOperationException(
+                "Lejemålet blev ikke fundet blandt reollejerens aktive lejemål på den valgte dato.");
+        }
+
         public int GetRentedShelfCountForTenant(
             Tenant tenant,
             DateTime date,
