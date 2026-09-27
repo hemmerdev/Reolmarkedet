@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 
 namespace Reolmarkedet.Data.Repositories
 {
@@ -10,7 +11,7 @@ namespace Reolmarkedet.Data.Repositories
         {
             var sales = new List<Sale>();
             string query =
-                @"SELECT SaleId, SaleDate, SalePrice, Notes, ItemId
+                @"SELECT SaleId, SaleDate, SalePrice, Notes, ItemId, PaymentMethod
                 FROM dbo.SALE";
 
             using (SqlConnection connection = new(connectionString))
@@ -27,7 +28,10 @@ namespace Reolmarkedet.Data.Repositories
                             SaleDate = DateOnly.FromDateTime(reader.GetDateTime(1)),
                             SalePrice = reader.GetDecimal(2),
                             Notes = reader.IsDBNull(3) ? null : reader.GetString(3),
-                            ItemId = reader.GetInt32(4)
+                            ItemId = reader.GetInt32(4),
+                            PaymentMethod = reader.IsDBNull(5)
+                                ? null
+                                : Enum.Parse<PaymentMethod>(reader.GetString(5))
                         });
                     }
                 }
@@ -39,7 +43,7 @@ namespace Reolmarkedet.Data.Repositories
         {
             Sale? sale = null;
             string query =
-                @"SELECT SaleId, SaleDate, SalePrice, Notes, ItemId
+                @"SELECT SaleId, SaleDate, SalePrice, Notes, ItemId, PaymentMethod
                 FROM dbo.SALE
                 WHERE SaleId = @SaleId";
 
@@ -59,7 +63,10 @@ namespace Reolmarkedet.Data.Repositories
                             SaleDate = DateOnly.FromDateTime(reader.GetDateTime(1)),
                             SalePrice = reader.GetDecimal(2),
                             Notes = reader.IsDBNull(3) ? null : reader.GetString(3),
-                            ItemId = reader.GetInt32(4)
+                            ItemId = reader.GetInt32(4),
+                            PaymentMethod = reader.IsDBNull(5)
+                                ? null
+                                : Enum.Parse<PaymentMethod>(reader.GetString(5))
                         };
                     }
                 }
@@ -70,9 +77,9 @@ namespace Reolmarkedet.Data.Repositories
         public void Add(Sale sale)
         {
             string query =
-                @"INSERT INTO dbo.SALE (SaleDate, SalePrice, Notes, ItemId)
+                @"INSERT INTO dbo.SALE (SaleDate, SalePrice, Notes, ItemId, PaymentMethod)
                 OUTPUT INSERTED.SaleId
-                VALUES (@SaleDate, @SalePrice, @Notes, @ItemId)";
+                VALUES (@SaleDate, @SalePrice, @Notes, @ItemId, @PaymentMethod)";
 
             using (SqlConnection connection = new(connectionString))
             {
@@ -81,6 +88,9 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@SalePrice", sale.SalePrice);
                 command.Parameters.AddWithValue("@Notes", (object?)sale.Notes ?? DBNull.Value);
                 command.Parameters.AddWithValue("@ItemId", sale.ItemId);
+                command.Parameters.AddWithValue(
+                    "@PaymentMethod",
+                    (object?)sale.PaymentMethod?.ToString() ?? DBNull.Value);
 
                 connection.Open();
 
@@ -101,7 +111,8 @@ namespace Reolmarkedet.Data.Repositories
                 SET SaleDate = @SaleDate,
                     SalePrice = @SalePrice,
                     Notes = @Notes,
-                    ItemId = @ItemId
+                    ItemId = @ItemId,
+                    PaymentMethod = @PaymentMethod
                 WHERE SaleId = @SaleId";
 
             using (SqlConnection connection = new(connectionString))
@@ -113,6 +124,9 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@Notes", (object?)sale.Notes ?? DBNull.Value);
                 command.Parameters.AddWithValue("@ItemId", sale.ItemId);
                 command.Parameters.AddWithValue("@SaleId", sale.SaleId);
+                command.Parameters.AddWithValue(
+                    "@PaymentMethod",
+                    (object?)sale.PaymentMethod?.ToString() ?? DBNull.Value);
 
                 connection.Open();
 

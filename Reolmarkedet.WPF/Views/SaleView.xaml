@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:coreEnums="clr-namespace:Reolmarkedet.Core.Models.enums;assembly=Reolmarkedet.Core"
              xmlns:local="clr-namespace:Reolmarkedet.WPF.Views"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -276,6 +277,34 @@
                             </StackPanel>
                         </Border>
 
+                        <TextBlock Text="Betalingsform" />
+                        <ComboBox ItemsSource="{Binding PaymentMethods}"
+                                  SelectedItem="{Binding SelectedPaymentMethod, Mode=TwoWay}"
+                                  Style="{StaticResource InputComboBoxStyle}"
+                                  Margin="0,4,0,12">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="{Binding}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding}"
+                                                                 Value="{x:Static coreEnums:PaymentMethod.Cash}">
+                                                        <Setter Property="Text" Value="Kontant" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding}"
+                                                                 Value="{x:Static coreEnums:PaymentMethod.Card}">
+                                                        <Setter Property="Text" Value="Kort" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
                         <Button Content="Registrer køb"
                                 Command="{Binding RegisterSaleCommand}"
                                 Style="{StaticResource PrimaryButtonStyle}"/>
@@ -338,6 +367,11 @@
                                         Width="100"
                                         Binding="{Binding SalePrice, StringFormat='{}{0:0.00} kr.', ConverterCulture='da-DK'}"
                                         ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                    <DataGridTextColumn Header="Betalingsform"
+                                        Width="110"
+                                        Binding="{Binding PaymentMethodText}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}" />
 
                     <DataGridTextColumn Header="Bemærkninger"
                                         Width="*"

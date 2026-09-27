@@ -1,4 +1,5 @@
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using ReolMarkedet.Tests.Fakes;
 
@@ -27,7 +28,7 @@ public class SalesServiceTests
 
         // Act
         salesService.RegisterSale(
-            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes", PaymentMethod.Card);
 
         // Assert
         Assert.AreEqual(1, saleRepository.GetAll().Count());
@@ -60,12 +61,12 @@ public class SalesServiceTests
 
         SalesService salesService = new(itemRepository, saleRepository);
         salesService.RegisterSale(
-            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Original sale");
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Original sale", PaymentMethod.Card);
 
         // Act and Assert
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             salesService.RegisterSale(
-                item.ItemId, 90.0m, new DateOnly(2026, 9, 27), "Second attempt"));
+                item.ItemId, 90.0m, new DateOnly(2026, 9, 27), "Second attempt", PaymentMethod.Card));
 
 
         Assert.AreEqual(1, saleRepository.GetAll().Count());
@@ -97,7 +98,7 @@ public class SalesServiceTests
         SalesService salesService = new(itemRepository, saleRepository);
 
         Sale sale = salesService.RegisterSale(
-            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes", PaymentMethod.Card);
         // Act
         salesService.ReturnItem(sale.SaleId);
 
@@ -124,12 +125,12 @@ public class SalesServiceTests
 
         SalesService salesService = new(itemRepository, saleRepository);
         Sale sale = salesService.RegisterSale(
-            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes", PaymentMethod.Card);
         salesService.ReturnItem(sale.SaleId);
 
         // Act
         Sale resale = salesService.RegisterSale(
-            item.ItemId, 90.0m, new DateOnly(2026, 9, 27), "Resale attempt");
+            item.ItemId, 90.0m, new DateOnly(2026, 9, 27), "Resale attempt", PaymentMethod.Card);
 
         // Assert
         Assert.AreEqual(1, saleRepository.GetAll().Count());
@@ -156,7 +157,7 @@ public class SalesServiceTests
 
         SalesService salesService = new(itemRepository, saleRepository);
         Sale sale = salesService.RegisterSale(
-            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes", PaymentMethod.Card);
         salesService.ReturnItem(sale.SaleId);
 
         // Act and Assert

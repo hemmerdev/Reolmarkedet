@@ -53,6 +53,7 @@ namespace ReolMarkedet.Tests.Fakes
             storedSale.SalePrice = sale.SalePrice;
             storedSale.Notes = sale.Notes;
             storedSale.ItemId = sale.ItemId;
+            storedSale.PaymentMethod = sale.PaymentMethod;
         }
 
         public void Delete(int id)

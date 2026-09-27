@@ -1,5 +1,6 @@
 ﻿using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
@@ -34,12 +35,19 @@ namespace Reolmarkedet.WPF.ViewModels
         private SaleRowViewModel? _selectedSaleRow;
         private string _returnMessage = string.Empty;
         private string _returnConfirmationMessage = string.Empty;
+        private PaymentMethod? _selectedPaymentMethod = null;
 
         public ObservableCollection<SaleRowViewModel> Sales { get; } = new();
         public ObservableCollection<SaleRowViewModel> VisibleSales { get; } = new();
         public ObservableCollection<RentalRowViewModel> RentalOptions { get; } = new();
         public ObservableCollection<Item> ItemOptions { get; } = new();
         public ObservableCollection<BasketItemViewModel> BasketItems { get; } = new();
+        public ObservableCollection<PaymentMethod> PaymentMethods { get; } = new()
+        {
+            PaymentMethod.Cash,
+            PaymentMethod.Card,
+            PaymentMethod.MobilePay
+        };
 
         public decimal BasketTotal
         {
@@ -316,6 +324,22 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public PaymentMethod? SelectedPaymentMethod
+        {
+            get => _selectedPaymentMethod;
+            set
+            {
+                if (_selectedPaymentMethod != value)
+                {
+                    _selectedPaymentMethod = value;
+                    OnPropertyChanged();
+                    SaleMessage = string.Empty;
+                    SaleConfirmationMessage = string.Empty;
+                    RegisterSaleCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         public RelayCommand FindItemCommand { get; }
         public RelayCommand RegisterSaleCommand { get; }
         public RelayCommand AddToBasketCommand { get; }
@@ -498,7 +522,8 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private bool CanRegisterSale(object? parameter)
         {
-            return BasketItems.Count > 0;
+            return BasketItems.Count > 0 &&
+                   SelectedPaymentMethod.HasValue;
         }
 
         private void RegisterSale(object? parameter)
@@ -513,6 +538,12 @@ namespace Reolmarkedet.WPF.ViewModels
             List<BasketItemViewModel> basketItems =
                 BasketItems.ToList();
 
+            if (SelectedPaymentMethod is null)
+            {
+                SaleMessage = "Vælg en betalingsmetode.";
+                return;
+            }
+
             DateOnly saleDate = DateOnly.FromDateTime(DateTime.Today);
             foreach (var row in basketItems)
             {
@@ -522,7 +553,8 @@ namespace Reolmarkedet.WPF.ViewModels
                         row.ItemId,
                         row.SalePrice,
                         saleDate,
-                        row.Notes);
+                        row.Notes,
+                        SelectedPaymentMethod.Value);
                     Sales.Insert(0, new SaleRowViewModel(sale, row.Item, row.Rental));
                     RemoveSoldItemFromOptions(row.Item);
                     BasketItems.Remove(row);
@@ -556,6 +588,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
             SelectedItem = null;
             SearchText = string.Empty;
+            SelectedPaymentMethod = null;
             SaleConfirmationMessage = "Købet er blevet registreret.";
         }
 

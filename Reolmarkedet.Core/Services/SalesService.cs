@@ -4,6 +4,7 @@
 
 using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 
 namespace Reolmarkedet.Core.Services
 {
@@ -46,7 +47,8 @@ namespace Reolmarkedet.Core.Services
             int itemId,
             decimal salePrice,
             DateOnly saleDate,
-            string? notes)
+            string? notes,
+            PaymentMethod paymentMethod)
         {
             ValidateSale(notes, salePrice);
             if (itemRepository.GetById(itemId) is null)
@@ -59,13 +61,19 @@ namespace Reolmarkedet.Core.Services
                 throw new InvalidOperationException(
                     $"Varenummer '{itemId}' er allerede solgt.");
             }
+            if (!Enum.IsDefined(paymentMethod))
+            {
+                throw new ArgumentException(
+                    "Vælg en gyldig betalingsmetode.");
+            }
 
             Sale sale = new Sale
             {
                 ItemId = itemId,
                 SalePrice = salePrice,
                 SaleDate = saleDate,
-                Notes = notes
+                Notes = notes,
+                PaymentMethod = paymentMethod
             };
 
             saleRepository.Add(sale);

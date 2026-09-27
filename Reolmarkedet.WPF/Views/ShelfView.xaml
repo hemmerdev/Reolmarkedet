@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Reolmarkedet.WPF.Views"
              xmlns:models="clr-namespace:Reolmarkedet.Core.Models;assembly=Reolmarkedet.Core"
+             xmlns:coreEnums="clr-namespace:Reolmarkedet.Core.Models.enums;assembly=Reolmarkedet.Core"
              xmlns:vm="clr-namespace:Reolmarkedet.WPF.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -141,21 +142,21 @@
 
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding ShelfStatus}"
-                                             Value="{x:Static models:ShelfStatus.Available}">
+                                             Value="{x:Static coreEnums:ShelfStatus.Available}">
                                     <Setter TargetName="StatusText" Property="Text" Value="Ledig" />
                                     <Setter TargetName="StatusPill" Property="Background" Value="#2F4635" />
                                     <Setter TargetName="StatusText" Property="Foreground" Value="#B7DDBE" />
                                 </DataTrigger>
 
                                 <DataTrigger Binding="{Binding ShelfStatus}"
-                                             Value="{x:Static models:ShelfStatus.Rented}">
+                                             Value="{x:Static coreEnums:ShelfStatus.Rented}">
                                     <Setter TargetName="StatusText" Property="Text" Value="Udlejet" />
                                     <Setter TargetName="StatusPill" Property="Background" Value="#4B3030" />
                                     <Setter TargetName="StatusText" Property="Foreground" Value="#F2B1B1" />
                                 </DataTrigger>
 
                                 <DataTrigger Binding="{Binding ShelfStatus}"
-                                             Value="{x:Static models:ShelfStatus.TerminationPending}">
+                                             Value="{x:Static coreEnums:ShelfStatus.TerminationPending}">
                                     <Setter TargetName="StatusText" Property="Text" Value="Opsagt" />
                                     <Setter TargetName="StatusPill" Property="Background" Value="#49422E" />
                                     <Setter TargetName="StatusText" Property="Foreground" Value="#E6CF8E" />

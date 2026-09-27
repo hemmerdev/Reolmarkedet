@@ -1,4 +1,5 @@
 using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.WPF.ViewModels;
 using ReolMarkedet.Tests.Fakes;
 
@@ -122,7 +123,7 @@ public class SaleViewModelTests
             SaleId = 1,
             ItemId = 3,
             SaleDate = DateOnly.FromDateTime(DateTime.Today),
-            SalePrice = 20.00m
+            SalePrice = 20.00m,
         };
         Item itemC = new()
         {
@@ -148,7 +149,7 @@ public class SaleViewModelTests
                 option => option.RentalId == firstRental.RentalId);
 
         saleViewModel.SelectedItemOption = saleViewModel.ItemOptions.Single();
-
+        saleViewModel.SelectedPaymentMethod = PaymentMethod.Card;
         // Act
         saleViewModel.AddToBasketCommand.Execute(null);
         saleViewModel.RegisterSaleCommand.Execute(null);
@@ -218,7 +219,7 @@ public class SaleViewModelTests
 
         viewModel.Refresh();
         viewModel.SelectedRentalOption = viewModel.RentalOptions.Single();
-
+        viewModel.SelectedPaymentMethod = PaymentMethod.Card;
         // Act
         viewModel.SelectedItemOption = viewModel.ItemOptions.First(
             item => item.ItemId == itemA.ItemId);
@@ -240,6 +241,13 @@ public class SaleViewModelTests
 
         // Assert
         List<Sale> savedSales = saleRepository.GetAll().ToList();
+
+        foreach (Sale sale in savedSales)
+        {
+            Assert.AreEqual(PaymentMethod.Card, sale.PaymentMethod);
+        }
+
+        Assert.IsNull(viewModel.SelectedPaymentMethod);
 
         Assert.HasCount(2, savedSales);
         Assert.AreEqual(

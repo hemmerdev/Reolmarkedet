@@ -1,4 +1,5 @@
 ﻿using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 
 
 //RentalService

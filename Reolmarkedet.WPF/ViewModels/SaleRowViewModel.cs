@@ -1,4 +1,5 @@
 ﻿using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 
 namespace Reolmarkedet.WPF.ViewModels
 {
@@ -11,6 +12,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public string TenantName { get; }
         public decimal SalePrice { get; }
         public string? Notes { get; }
+        public string PaymentMethodText { get; }
 
         public SaleRowViewModel(Sale sale, Item item, Rental rental)
         {
@@ -21,6 +23,13 @@ namespace Reolmarkedet.WPF.ViewModels
             TenantName = rental.Tenant.Name;
             SalePrice = sale.SalePrice;
             Notes = sale.Notes;
+            PaymentMethodText = sale.PaymentMethod switch
+            {
+                PaymentMethod.Cash => "Kontant",
+                PaymentMethod.Card => "Kort",
+                PaymentMethod.MobilePay => "MobilePay",
+                _ => "Ikke angivet"
+            };
         }
     }
 }
