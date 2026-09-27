@@ -22,6 +22,8 @@ namespace Reolmarkedet.WPF.ViewModels
         private string _name = string.Empty;
         private string _phoneNumber = string.Empty;
         private string _email = string.Empty;
+        private string _bankRegistrationNumber = string.Empty;
+        private string _bankAccountNumber = string.Empty;
         private Tenant? _selectedTenant;
         private bool _showInactiveTenants;
         private string _validationMessage = string.Empty;
@@ -87,6 +89,36 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public string BankRegistrationNumber
+        {
+            get => _bankRegistrationNumber;
+            set
+            {
+                if (_bankRegistrationNumber != value)
+                {
+                    _bankRegistrationNumber = value;
+                    ConfirmationMessage = string.Empty;
+                    OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public string BankAccountNumber
+        {
+            get => _bankAccountNumber;
+            set
+            {
+                if (_bankAccountNumber != value)
+                {
+                    _bankAccountNumber = value;
+                    ConfirmationMessage = string.Empty;
+                    OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         public Tenant? SelectedTenant
         {
             get => _selectedTenant;
@@ -110,6 +142,8 @@ namespace Reolmarkedet.WPF.ViewModels
                         Name = _selectedTenant.Name;
                         PhoneNumber = _selectedTenant.PhoneNumber ?? string.Empty;
                         Email = _selectedTenant.Email ?? string.Empty;
+                        BankRegistrationNumber = _selectedTenant.BankRegistrationNumber ?? string.Empty;
+                        BankAccountNumber = _selectedTenant.BankAccountNumber ?? string.Empty;
                     }
                     else // Clear the form fields when no tenant is selected
                     {
@@ -159,6 +193,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
+
         public string ConfirmationMessage
         {
             get => _confirmationMessage;
@@ -335,7 +370,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 ValidationMessage = "Navn må ikke være tomt.";
                 return;
             }
-            if (!ValidateContactDetails())
+            if (!ValidateContactDetails() ||
+                !ValidateBankDetails())
             {
                 return;
             }
@@ -344,9 +380,11 @@ namespace Reolmarkedet.WPF.ViewModels
 
             Tenant tenant = new Tenant()
             {
-                Name = Name,
-                Email = Email,
-                PhoneNumber = PhoneNumber,
+                Name = this.Name,
+                Email = this.Email,
+                PhoneNumber = this.PhoneNumber,
+                BankRegistrationNumber = this.BankRegistrationNumber.Trim(),
+                BankAccountNumber = this.BankAccountNumber.Trim()
             };
 
             try
@@ -372,7 +410,9 @@ namespace Reolmarkedet.WPF.ViewModels
             return SelectedTenant is not null &&
                    (Name != SelectedTenant.Name ||
                     PhoneNumber != (SelectedTenant.PhoneNumber ?? string.Empty) ||
-                    Email != (SelectedTenant.Email ?? string.Empty));
+                    Email != (SelectedTenant.Email ?? string.Empty) ||
+                    BankRegistrationNumber != (SelectedTenant.BankRegistrationNumber ?? string.Empty) ||
+                    BankAccountNumber != (SelectedTenant.BankAccountNumber ?? string.Empty));
         }
 
         private void UpdateTenant(object? parameter)
@@ -390,20 +430,30 @@ namespace Reolmarkedet.WPF.ViewModels
                     "Navn må ikke være tomt. Angiv et navn, eller annuller redigeringen.";
                 return;
             }
-            if (!ValidateContactDetails())
+            if (!ValidateContactDetails() ||
+                !ValidateBankDetails())
             {
                 return;
             }
 
             ValidationMessage = string.Empty;
 
+            // store the original values in case the update fails
             string originalName = tenant.Name;
             string? originalPhoneNumber = tenant.PhoneNumber;
             string? originalEmail = tenant.Email;
+            string? originalBankRegistrationNumber = tenant.BankRegistrationNumber;
+            string? originalBankAccountNumber = tenant.BankAccountNumber;
 
             tenant.Name = Name;
-            tenant.PhoneNumber = string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber;
-            tenant.Email = string.IsNullOrWhiteSpace(Email) ? null : Email;
+            tenant.PhoneNumber =
+                string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber;
+            tenant.Email =
+                string.IsNullOrWhiteSpace(Email) ? null : Email;
+            tenant.BankRegistrationNumber =
+                string.IsNullOrWhiteSpace(BankRegistrationNumber) ? null : BankRegistrationNumber.Trim();
+            tenant.BankAccountNumber =
+                string.IsNullOrWhiteSpace(BankAccountNumber) ? null : BankAccountNumber.Trim();
 
             try
             {
@@ -414,6 +464,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 tenant.Name = originalName;
                 tenant.PhoneNumber = originalPhoneNumber;
                 tenant.Email = originalEmail;
+                tenant.BankRegistrationNumber = originalBankRegistrationNumber;
+                tenant.BankAccountNumber = originalBankAccountNumber;
                 ValidationMessage = "Ændringerne kunne ikke gemmes i databasen. Prøv igen.";
                 return;
             }
@@ -481,6 +533,8 @@ namespace Reolmarkedet.WPF.ViewModels
             Email = string.Empty;
             ValidationMessage = string.Empty;
             ConfirmationMessage = string.Empty;
+            BankRegistrationNumber = string.Empty;
+            BankAccountNumber = string.Empty;
         }
 
         private void ApplySearch()
@@ -521,6 +575,53 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 ValidationMessage = emailError;
                 return false;
+            }
+
+            return true;
+        }
+
+        private bool ValidateBankDetails()
+        {
+            if (string.IsNullOrWhiteSpace(BankRegistrationNumber))
+            {
+                ValidationMessage = "Angiv registreringsnummer.";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(BankAccountNumber))
+            {
+                ValidationMessage = "Angiv kontonummer.";
+                return false;
+            }
+            string trimmedRegistrationNumber = BankRegistrationNumber.Trim();
+            string trimmedAccountNumber = BankAccountNumber.Trim();
+            if (trimmedRegistrationNumber.Length != 4)
+            {
+                ValidationMessage = "Registreringsnummeret skal have 4 cifre.";
+                return false;
+            }
+
+            foreach (char c in trimmedRegistrationNumber)
+            {
+                if (c < '0' || c > '9')
+                {
+                    ValidationMessage = "Registreringsnummeret indeholder ugyldige tegn. Brug kun cifre.";
+                    return false;
+                }
+            }
+
+            if (trimmedAccountNumber.Length > 10)
+            {
+                ValidationMessage = "Kontonummeret må højst have 10 cifre.";
+                return false;
+            }
+
+            foreach (char c in trimmedAccountNumber)
+            {
+                if (c < '0' || c > '9')
+                {
+                    ValidationMessage = "Kontonummeret indeholder ugyldige tegn. Brug kun cifre.";
+                    return false;
+                }
             }
 
             return true;

@@ -16,7 +16,8 @@ namespace Reolmarkedet.Data.Repositories
         public IEnumerable<Tenant> GetAll()
         {
             var tenants = new List<Tenant>();
-            string query = "SELECT TenantId, Name, Phone, Email, IsActive " +
+            string query = "SELECT TenantId, Name, Phone, Email, IsActive, " +
+                           "BankRegistrationNumber, BankAccountNumber " +
                            "FROM dbo.TENANT";
 
             using (SqlConnection connection = new(_connectionString))
@@ -34,7 +35,9 @@ namespace Reolmarkedet.Data.Repositories
                             Name = reader.GetString(1),
                             PhoneNumber = reader.IsDBNull(2) ? null : reader.GetString(2),
                             Email = reader.IsDBNull(3) ? null : reader.GetString(3),
-                            IsActive = reader.GetBoolean(4)
+                            IsActive = reader.GetBoolean(4),
+                            BankRegistrationNumber = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            BankAccountNumber = reader.IsDBNull(6) ? null : reader.GetString(6)
                         });
                     }
                 }
@@ -47,7 +50,8 @@ namespace Reolmarkedet.Data.Repositories
         {
             Tenant? tenant = null;
 
-            string query = "SELECT TenantId, Name, Phone, Email, IsActive " +
+            string query = "SELECT TenantId, Name, Phone, Email, IsActive, " +
+                           "BankRegistrationNumber, BankAccountNumber " +
                            "FROM dbo.TENANT " +
                            "WHERE TenantId = @TenantId";
 
@@ -67,7 +71,10 @@ namespace Reolmarkedet.Data.Repositories
                             Name = reader.GetString(1),
                             PhoneNumber = reader.IsDBNull(2) ? null : reader.GetString(2),
                             Email = reader.IsDBNull(3) ? null : reader.GetString(3),
-                            IsActive = reader.GetBoolean(4)
+                            IsActive = reader.GetBoolean(4),
+                            BankRegistrationNumber = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            BankAccountNumber = reader.IsDBNull(6) ? null : reader.GetString(6)
+
                         };
                     }
                 }
@@ -78,9 +85,9 @@ namespace Reolmarkedet.Data.Repositories
 
         public void Add(Tenant tenant)
         {
-            string query = "INSERT INTO dbo.TENANT (Name, Phone, Email, IsActive) " +
+            string query = "INSERT INTO dbo.TENANT (Name, Phone, Email, IsActive, BankRegistrationNumber, BankAccountNumber) " +
                            "OUTPUT INSERTED.TenantId " +
-                           "VALUES (@Name, @Phone, @Email, @IsActive)";
+                           "VALUES (@Name, @Phone, @Email, @IsActive, @BankRegistrationNumber, @BankAccountNumber)";
 
             using (SqlConnection connection = new(_connectionString))
             {
@@ -90,6 +97,8 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@Phone", (object?)tenant.PhoneNumber ?? DBNull.Value);
                 command.Parameters.AddWithValue("@Email", (object?)tenant.Email ?? DBNull.Value);
                 command.Parameters.AddWithValue("@IsActive", tenant.IsActive);
+                command.Parameters.AddWithValue("@BankRegistrationNumber", (object?)tenant.BankRegistrationNumber ?? DBNull.Value);
+                command.Parameters.AddWithValue("@BankAccountNumber", (object?)tenant.BankAccountNumber ?? DBNull.Value);
 
                 connection.Open();
 
@@ -107,7 +116,12 @@ namespace Reolmarkedet.Data.Repositories
         public void Update(Tenant tenant)
         {
             string query = "UPDATE dbo.TENANT " +
-                           "SET Name = @Name, Phone = @Phone, Email = @Email, IsActive = @IsActive " +
+                           "SET Name = @Name, " +
+                               "Phone = @Phone, " +
+                               "Email = @Email, " +
+                               "IsActive = @IsActive, " +
+                               "BankRegistrationNumber = @BankRegistrationNumber, " +
+                               "BankAccountNumber = @BankAccountNumber " +
                            "WHERE TenantId = @TenantId";
 
             using (SqlConnection connection = new(_connectionString))
@@ -119,6 +133,8 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@Phone", (object?)tenant.PhoneNumber ?? DBNull.Value);
                 command.Parameters.AddWithValue("@Email", (object?)tenant.Email ?? DBNull.Value);
                 command.Parameters.AddWithValue("@IsActive", tenant.IsActive);
+                command.Parameters.AddWithValue("@BankRegistrationNumber", (object?)tenant.BankRegistrationNumber ?? DBNull.Value);
+                command.Parameters.AddWithValue("@BankAccountNumber", (object?)tenant.BankAccountNumber ?? DBNull.Value);
 
                 connection.Open();
 

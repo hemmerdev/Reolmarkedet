@@ -15,11 +15,13 @@ public class TenantViewModelTests
             new ObservableCollection<Rental>(),
             new FakeTenantRepository());
         viewModel.Name = "John Doe";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = "0123456789";
         viewModel.AddTenantCommand.Execute(null);
 
         Tenant tenant = viewModel.Tenants[0];
         viewModel.SelectedTenant = tenant;
-        viewModel.Name = ""; // Set name to blank
+        viewModel.Name = ""; // Set name to blank       
 
         // Act
         viewModel.UpdateTenantCommand.Execute(null);
@@ -38,6 +40,8 @@ public class TenantViewModelTests
             new ObservableCollection<Rental>(),
             new FakeTenantRepository());
         viewModel.Name = "John Doe";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = "0123456789";
         viewModel.AddTenantCommand.Execute(null);
 
         Tenant tenant = viewModel.Tenants[0];
@@ -60,6 +64,8 @@ public class TenantViewModelTests
         var rentals = new ObservableCollection<Rental>();
         var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = "0123456789";
         viewModel.AddTenantCommand.Execute(null);
 
         Tenant tenant = viewModel.Tenants[0];
@@ -95,6 +101,8 @@ public class TenantViewModelTests
         var rentals = new ObservableCollection<Rental>();
         var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = "0123456789";
         viewModel.AddTenantCommand.Execute(null);
 
         Tenant tenant = viewModel.Tenants[0];
@@ -130,6 +138,8 @@ public class TenantViewModelTests
         var rentals = new ObservableCollection<Rental>();
         var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = "0123456789";
         viewModel.AddTenantCommand.Execute(null);
 
         Tenant tenant = viewModel.Tenants[0];
@@ -165,6 +175,8 @@ public class TenantViewModelTests
         var rentals = new ObservableCollection<Rental>();
         var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
         viewModel.Name = "Test Tenant";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = "0123456789";
         viewModel.AddTenantCommand.Execute(null);
 
         Tenant tenant = viewModel.Tenants[0];
@@ -201,5 +213,27 @@ public class TenantViewModelTests
         viewModel.ShowInactiveTenants = false;
         Assert.HasCount(1, viewModel.VisibleTenants);
         Assert.AreSame(tenant, viewModel.VisibleTenants[0]);
+    }
+
+    [TestMethod]
+    public void AddTenant_WhenBankAccountNumberIsMissing_DoesNotCreateTenant()
+    {
+        // Arrange
+        var repository = new FakeTenantRepository();
+        TenantViewModel viewModel = new(
+            new ObservableCollection<Rental>(),
+            repository);
+
+        viewModel.Name = "Test Tenant";
+        viewModel.BankRegistrationNumber = "1234";
+        viewModel.BankAccountNumber = string.Empty;
+
+        // Act
+        viewModel.AddTenantCommand.Execute(null);
+
+        // Assert
+        Assert.IsEmpty(viewModel.Tenants);
+        Assert.IsFalse(repository.GetAll().Any());
+        Assert.AreEqual("Angiv kontonummer.", viewModel.ValidationMessage);
     }
 }

@@ -53,6 +53,8 @@ internal class FakeTenantRepository : IRepository<Tenant>
         storedTenant.PhoneNumber = tenant.PhoneNumber;
         storedTenant.Email = tenant.Email;
         storedTenant.IsActive = tenant.IsActive;
+        storedTenant.BankRegistrationNumber = tenant.BankRegistrationNumber;
+        storedTenant.BankAccountNumber = tenant.BankAccountNumber;
     }
 
     public void Delete(int id)

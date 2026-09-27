@@ -114,6 +114,20 @@
                                  Margin="0,4,0,12"
                                  Style="{StaticResource InputTextBoxStyle}"/>
 
+                        <TextBlock Text="Registreringsnummer" />
+                        <TextBox Text="{Binding BankRegistrationNumber,
+                                 Mode=TwoWay,
+                                 UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,4,0,12"
+                                 Style="{StaticResource InputTextBoxStyle}" />
+
+                        <TextBlock Text="Kontonummer" />
+                        <TextBox Text="{Binding BankAccountNumber,
+                                 Mode=TwoWay,
+                                 UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,4,0,12"
+                                 Style="{StaticResource InputTextBoxStyle}" />
+
                         <StackPanel Orientation="Horizontal">
 
                             <Button Content="Opret" Command="{Binding AddTenantCommand}"
