@@ -7,6 +7,8 @@ namespace Reolmarkedet.Core.Models
     {
         public int ShelfId { get; set; }
         public int ShelfNumber { get; set; }
+        public string? RowLabel { get; set; }
+        public int? PositionInRow { get; set; }
         public bool IsActive { get; set; } = true;
         public ShelfType ShelfType
         {

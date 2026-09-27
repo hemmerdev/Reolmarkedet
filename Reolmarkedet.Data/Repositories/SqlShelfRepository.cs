@@ -17,7 +17,8 @@ namespace Reolmarkedet.Data.Repositories
         {
             var shelves = new List<Shelf>();
             string query = "SELECT shelf.ShelfId, shelf.ShelfNumber, shelf.IsActive, " +
-                                   "st.ShelfTypeId, st.ShelfTypeName " +
+                                   "st.ShelfTypeId, st.ShelfTypeName, " +
+                                   "shelf.RowLabel, shelf.PositionInRow " +
                            "FROM dbo.SHELF AS shelf " +
                            "INNER JOIN dbo.SHELFTYPE AS st " +
                                 "ON shelf.ShelfTypeId = st.ShelfTypeId";
@@ -41,6 +42,8 @@ namespace Reolmarkedet.Data.Repositories
                             ShelfId = reader.GetInt32(0),
                             ShelfNumber = reader.GetInt32(1),
                             IsActive = reader.GetBoolean(2),
+                            RowLabel = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            PositionInRow = reader.IsDBNull(6) ? null : reader.GetInt32(6),
                         });
                     }
                 }
@@ -52,7 +55,8 @@ namespace Reolmarkedet.Data.Repositories
         {
             Shelf? shelf = null;
             string query = "SELECT shelf.ShelfId, shelf.ShelfNumber, shelf.IsActive, " +
-                                   "st.ShelfTypeId, st.ShelfTypeName " +
+                                   "st.ShelfTypeId, st.ShelfTypeName, " +
+                                   "shelf.RowLabel, shelf.PositionInRow " +
                            "FROM dbo.SHELF AS shelf " +
                            "INNER JOIN dbo.SHELFTYPE AS st " +
                                 "ON shelf.ShelfTypeId = st.ShelfTypeId " +
@@ -78,6 +82,8 @@ namespace Reolmarkedet.Data.Repositories
                             ShelfId = reader.GetInt32(0),
                             ShelfNumber = reader.GetInt32(1),
                             IsActive = reader.GetBoolean(2),
+                            RowLabel = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            PositionInRow = reader.IsDBNull(6) ? null : reader.GetInt32(6),
                         };
                     }
                 }
@@ -87,9 +93,9 @@ namespace Reolmarkedet.Data.Repositories
 
         public void Add(Shelf shelf)
         {
-            string query = "INSERT INTO dbo.SHELF (ShelfNumber, IsActive, ShelfTypeId) " +
+            string query = "INSERT INTO dbo.SHELF (ShelfNumber, IsActive, ShelfTypeId, RowLabel, PositionInRow) " +
                            "OUTPUT INSERTED.ShelfId " +
-                           "VALUES (@ShelfNumber, @IsActive, @ShelfTypeId)";
+                           "VALUES (@ShelfNumber, @IsActive, @ShelfTypeId, @RowLabel, @PositionInRow)";
 
             using (SqlConnection connection = new(_connectionString))
             {
@@ -98,6 +104,8 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@ShelfNumber", shelf.ShelfNumber);
                 command.Parameters.AddWithValue("@IsActive", shelf.IsActive);
                 command.Parameters.AddWithValue("@ShelfTypeId", shelf.ShelfType.ShelfTypeId);
+                command.Parameters.AddWithValue("@RowLabel", (object?)shelf.RowLabel ?? DBNull.Value);
+                command.Parameters.AddWithValue("@PositionInRow", (object?)shelf.PositionInRow ?? DBNull.Value);
 
                 connection.Open();
 
@@ -117,7 +125,9 @@ namespace Reolmarkedet.Data.Repositories
             string query = "UPDATE dbo.SHELF " +
                            "SET ShelfNumber = @ShelfNumber, " +
                                 "IsActive = @IsActive, " +
-                                "ShelfTypeId = @ShelfTypeId " +
+                                "ShelfTypeId = @ShelfTypeId, " +
+                                "RowLabel = @RowLabel, " +
+                                "PositionInRow = @PositionInRow " +
                            "WHERE ShelfId = @ShelfId";
 
             using (SqlConnection connection = new(_connectionString))
@@ -128,6 +138,8 @@ namespace Reolmarkedet.Data.Repositories
                 command.Parameters.AddWithValue("@ShelfNumber", shelf.ShelfNumber);
                 command.Parameters.AddWithValue("@IsActive", shelf.IsActive);
                 command.Parameters.AddWithValue("@ShelfTypeId", shelf.ShelfType.ShelfTypeId);
+                command.Parameters.AddWithValue("@RowLabel", (object?)shelf.RowLabel ?? DBNull.Value);
+                command.Parameters.AddWithValue("@PositionInRow", (object?)shelf.PositionInRow ?? DBNull.Value);
 
                 connection.Open();
 

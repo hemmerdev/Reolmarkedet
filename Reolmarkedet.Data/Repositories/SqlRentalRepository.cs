@@ -19,7 +19,8 @@ namespace Reolmarkedet.Data.Repositories
                 r.TerminationNoticeDate, r.MonthlyRent,
                 t.TenantId, t.Name, t.Phone, t.Email, t.IsActive, 
                 s.ShelfId, s.ShelfNumber, s.IsActive, 
-                st.ShelfTypeId, st.ShelfTypeName, r.IsCustomPrice
+                st.ShelfTypeId, st.ShelfTypeName, r.IsCustomPrice,
+                s.RowLabel, s.PositionInRow
                 FROM dbo.RENTAL AS r 
                 INNER JOIN dbo.TENANT AS t 
                     ON r.TenantId = t.TenantId 
@@ -54,7 +55,8 @@ namespace Reolmarkedet.Data.Repositories
                 r.TerminationNoticeDate, r.MonthlyRent,
                 t.TenantId, t.Name, t.Phone, t.Email, t.IsActive, 
                 s.ShelfId, s.ShelfNumber, s.IsActive, 
-                st.ShelfTypeId, st.ShelfTypeName, r.IsCustomPrice
+                st.ShelfTypeId, st.ShelfTypeName, r.IsCustomPrice,
+                s.RowLabel, s.PositionInRow
                 FROM dbo.RENTAL AS r 
                 INNER JOIN dbo.TENANT AS t 
                     ON r.TenantId = t.TenantId 
@@ -193,6 +195,8 @@ namespace Reolmarkedet.Data.Repositories
                 ShelfId = reader.GetInt32(10),
                 ShelfNumber = reader.GetInt32(11),
                 IsActive = reader.GetBoolean(12),
+                RowLabel = reader.IsDBNull(16) ? null : reader.GetString(16),
+                PositionInRow = reader.IsDBNull(17) ? null : reader.GetInt32(17)
             };
 
             return new Rental(tenant, shelf)

@@ -288,9 +288,24 @@
                     <TextBlock Text="Ledig reol i den valgte periode" />
                     <ComboBox ItemsSource="{Binding AvailableShelves}"
                               Style="{StaticResource InputComboBoxStyle}"
-                              DisplayMemberPath="ShelfNumber"
                               SelectedItem="{Binding SelectedShelf, Mode=TwoWay}"
-                              Margin="0,4,0,12" />
+                              Margin="0,4,0,12">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="Reol {0} — {1} {2}">
+                                            <Binding Path="ShelfNumber" />
+                                            <Binding Path="RowLabel"
+                                                     TargetNullValue="Placering ikke angivet" />
+                                            <Binding Path="PositionInRow"
+                                                     TargetNullValue="" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
                     <Button Content="Tilføj reol"
                             Command="{Binding AddShelfToSelectionCommand}"
@@ -354,8 +369,22 @@
                                             </TextBlock.Style>
                                         </TextBlock>
 
-                                        <TextBlock Text="{Binding ShelfNumber, StringFormat='Reol {0}'}"
-                                                   VerticalAlignment="Center" />
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding ShelfNumber, StringFormat='Reol {0}'}" />
+
+                                            <TextBlock Foreground="#AAAAAA"
+                                                       FontSize="14"
+                                                       Margin="0,4,0,0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="Placering: {0} {1}">
+                                                        <Binding Path="Shelf.RowLabel"
+                                                                 TargetNullValue="Ikke angivet" />
+                                                        <Binding Path="Shelf.PositionInRow"
+                                                                 TargetNullValue="" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
                                     </DockPanel>
                                 </Border>
                             </DataTemplate>

@@ -1019,7 +1019,16 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
 
-            foreach (var shelf in Shelves)
+            // Sort shelves by RowLabel, PositionInRow, and ShelfNumber, with nulls last
+            var sortedShelves = Shelves
+                .OrderBy(shelf => shelf.RowLabel is null ||
+                                  shelf.PositionInRow is null)
+                .ThenBy(shelf => shelf.RowLabel, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(shelf => shelf.PositionInRow)
+                .ThenBy(shelf => shelf.ShelfNumber)
+                .ToList();
+
+            foreach (var shelf in sortedShelves)
             {
                 bool isAvailable = _rentalService.IsShelfAvailable(
                     shelf, StartDate.Value, EndDate, Rentals);
