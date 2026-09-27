@@ -31,6 +31,9 @@ namespace Reolmarkedet.WPF.ViewModels
         private string _saleSearchText = string.Empty;
         private DateTime? _saleFromDate;
         private DateTime? _saleToDate;
+        private SaleRowViewModel? _selectedSaleRow;
+        private string _returnMessage = string.Empty;
+        private string _returnConfirmationMessage = string.Empty;
 
         public ObservableCollection<SaleRowViewModel> Sales { get; } = new();
         public ObservableCollection<SaleRowViewModel> VisibleSales { get; } = new();
@@ -97,7 +100,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
-
         public string Notes
         {
             get => _notes;
@@ -192,6 +194,22 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public SaleRowViewModel? SelectedSaleRow
+        {
+            get => _selectedSaleRow;
+            set
+            {
+                if (_selectedSaleRow != value)
+                {
+                    _selectedSaleRow = value;
+                    ReturnMessage = string.Empty;
+                    ReturnConfirmationMessage = string.Empty;
+                    OnPropertyChanged();
+                    ReturnItemCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         public string SaleMessage
         {
             get => _saleMessage;
@@ -200,6 +218,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (!string.IsNullOrEmpty(value))
                 {
                     SaleConfirmationMessage = string.Empty;
+                    ReturnConfirmationMessage = string.Empty;
+                    ReturnMessage = string.Empty;
                 }
                 if (_saleMessage != value)
                 {
@@ -217,10 +237,50 @@ namespace Reolmarkedet.WPF.ViewModels
                 if (!string.IsNullOrEmpty(value))
                 {
                     SaleMessage = string.Empty;
+                    ReturnConfirmationMessage = string.Empty;
+                    ReturnMessage = string.Empty;
                 }
                 if (_saleConfirmationMessage != value)
                 {
                     _saleConfirmationMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ReturnMessage
+        {
+            get => _returnMessage;
+            private set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    ReturnConfirmationMessage = string.Empty;
+                    SaleMessage = string.Empty;
+                    SaleConfirmationMessage = string.Empty;
+                }
+                if (_returnMessage != value)
+                {
+                    _returnMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ReturnConfirmationMessage
+        {
+            get => _returnConfirmationMessage;
+            private set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    ReturnMessage = string.Empty;
+                    SaleMessage = string.Empty;
+                    SaleConfirmationMessage = string.Empty;
+                }
+                if (_returnConfirmationMessage != value)
+                {
+                    _returnConfirmationMessage = value;
                     OnPropertyChanged();
                 }
             }
@@ -261,6 +321,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand AddToBasketCommand { get; }
         public RelayCommand RemoveFromBasketCommand { get; }
         public RelayCommand ClearSaleFiltersCommand { get; }
+        public RelayCommand ReturnItemCommand { get; }
 
 
         public SaleViewModel(
@@ -279,6 +340,7 @@ namespace Reolmarkedet.WPF.ViewModels
             AddToBasketCommand = new RelayCommand(AddToBasket, CanAddToBasket);
             RemoveFromBasketCommand = new RelayCommand(RemoveFromBasket, CanRemoveFromBasket);
             ClearSaleFiltersCommand = new RelayCommand(ClearSaleFilters, CanClearSaleFilters);
+            ReturnItemCommand = new RelayCommand(ReturnItem, CanReturnItem);
             // This tells WPF to recalculate the BasketTotal property whenever an item is added or removed from the basket.
             BasketItems.CollectionChanged += (_, _) =>
             {
@@ -288,6 +350,53 @@ namespace Reolmarkedet.WPF.ViewModels
             };
 
             Sales.CollectionChanged += (_, _) => ApplySaleFilter();
+        }
+
+        private bool CanReturnItem(object? parameter)
+        {
+            return SelectedSaleRow is not null;
+        }
+
+        private void ReturnItem(object? parameter)
+        {
+            ClearMessages();
+            var selectedRow = SelectedSaleRow;
+            if (selectedRow is null)
+            {
+                return;
+            }
+
+            try
+            {
+                _salesService.ReturnItem(selectedRow.SaleId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ReturnMessage = ex.Message;
+                return;
+            }
+            catch (DbException)
+            {
+                ReturnMessage = "Varen kunne ikke returneres pga. en databasefejl. Prøv igen.";
+                return;
+            }
+
+            Sales.Remove(selectedRow);
+            SelectedSaleRow = null;
+            SelectedRentalOption = null;
+            SelectedItemOption = null;
+
+            try
+            {
+                LoadRentalOptions();
+            }
+            catch (DbException)
+            {
+                ReturnMessage = "Varen er returneret, men varelisten kunne ikke opdateres. Åbn salgsvisningen igen.";
+                return;
+            }
+
+            ReturnConfirmationMessage = "Varen er returneret og kan sælges igen";
         }
 
         private bool CanClearSaleFilters(object? parameter)
@@ -341,8 +450,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void AddToBasket(object? parameter)
         {
-            SaleMessage = string.Empty;
-            SaleConfirmationMessage = string.Empty;
+            ClearMessages();
 
             if (SelectedItem is null ||
                 _selectedRental is null)
@@ -395,8 +503,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void RegisterSale(object? parameter)
         {
-            SaleMessage = string.Empty;
-            SaleConfirmationMessage = string.Empty;
+            ClearMessages();
 
             if (BasketItems.Count == 0)
             {
@@ -459,8 +566,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void FindItem(object? parameter)
         {
-            SaleMessage = string.Empty;
-            SaleConfirmationMessage = string.Empty;
+            ClearMessages();
 
             SelectedItem = null;
             SelectedRentalOption = null;
@@ -647,10 +753,10 @@ namespace Reolmarkedet.WPF.ViewModels
             SelectedItem = null;
             SelectedRentalOption = null;
             SelectedItemOption = null;
+            SelectedSaleRow = null;
             ItemOptions.Clear();
             SearchText = string.Empty;
-            SaleMessage = string.Empty;
-            SaleConfirmationMessage = string.Empty;
+            ClearMessages();
 
             try
             {
@@ -669,6 +775,14 @@ namespace Reolmarkedet.WPF.ViewModels
                         "Salgsoversigten og varevalget kunne ikke opdateres fra databasen. " +
                         "Åbn salgsvisningen igen for at prøve igen.";
             }
+        }
+
+        private void ClearMessages()
+        {
+            SaleMessage = string.Empty;
+            SaleConfirmationMessage = string.Empty;
+            ReturnMessage = string.Empty;
+            ReturnConfirmationMessage = string.Empty;
         }
     }
 }

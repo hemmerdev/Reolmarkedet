@@ -77,4 +77,94 @@ public class SalesServiceTests
         Assert.AreEqual(new DateOnly(2026, 9, 26), storedSale.SaleDate);
         Assert.AreEqual("Original sale", storedSale.Notes);
     }
+
+    [TestMethod]
+    public void ReturnItem_WhenSaleExists_RemovesSaleAndMakesItemAvailable()
+    {
+        // Arrange
+        FakeSaleRepository saleRepository = new();
+        FakeItemRepository itemRepository = new(saleRepository);
+
+        Item item = new()
+        {
+            ItemId = 1,
+            Description = "Test Item",
+            Price = 100.0m,
+            Barcode = "1234567890"
+        };
+        itemRepository.Add(item);
+
+        SalesService salesService = new(itemRepository, saleRepository);
+
+        Sale sale = salesService.RegisterSale(
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+        // Act
+        salesService.ReturnItem(sale.SaleId);
+
+        // Assert
+        Assert.AreEqual(0, saleRepository.GetAll().Count());
+        Assert.AreEqual(1, itemRepository.GetUnsold().Count());
+    }
+
+    [TestMethod]
+    public void RegisterSale_WhenItemHasBeenReturned_AllowsResale()
+    {
+        // Arrange
+        FakeSaleRepository saleRepository = new();
+        FakeItemRepository itemRepository = new(saleRepository);
+
+        Item item = new()
+        {
+            ItemId = 1,
+            Description = "Test Item",
+            Price = 100.0m,
+            Barcode = "1234567890"
+        };
+        itemRepository.Add(item);
+
+        SalesService salesService = new(itemRepository, saleRepository);
+        Sale sale = salesService.RegisterSale(
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+        salesService.ReturnItem(sale.SaleId);
+
+        // Act
+        Sale resale = salesService.RegisterSale(
+            item.ItemId, 90.0m, new DateOnly(2026, 9, 27), "Resale attempt");
+
+        // Assert
+        Assert.AreEqual(1, saleRepository.GetAll().Count());
+        Assert.Contains(resale, saleRepository.GetAll());
+        Assert.AreEqual(0, itemRepository.GetUnsold().Count());
+        Assert.AreNotEqual(sale.SaleId, resale.SaleId);
+    }
+
+    [TestMethod]
+    public void ReturnItem_WhenSaleAlreadyReturned_ThrowsAndKeepsItemUnsold()
+    {
+        // Arrange
+        FakeSaleRepository saleRepository = new();
+        FakeItemRepository itemRepository = new(saleRepository);
+
+        Item item = new()
+        {
+            ItemId = 1,
+            Description = "Test Item",
+            Price = 100.0m,
+            Barcode = "1234567890"
+        };
+        itemRepository.Add(item);
+
+        SalesService salesService = new(itemRepository, saleRepository);
+        Sale sale = salesService.RegisterSale(
+            item.ItemId, 80.0m, new DateOnly(2026, 9, 26), "Test sale notes");
+        salesService.ReturnItem(sale.SaleId);
+
+        // Act and Assert
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            salesService.ReturnItem(sale.SaleId));
+
+        Assert.AreEqual(0, saleRepository.GetAll().Count());
+        Assert.Contains(item, itemRepository.GetAll());
+        Assert.AreEqual(1, itemRepository.GetUnsold().Count());
+    }
 }

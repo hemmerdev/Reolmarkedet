@@ -88,5 +88,18 @@ namespace Reolmarkedet.Core.Services
                     "Salgsprisen skal være mellem 0 og 99.999.999,99 og må have højst to decimaler.");
             }
         }
+
+        public void ReturnItem(int saleId)
+        {
+            if (saleRepository.GetById(saleId) is Sale)
+            {
+                saleRepository.Delete(saleId);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Salget med id '{saleId}' blev ikke fundet. Varen kan muligvis allerede være returneret.");
+            }
+        }
     }
 }

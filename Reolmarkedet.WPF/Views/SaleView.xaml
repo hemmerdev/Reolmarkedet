@@ -297,74 +297,162 @@
             </Border>
         </ScrollViewer>
 
-        <DataGrid Grid.Row="2"
-                  Grid.Column="0"
-                  ItemsSource="{Binding VisibleSales}"
-                  Style="{StaticResource ManagementDataGridStyle}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  SelectionMode="Single"
-                  SelectionUnit="FullRow">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Dato"
-                                    Width="90"
-                                    Binding="{Binding SaleDate, StringFormat=dd-MM-yyyy}"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+        <Grid Grid.Row="2" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <DataGridTextColumn Header="Vare"
-                                    Width="*"
-                                    Binding="{Binding ItemDescription}"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+            <DataGrid Grid.Row="0"
+                      ItemsSource="{Binding VisibleSales}"
+                      Style="{StaticResource ManagementDataGridStyle}"
+                      SelectedItem="{Binding SelectedSaleRow}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Dato"
+                                        Width="90"
+                                        Binding="{Binding SaleDate, StringFormat=dd-MM-yyyy}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
-                <DataGridTextColumn Header="Reol"
-                                    Width="50"
-                                    Binding="{Binding ShelfNumber}"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Vare"
+                                        Width="*"
+                                        Binding="{Binding ItemDescription}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
-                <DataGridTextColumn Header="Reollejer"
-                                    Width="*"
-                                    Binding="{Binding TenantName}"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Reol"
+                                        Width="50"
+                                        Binding="{Binding ShelfNumber}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
-                <DataGridTextColumn Header="Salgspris"
-                                    Width="100"
-                                    Binding="{Binding SalePrice, StringFormat='{}{0:0.00} kr.', ConverterCulture='da-DK'}"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Reollejer"
+                                        Width="*"
+                                        Binding="{Binding TenantName}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
-                <DataGridTextColumn Header="Bemærkninger"
-                                    Width="*"
-                                    Binding="{Binding Notes}"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                    <DataGridTextColumn Header="Salgspris"
+                                        Width="100"
+                                        Binding="{Binding SalePrice, StringFormat='{}{0:0.00} kr.', ConverterCulture='da-DK'}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
-        <TextBlock Grid.Row="2"
-                   Grid.Column="0"
-                   Margin="16,56,16,0"
-                   VerticalAlignment="Top"
-                   Foreground="#AAAAAA"
-                   TextWrapping="Wrap"
-                   IsHitTestVisible="False">
-            <TextBlock.Style>
-                <Style TargetType="TextBlock">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                    <Setter Property="Text"
-                            Value="Ingen salg matcher de valgte filtre."/>
+                    <DataGridTextColumn Header="Bemærkninger"
+                                        Width="*"
+                                        Binding="{Binding Notes}"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                </DataGrid.Columns>
+            </DataGrid>
 
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding VisibleSales.Count}" Value="0">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
+            <TextBlock Grid.Row="0"
+                       Margin="16,56,16,0"
+                       VerticalAlignment="Top"
+                       Foreground="#AAAAAA"
+                       TextWrapping="Wrap"
+                       IsHitTestVisible="False">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Setter Property="Text"
+                                Value="Ingen salg matcher de valgte filtre."/>
 
-                        <DataTrigger Binding="{Binding Sales.Count}" Value="0">
-                            <Setter Property="Text"
-                                    Value="Der er endnu ikke registreret nogen salg."/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Style>
-        </TextBlock>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding VisibleSales.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+
+                            <DataTrigger Binding="{Binding Sales.Count}" Value="0">
+                                <Setter Property="Text"
+                                        Value="Der er endnu ikke registreret nogen salg."/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <Border Grid.Row="1"
+                    Margin="0,12,0,0"
+                    Background="#292929"
+                    BorderBrush="#595959"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="18">
+                <StackPanel>
+                    <TextBlock Text="Returnér valgt vare"
+                               FontSize="20"
+                               Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Vælg et salg i listen ovenfor."
+                               Foreground="#AAAAAA"
+                               Margin="0,0,0,12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSaleRow}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSaleRow}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <TextBlock Text="{Binding SelectedSaleRow.ItemDescription}"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBlock Text="{Binding SelectedSaleRow.SaleDate,
+                                   StringFormat='Salgsdato: {0:dd-MM-yyyy}'}"
+                                   Margin="0,0,0,4"/>
+
+                        <TextBlock Text="{Binding SelectedSaleRow.SalePrice,
+                                   ConverterCulture=da-DK,
+                                   StringFormat='Salgspris: {0:N2} kr.'}"
+                                   Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Når du bekræfter returneringen, slettes salget, og varen kan sælges igen."
+                                   Foreground="#AAAAAA"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,12"/>
+
+                        <Button Content="Bekræft returnering"
+                                Command="{Binding ReturnItemCommand}"
+                                Style="{StaticResource WarningButtonStyle}"
+                                HorizontalAlignment="Left"/>
+
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ReturnMessage}"
+                               Foreground="#F28B82"
+                               TextWrapping="Wrap"
+                               Style="{StaticResource MessageTextStyle}"
+                               Margin="0,12,0,0"/>
+
+                    <TextBlock Text="{Binding ReturnConfirmationMessage}"
+                               Foreground="#B7DDBE"
+                               TextWrapping="Wrap"
+                               Style="{StaticResource MessageTextStyle}"
+                               Margin="0,12,0,0"/>
+
+                </StackPanel>
+
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
