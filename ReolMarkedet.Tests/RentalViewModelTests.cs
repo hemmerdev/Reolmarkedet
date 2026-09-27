@@ -59,4 +59,40 @@ public class RentalViewModelTests
         Assert.AreEqual(850m, firstRental.MonthlyRent);
         Assert.AreEqual(825m, secondRental.MonthlyRent);
     }
+
+    [TestMethod]
+    public void FirstPeriodTotal_WhenTwoShelvesSelected_ReturnsCorrectTotalWithoutSaving()
+    {
+        // Arrange
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf firstShelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        Shelf secondShelf = new(shelfType) { ShelfId = 2, ShelfNumber = 2 };
+        FakeRentalRepository rentalRepository = new();
+
+        RentalViewModel viewModel = new(
+            new ObservableCollection<Tenant> { tenant },
+            new ObservableCollection<Shelf> { firstShelf, secondShelf },
+            new ObservableCollection<Rental>(),
+            rentalRepository)
+        {
+            SelectedTenant = tenant,
+            StartDate = new DateTime(2026, 10, 16),
+            EndDate = null
+        };
+
+        viewModel.SelectedShelf = firstShelf;
+        viewModel.AddShelfToSelectionCommand.Execute(null);
+
+        viewModel.SelectedShelf = secondShelf;
+        viewModel.AddShelfToSelectionCommand.Execute(null);
+
+        // Act
+        decimal? firstPeriodTotal = viewModel.FirstPeriodTotal;
+
+        // Assert
+        Assert.AreEqual((decimal?)864.52m, firstPeriodTotal);
+        Assert.HasCount(0, viewModel.Rentals);
+        Assert.IsFalse(rentalRepository.GetAll().Any());
+    }
 }

@@ -120,6 +120,9 @@ namespace Reolmarkedet.WPF.ViewModels
                     RentalConfirmationMessage = string.Empty;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(TotalMonthlyRent));
+                    OnPropertyChanged(nameof(FirstPeriodTotal));
+                    OnPropertyChanged(nameof(FirstPeriodText));
+                    OnPropertyChanged(nameof(MonthlyPaymentText));
                 }
             }
         }
@@ -160,6 +163,125 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public decimal? FirstPeriodTotal
+        {
+            get
+            {
+                if (SelectedShelves.Count == 0)
+                {
+                    return 0m;
+                }
+                if (SelectedTenant is null ||
+                    StartDate is null ||
+                    TotalMonthlyRent is null)
+                {
+                    return null;
+                }
+
+                if (EndDate.HasValue &&
+                    EndDate.Value.Date <= StartDate.Value.Date)
+                {
+
+                    return null;
+
+                }
+
+                List<Rental> temporaryRentals = new();
+                List<Rental> rentalsForCalculation = new(Rentals);
+
+                foreach (var row in SelectedShelfRows)
+                {
+                    decimal monthlyPrice = row.MonthlyRent;
+
+                    if (IsCustomPrice)
+                    {
+                        monthlyPrice = TotalMonthlyRent.Value / SelectedShelves.Count;
+                    }
+                    Rental temporaryRental = new Rental(SelectedTenant, row.Shelf)
+                    {
+                        StartDate = StartDate.Value.Date,
+                        EndDate = this.EndDate,
+                        MonthlyRent = monthlyPrice,
+                        IsCustomPrice = this.IsCustomPrice
+                    };
+
+                    temporaryRentals.Add(temporaryRental);
+                    rentalsForCalculation.Add(temporaryRental);
+                }
+
+                decimal total = 0m;
+                foreach (var rental in temporaryRentals)
+                {
+                    total += _rentalService.GetFirstPeriodRent(rental, rentalsForCalculation);
+                }
+                return total;
+            }
+        }
+
+        public string FirstPeriodText
+        {
+            get
+            {
+                if (SelectedShelves.Count == 0 ||
+                    StartDate is null)
+                {
+                    return string.Empty;
+                }
+
+                DateTime periodStart = StartDate.Value.Date;
+
+                int daysInMonth = DateTime.DaysInMonth(
+                    StartDate.Value.Year,
+                    StartDate.Value.Month);
+
+                DateTime periodEnd = new DateTime(
+                    StartDate.Value.Year,
+                    StartDate.Value.Month,
+                    daysInMonth);
+
+                if (EndDate.HasValue &&
+                    EndDate.Value.Date < periodEnd)
+                {
+                    periodEnd = EndDate.Value.Date;
+                }
+                if (periodEnd < periodStart)
+                {
+                    return string.Empty;
+                }
+
+                return $"For perioden: {periodStart:dd.MM.yyyy} - {periodEnd:dd.MM.yyyy}";
+            }
+        }
+
+        public string MonthlyPaymentText
+        {
+            get
+            {
+                if (SelectedShelves.Count == 0 ||
+                    StartDate is null)
+                {
+                    return string.Empty;
+                }
+                if (EndDate.HasValue &&
+                    EndDate.Value.Date <= StartDate.Value.Date)
+                {
+                    return string.Empty;
+                }
+
+                var nextMonth = new DateTime(
+                    StartDate.Value.Year,
+                    StartDate.Value.Month,
+                    1).AddMonths(1);
+
+                if (EndDate.HasValue && EndDate.Value.Date < nextMonth)
+                {
+                    return "Lejemålet afsluttes i første periode. Der afregnes ikke leje i efterfølgende måneder.";
+                }
+
+                return $"Fra {nextMonth:dd.MM.yyyy} afregnes lejen via månedsopgørelsen.";
+            }
+        }
+
         public bool IsCustomPrice
         {
             get => _isCustomPrice;
@@ -170,6 +292,9 @@ namespace Reolmarkedet.WPF.ViewModels
                     _isCustomPrice = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(TotalMonthlyRent));
+                    OnPropertyChanged(nameof(FirstPeriodTotal));
+                    OnPropertyChanged(nameof(FirstPeriodText));
+                    OnPropertyChanged(nameof(MonthlyPaymentText));
                     EnableCustomPriceCommand.RaiseCanExecuteChanged();
                     UseStandardPriceCommand.RaiseCanExecuteChanged();
                 }
@@ -695,8 +820,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
 
-
             // All validation passed. Create one rental for each selected shelf.
+
+            List<Rental> createdRentals = new(); // List for calculating the total rent for the first period across all rentals created in this operation.
             foreach (SelectedShelfRowViewModel shelfRow in shelvesToRent)
             {
                 Shelf shelf = shelfRow.Shelf;
@@ -727,7 +853,13 @@ namespace Reolmarkedet.WPF.ViewModels
                     return;
                 }
                 Rentals.Add(rental);
+                createdRentals.Add(rental);
                 SelectedShelves.Remove(shelf);
+            }
+            decimal firstPeriodTotal = 0;
+            foreach (var r in createdRentals)
+            {
+                firstPeriodTotal += _rentalService.GetFirstPeriodRent(r, Rentals);
             }
 
             // Reset the draft for the next creation.
@@ -741,7 +873,8 @@ namespace Reolmarkedet.WPF.ViewModels
             Refresh();
 
             // Set feedback last because refreshing clears earlier messages.
-            RentalConfirmationMessage = $"{shelvesToRent.Count} lejemål blev oprettet.";
+            RentalConfirmationMessage = $"{shelvesToRent.Count} lejemål blev oprettet. " +
+                $"Betaling for første periode: {firstPeriodTotal.ToString("N2", PriceCulture)} kr.";
         }
 
         private bool CanUseStandardPrice(object? parameter)
@@ -918,7 +1051,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     MonthlyRent = string.Empty;
                 }
-
+                OnPropertyChanged(nameof(FirstPeriodTotal));
+                OnPropertyChanged(nameof(FirstPeriodText));
+                OnPropertyChanged(nameof(MonthlyPaymentText));
                 return;
             }
 
@@ -939,6 +1074,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 position++;
             }
             OnPropertyChanged(nameof(TotalMonthlyRent));
+            OnPropertyChanged(nameof(FirstPeriodTotal));
+            OnPropertyChanged(nameof(FirstPeriodText));
+            OnPropertyChanged(nameof(MonthlyPaymentText));
 
             if (!IsCustomPrice)
             {

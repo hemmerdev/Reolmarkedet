@@ -388,9 +388,53 @@
                             Padding="0,12,0,0"
                             Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Samlet månedlig leje for valgte reoler"
+                            <TextBlock Text="Betaling ved oprettelse"
                                        TextWrapping="Wrap"
                                        FontWeight="SemiBold" />
+
+                            <TextBlock Text="{Binding FirstPeriodText}"
+                                       Foreground="#AAAAAA"
+                                       Margin="0,4,0,0"
+                                       TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding FirstPeriodText}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <TextBlock Text="{Binding FirstPeriodTotal,
+                                       ConverterCulture='da-DK',
+                                       StringFormat='{}{0:N2} kr.',
+                                       TargetNullValue='Kan ikke beregnes'}"
+                                       Margin="0,4,0,0"
+                                       TextWrapping="Wrap"
+                                       FontSize="24"
+                                       FontWeight="SemiBold" />
+
+                            <TextBlock Text="Samlet månedlig leje"
+                                       TextWrapping="Wrap"
+                                       FontWeight="SemiBold"
+                                       Margin="0,16,0,0"/>
+
+                            <TextBlock Text="{Binding MonthlyPaymentText}"
+                                       Foreground="#AAAAAA"
+                                       Margin="0,4,0,0"
+                                       TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding MonthlyPaymentText}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
 
                             <TextBlock Text="{Binding TotalMonthlyRent,
                                        ConverterCulture='da-DK',

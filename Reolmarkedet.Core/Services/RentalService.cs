@@ -224,16 +224,21 @@ namespace Reolmarkedet.Core.Services
                 }
             }
 
-            // Earlier rentals get earlier pricing positions; IDs break ties on the same day.
+            // Earlier rentals get earlier pricing positions
             activeRentals = activeRentals
                 .OrderBy(r => r.StartDate.Date)
-                .ThenBy(r => r.RentalId)
+                .ThenBy(r => r.RentalId == 0 ? int.MaxValue : r.RentalId) // Puts temporary rentals after saved rentals with the same start date
                 .ToList();
 
-            // Pricing positions start at 1, while list indexes start at 0.
+
             for (int i = 1; i <= activeRentals.Count; i++)
             {
-                if (activeRentals[i - 1].RentalId == rental.RentalId)
+                // Match the same object in memory, including temporary rentals whose ID is 0.
+                // Also allow matching by a saved ID, since the database can load the same rental
+                // into separate objects. Never match different temporary rentals just by ID 0.
+                if (activeRentals[i - 1] == rental ||
+                    (rental.RentalId != 0 &&
+                    activeRentals[i - 1].RentalId == rental.RentalId))
                 {
                     return GetStandardMonthlyRentPerShelf(i);
                 }
@@ -241,6 +246,47 @@ namespace Reolmarkedet.Core.Services
 
             throw new InvalidOperationException(
                 "Lejemålet blev ikke fundet blandt reollejerens aktive lejemål på den valgte dato.");
+        }
+
+        public decimal GetFirstPeriodRent(
+            Rental rental,
+            IEnumerable<Rental> rentals)
+        {
+            DateTime periodStart = rental.StartDate.Date;
+
+            int daysInMonth = DateTime.DaysInMonth(
+                periodStart.Year,
+                periodStart.Month);
+            DateTime periodEnd = new DateTime(
+                periodStart.Year,
+                periodStart.Month,
+                daysInMonth);
+
+
+            if (rental.EndDate.HasValue &&
+                rental.EndDate.Value.Date < periodEnd.Date)
+            {
+                periodEnd = rental.EndDate.Value.Date;
+            }
+            if (periodEnd < periodStart)
+            {
+                throw new ArgumentException(
+                    "Slutdatoen må ikke være før startdatoen");
+            }
+
+            // Calculate total charge:
+            decimal total = 0;
+
+            for (int i = periodStart.Day; i <= periodEnd.Day; i++)
+            {
+                // Calculate the daily price for each day in the period and add it to the total
+                total += (GetMonthlyRentForDate(
+                    rental,
+                    new DateTime(periodStart.Year, periodStart.Month, i),
+                    rentals) / daysInMonth);
+            }
+            // Round to 2 decimals, rounding away from zero on .5 values
+            return Math.Round(total, 2, MidpointRounding.AwayFromZero);
         }
 
         public int GetRentedShelfCountForTenant(

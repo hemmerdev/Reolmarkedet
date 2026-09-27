@@ -498,4 +498,33 @@ public class RentalServiceTests
         Assert.AreEqual(700m, novemberRent);
         Assert.AreEqual(700m, secondRental.MonthlyRent);
     }
+
+    [TestMethod]
+    public void GetFirstPeriodRent_WhenStartingMidMonth_ReturnsProratedCharge()
+    {
+        // Arrange
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+
+        Rental rental = new(tenant, shelf)
+        {
+            RentalId = 1,
+            StartDate = new DateTime(2026, 9, 16),
+            MonthlyRent = 850m,
+            IsCustomPrice = false
+        };
+
+        List<Rental> rentals = new() { rental };
+
+        // Act
+        decimal firstPeriodRent = rentalService.GetFirstPeriodRent(
+            rental,
+            rentals);
+
+        // Assert
+        Assert.AreEqual(425m, firstPeriodRent);
+        Assert.AreEqual(850m, rental.MonthlyRent);
+    }
 }
