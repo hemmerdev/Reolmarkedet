@@ -185,37 +185,13 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
-        public int ActiveShelfCount
-        {
-            get
-            {
-                int activeShelfCount = 0;
-                foreach (var row in TenantRentalRows)
-                {
-                    if (row.Status == RentalStatus.Active)
-                    {
-                        activeShelfCount++;
-                    }
-                }
-                return activeShelfCount;
-            }
-        }
+        public int ActiveShelfCount =>
+            TenantRentalRows.Count(row => row.Status == RentalStatus.Active);
 
-        public decimal CurrentMonthlyRent
-        {
-            get
-            {
-                decimal currentMonthlyRent = 0;
-                foreach (var row in TenantRentalRows)
-                {
-                    if (row.Status == RentalStatus.Active)
-                    {
-                        currentMonthlyRent += row.MonthlyRent;
-                    }
-                }
-                return currentMonthlyRent;
-            }
-        }
+        public decimal CurrentMonthlyRent =>
+            TenantRentalRows
+            .Where(row => row.Status == RentalStatus.Active)
+            .Sum(row => row.MonthlyRent);
 
         public string ValidationMessage
         {

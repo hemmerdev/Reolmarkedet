@@ -49,18 +49,7 @@ namespace Reolmarkedet.WPF.ViewModels
             PaymentMethod.MobilePay
         };
 
-        public decimal BasketTotal
-        {
-            get
-            {
-                decimal total = 0;
-                foreach (var item in BasketItems)
-                {
-                    total += item.SalePrice;
-                }
-                return total;
-            }
-        }
+        public decimal BasketTotal => BasketItems.Sum(item => item.SalePrice);
 
         public string SearchText
         {

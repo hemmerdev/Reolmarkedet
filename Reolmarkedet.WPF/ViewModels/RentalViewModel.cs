@@ -161,14 +161,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
                 if (!IsCustomPrice)
                 {
-                    decimal total = 0m;
-
-                    foreach (SelectedShelfRowViewModel row in SelectedShelfRows)
-                    {
-                        total += row.MonthlyRent;
-                    }
-
-                    return total;
+                    return SelectedShelfRows.Sum(row => row.MonthlyRent);
                 }
                 if (!decimal.TryParse(
                     MonthlyRent,

@@ -74,20 +74,10 @@ namespace Reolmarkedet.Core.Services
         {
             DateTime day = date.Date;
 
-            foreach (var rental in rentals)
-            {
-                bool sameShelf = rental.Shelf.ShelfId == shelf.ShelfId;
-                bool hasStarted = rental.StartDate.Date <= day;
-                bool hasNotEnded = rental.EndDate?.Date >= day ||
-                    rental.EndDate is null;
-
-                if (sameShelf && hasStarted && hasNotEnded)
-                {
-                    return rental;
-                }
-            }
-
-            return null;
+            return rentals.FirstOrDefault(r =>
+                r.Shelf.ShelfId == shelf.ShelfId &&
+                r.StartDate.Date <= day &&
+                (r.EndDate?.Date >= day || r.EndDate is null));
         }
 
         public ShelfStatus GetShelfStatus(
@@ -113,64 +103,28 @@ namespace Reolmarkedet.Core.Services
 
         public bool HasRentalsForShelf(Shelf shelf, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-                if (rental.Shelf.ShelfId == shelf.ShelfId)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rentals.Any(r => r.Shelf.ShelfId == shelf.ShelfId);
         }
 
         public bool HasCurrentOrFutureRentalsForShelf(
             Shelf shelf, DateTime date, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-
-                bool sameShelf = rental.Shelf.ShelfId == shelf.ShelfId;
-
-                bool hasNotEnded =
-                    rental.EndDate is null ||
-                    rental.EndDate.Value.Date >= date.Date;
-
-                if (sameShelf && hasNotEnded)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rentals.Any(r =>
+                r.Shelf.ShelfId == shelf.ShelfId &&
+                (r.EndDate is null || r.EndDate.Value.Date >= date.Date));
         }
 
         public bool HasRentalsForTenant(Tenant tenant, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-                if (rental.Tenant.TenantId == tenant.TenantId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return rentals.Any(rental => rental.Tenant.TenantId == tenant.TenantId);
         }
 
         public bool HasCurrentOrFutureRentalsForTenant(
             Tenant tenant, DateTime date, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-                bool sameTenant = rental.Tenant.TenantId == tenant.TenantId;
-                bool hasNotEnded =
-                    rental.EndDate is null ||
-                    rental.EndDate.Value.Date >= date.Date;
-                if (sameTenant && hasNotEnded)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rentals.Any(r =>
+                r.Tenant.TenantId == tenant.TenantId &&
+                (r.EndDate is null || r.EndDate.Value.Date >= date.Date));
         }
 
         public decimal GetStandardMonthlyRentPerShelf(int shelfCount)
@@ -295,21 +249,10 @@ namespace Reolmarkedet.Core.Services
             DateTime date,
             IEnumerable<Rental> rentals)
         {
-            int shelfCount = 0;
-
-            foreach (var rental in rentals)
-            {
-                bool sameTenant = rental.Tenant.TenantId == tenant.TenantId;
-                bool hasStarted = rental.StartDate.Date <= date.Date;
-                bool hasNotEnded = rental.EndDate is null ||
-                    rental.EndDate.Value.Date >= date.Date;
-
-                if (sameTenant && hasStarted && hasNotEnded)
-                {
-                    shelfCount++;
-                }
-            }
-            return shelfCount;
+            return rentals.Count(r =>
+                r.Tenant.TenantId == tenant.TenantId &&
+                r.StartDate.Date <= date.Date &&
+                (r.EndDate is null || r.EndDate.Value.Date >= date.Date));
         }
 
         public DateTime GetEarliestTerminationEndDate(DateTime noticeDate)
