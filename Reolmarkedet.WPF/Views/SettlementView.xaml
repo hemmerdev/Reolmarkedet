@@ -169,6 +169,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="4*"/>
@@ -176,15 +177,29 @@
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Row="0"
-                            Grid.ColumnSpan="3"
-                            Orientation="Horizontal"
-                            Margin="0,0,0,16">
-                    <TextBlock Text="Detaljer for "
-                               FontSize="20"/>
-                    <TextBlock Text="{Binding SelectedSettlement.Tenant.Name}"
-                               FontSize="20"/>
-                </StackPanel>
+                <Grid Grid.Row="0"
+                      Grid.ColumnSpan="3"
+                      Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+                        <TextBlock Text="Detaljer for "
+                                   FontSize="20"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Tenant.Name}"
+                                   FontSize="20"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1"
+                            Content="Luk detaljer"
+                            Command="{Binding CloseDetailedViewCommand}"
+                            Margin="8,0,0,0"
+                            Style="{StaticResource ActionButtonStyle}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"/>
+                </Grid>
 
                 <UniformGrid Grid.Row="1" Grid.ColumnSpan="3"
                              Columns="4" Margin="0,0,0,16">
@@ -209,6 +224,7 @@
                                    ConverterCulture=da-DK}"
                                    FontSize="20" FontWeight="SemiBold"/>
                     </StackPanel>
+
                     <StackPanel>
                         <TextBlock Text="{Binding SelectedSettlement.Status}"
                                    Foreground="#AAAAAA"/>
@@ -219,7 +235,69 @@
                     </StackPanel>
                 </UniformGrid>
 
-                <DockPanel Grid.Row="2" Grid.Column="0">
+                <Expander Grid.Row="2"
+                          Grid.ColumnSpan="3"
+                          Header="Næste handling"
+                          Foreground="#EEEEEE"
+                          IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                          Margin="0,0,0,16">
+                    <Expander.Style>
+                        <Style TargetType="Expander">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSettlement.Status}"
+                                             Value="Ingen betaling">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Expander.Style>
+
+                    <StackPanel Margin="12,8,0,4">
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettlement.Status}"
+                                                     Value="Til udbetaling">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="Overfør den positive saldo ovenfor til:"
+                                       Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding SelectedSettlement.Tenant.BankRegistrationNumber,
+                                       StringFormat='Reg.nr.: {0}'}"/>
+                            <TextBlock Text="{Binding SelectedSettlement.Tenant.BankAccountNumber,
+                                       StringFormat='Kontonummer: {0}'}"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettlement.Status}"
+                                                     Value="Skylder">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="Send regning for den skyldige saldo ovenfor til:"
+                                       Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding SelectedSettlement.Tenant.Email,
+                                       StringFormat='Email: {0}'}"/>
+                            <TextBlock Text="{Binding SelectedSettlement.Tenant.PhoneNumber,
+                                       StringFormat='Telefon: {0}'}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+
+                <DockPanel Grid.Row="3" Grid.Column="0">
                     <TextBlock Text="Salg i den valgte måned"
                                DockPanel.Dock="Top"
                                Margin="0,0,0,8"/>
@@ -260,7 +338,7 @@
                     </DataGrid>
                 </DockPanel>
 
-                <DockPanel Grid.Row="2" Grid.Column="2">
+                <DockPanel Grid.Row="3" Grid.Column="2">
                     <TextBlock Text="Leje for næste måned"
                                DockPanel.Dock="Top"
                                Margin="0,0,0,8"/>
