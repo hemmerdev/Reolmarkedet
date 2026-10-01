@@ -49,9 +49,14 @@
                         VerticalAlignment="Bottom"/>
             </StackPanel>
 
+            <TextBlock Text="Opgørelser beregnes ud fra aktuelle data. Rettelser og returneringer kan ændre tidligere måneder. Betaling registreres ikke her."
+                       Foreground="#AAAAAA"
+                       TextWrapping="Wrap"
+                       Margin="0,8,0,0"/>
             <TextBlock Text="Månedsopgørelser kan kun beregnes for afsluttede måneder."
                        Foreground="#AAAAAA"
                        Margin="0,8,0,0">
+
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -123,6 +128,24 @@
             </DataGrid.Columns>
         </DataGrid>
 
+        <TextBlock Grid.Row="2"
+                   Text="Ingen opgørelser at vise. Tryk beregn opgørelser."
+                   Margin="16,56,16,0"
+                   VerticalAlignment="Top"
+                   Foreground="#AAAAAA"
+                   IsHitTestVisible="False">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding MonthlySettlements.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
         <Border Grid.Row="3"
                 Background="#292929"
                 BorderBrush="#595959"
@@ -145,6 +168,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="4*"/>
@@ -162,7 +186,40 @@
                                FontSize="20"/>
                 </StackPanel>
 
-                <DockPanel Grid.Row="1" Grid.Column="0">
+                <UniformGrid Grid.Row="1" Grid.ColumnSpan="3"
+                             Columns="4" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Salg i valgt måned" Foreground="#AAAAAA"/>
+                        <TextBlock Text="{Binding SelectedSettlement.TotalSales,
+                                   StringFormat='{}{0:N2} kr.',
+                                   ConverterCulture=da-DK}"
+                                   FontSize="20" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="- Kommission (10%)" Foreground="#AAAAAA"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Commission,
+                                   StringFormat='{}{0:N2} kr.',
+                                   ConverterCulture=da-DK}"
+                                   FontSize="20" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="- Leje næste måned" Foreground="#AAAAAA"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Rent,
+                                   StringFormat='{}{0:N2} kr.',
+                                   ConverterCulture=da-DK}"
+                                   FontSize="20" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="{Binding SelectedSettlement.Status}"
+                                   Foreground="#AAAAAA"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Balance,
+                                   StringFormat='{}{0:N2} kr.',
+                                   ConverterCulture=da-DK}"
+                                   FontSize="20" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </UniformGrid>
+
+                <DockPanel Grid.Row="2" Grid.Column="0">
                     <TextBlock Text="Salg i den valgte måned"
                                DockPanel.Dock="Top"
                                Margin="0,0,0,8"/>
@@ -203,7 +260,7 @@
                     </DataGrid>
                 </DockPanel>
 
-                <DockPanel Grid.Row="1" Grid.Column="2">
+                <DockPanel Grid.Row="2" Grid.Column="2">
                     <TextBlock Text="Leje for næste måned"
                                DockPanel.Dock="Top"
                                Margin="0,0,0,8"/>
