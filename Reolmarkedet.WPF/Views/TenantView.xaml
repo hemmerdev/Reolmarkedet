@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Reolmarkedet.WPF.Views"
+             xmlns:enums="clr-namespace:Reolmarkedet.WPF.ViewModels.enums"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="24">
@@ -50,24 +51,185 @@
                       VerticalAlignment="Center"
                       Margin="16,4,0,0" />
         </Grid>
-        <DataGrid Grid.Row="2" Grid.Column="0" ItemsSource="{Binding VisibleTenants}"
-                  SelectedItem="{Binding SelectedTenant, Mode=TwoWay}"
-                  Style="{StaticResource ManagementDataGridStyle}"
-                  AutoGenerateColumns="False" IsReadOnly="True"
-                  CanUserAddRows="False" CanUserDeleteRows="False"
-                  SelectionMode="Single" SelectionUnit="FullRow">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding TenantId}" Width="50"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Navn" Binding="{Binding Name}" Width="*"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber}" Width="120"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"
-                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-            </DataGrid.Columns>
-        </DataGrid>
 
+        <Grid Grid.Row="2" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <DataGrid Grid.Row="0" ItemsSource="{Binding VisibleTenants}"
+                      SelectedItem="{Binding SelectedTenant, Mode=TwoWay}"
+                      Style="{StaticResource ManagementDataGridStyle}"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      CanUserAddRows="False" CanUserDeleteRows="False"
+                      SelectionMode="Single" SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding TenantId}" Width="50"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Navn" Binding="{Binding Name}" Width="*"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber}" Width="120"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Row="1"
+                    Background="#292929"
+                    BorderBrush="#595959"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="18"
+                    Margin="0,16,0,0"
+                    Visibility="{Binding IsEditing,
+                    Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="{Binding SelectedTenant.Name,
+                               StringFormat='Lejemål for {0}'}"
+                               FontSize="20"
+                               Margin="0,0,0,12" />
+
+                    <TextBlock Text="{Binding ActiveShelfCount,
+                               StringFormat='Aktive reoler: {0}'}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8" />
+
+                    <TextBlock Text="Aktuel månedlig leje"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding CurrentMonthlyRent,
+                               ConverterCulture=da-DK,
+                               StringFormat='{}{0:N2} kr.'}"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Margin="0,4,0,0" />
+
+                    <TextBlock Text="Ingen lejemål registreret for denne reollejer."
+                               Foreground="#AAAAAA"
+                               TextWrapping="Wrap"
+                               Margin="0,16,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TenantRentalRows.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <DataGrid ItemsSource="{Binding TenantRentalRows}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              MaxHeight="220"
+                              Margin="0,16,0,0">
+
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid"
+                                   BasedOn="{StaticResource ManagementDataGridStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TenantRentalRows.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Reol"
+                                                Binding="{Binding ShelfNumber}"
+                                                Width="55"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}" />
+
+                            <DataGridTemplateColumn Header="Status"  HeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                                                    Width="104">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="RentalStatusPill"
+                                                Width="88" Height="28"
+                                                CornerRadius="14"
+                                                Margin="6,4"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                            <TextBlock x:Name="RentalStatusText"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Status}"
+                                                         Value="{x:Static enums:RentalStatus.Active}">
+                                                <Setter TargetName="RentalStatusText"
+                                                        Property="Text" Value="Aktiv" />
+                                                <Setter TargetName="RentalStatusPill"
+                                                        Property="Background" Value="#2F4635" />
+                                                <Setter TargetName="RentalStatusText"
+                                                        Property="Foreground" Value="#B7DDBE" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding Status}"
+                                                         Value="{x:Static enums:RentalStatus.Historical}">
+                                                <Setter TargetName="RentalStatusText"
+                                                        Property="Text" Value="Afsluttet" />
+                                                <Setter TargetName="RentalStatusPill"
+                                                        Property="Background" Value="#3A3A3A" />
+                                                <Setter TargetName="RentalStatusText"
+                                                        Property="Foreground" Value="#CCCCCC" />
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding Status}"
+                                                         Value="{x:Static enums:RentalStatus.Upcoming}">
+                                                <Setter TargetName="RentalStatusText"
+                                                        Property="Text" Value="Kommende" />
+                                                <Setter TargetName="RentalStatusPill"
+                                                        Property="Background" Value="#49422E" />
+                                                <Setter TargetName="RentalStatusText"
+                                                        Property="Foreground" Value="#E6CF8E" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Placering"
+                                                Width="*"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="Rental.Shelf.RowLabel"
+                                                 TargetNullValue="Ikke angivet" />
+                                        <Binding Path="Rental.Shelf.PositionInRow"
+                                                 TargetNullValue="" />
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Startdato"
+                                                Binding="{Binding StartDate, StringFormat=dd-MM-yyyy}"
+                                                Width="100"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}" />
+
+                            <DataGridTextColumn Header="Sidste lejedag"
+                                                Binding="{Binding EndDate, StringFormat=dd-MM-yyyy,
+                                                TargetNullValue='—'}"
+                                                Width="110"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}" />
+
+                            <DataGridTextColumn Header="Månedlig sats"
+                                                Binding="{Binding MonthlyRent, ConverterCulture=da-DK,
+                                                StringFormat='{}{0:N2} kr.'}"
+                                                Width="120"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- Form -->
         <ScrollViewer Grid.Column="2" Grid.Row="2"
@@ -113,6 +275,20 @@
                         <TextBox Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  Margin="0,4,0,12"
                                  Style="{StaticResource InputTextBoxStyle}"/>
+
+                        <TextBlock Text="Registreringsnummer" />
+                        <TextBox Text="{Binding BankRegistrationNumber,
+                                 Mode=TwoWay,
+                                 UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,4,0,12"
+                                 Style="{StaticResource InputTextBoxStyle}" />
+
+                        <TextBlock Text="Kontonummer" />
+                        <TextBox Text="{Binding BankAccountNumber,
+                                 Mode=TwoWay,
+                                 UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,4,0,12"
+                                 Style="{StaticResource InputTextBoxStyle}" />
 
                         <StackPanel Orientation="Horizontal">
 

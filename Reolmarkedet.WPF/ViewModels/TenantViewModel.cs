@@ -2,7 +2,9 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.ViewModels.enums;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Net.Mail;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -13,6 +15,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<Tenant> Tenants { get; } = new();
         public ObservableCollection<Tenant> VisibleTenants { get; } = new();
         public ObservableCollection<Rental> Rentals { get; }
+        public ObservableCollection<RentalRowViewModel> TenantRentalRows { get; } = new();
 
         private readonly RentalService _rentalService = new();
         private readonly IRepository<Tenant> _tenantRepository;
@@ -21,6 +24,8 @@ namespace Reolmarkedet.WPF.ViewModels
         private string _name = string.Empty;
         private string _phoneNumber = string.Empty;
         private string _email = string.Empty;
+        private string _bankRegistrationNumber = string.Empty;
+        private string _bankAccountNumber = string.Empty;
         private Tenant? _selectedTenant;
         private bool _showInactiveTenants;
         private string _validationMessage = string.Empty;
@@ -51,6 +56,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     _name = value;
                     ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -65,6 +71,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     _phoneNumber = value;
                     ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -79,6 +86,37 @@ namespace Reolmarkedet.WPF.ViewModels
                     _email = value;
                     ConfirmationMessage = string.Empty;
                     OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public string BankRegistrationNumber
+        {
+            get => _bankRegistrationNumber;
+            set
+            {
+                if (_bankRegistrationNumber != value)
+                {
+                    _bankRegistrationNumber = value;
+                    ConfirmationMessage = string.Empty;
+                    OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public string BankAccountNumber
+        {
+            get => _bankAccountNumber;
+            set
+            {
+                if (_bankAccountNumber != value)
+                {
+                    _bankAccountNumber = value;
+                    ConfirmationMessage = string.Empty;
+                    OnPropertyChanged();
+                    UpdateTenantCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -106,11 +144,15 @@ namespace Reolmarkedet.WPF.ViewModels
                         Name = _selectedTenant.Name;
                         PhoneNumber = _selectedTenant.PhoneNumber ?? string.Empty;
                         Email = _selectedTenant.Email ?? string.Empty;
+                        BankRegistrationNumber = _selectedTenant.BankRegistrationNumber ?? string.Empty;
+                        BankAccountNumber = _selectedTenant.BankAccountNumber ?? string.Empty;
                     }
                     else // Clear the form fields when no tenant is selected
                     {
                         ClearFormFields();
                     }
+
+                    RefreshTenantRentals();
 
                     AddTenantCommand.RaiseCanExecuteChanged();
                     UpdateTenantCommand.RaiseCanExecuteChanged();
@@ -143,6 +185,14 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
 
+        public int ActiveShelfCount =>
+            TenantRentalRows.Count(row => row.Status == RentalStatus.Active);
+
+        public decimal CurrentMonthlyRent =>
+            TenantRentalRows
+            .Where(row => row.Status == RentalStatus.Active)
+            .Sum(row => row.MonthlyRent);
+
         public string ValidationMessage
         {
             get => _validationMessage;
@@ -155,6 +205,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
         }
+
         public string ConfirmationMessage
         {
             get => _confirmationMessage;
@@ -234,6 +285,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void ReactivateTenant(object? obj)
         {
+            ConfirmationMessage = string.Empty;
             if (SelectedTenant is null)
             {
                 return;
@@ -247,7 +299,17 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             tenant.IsActive = true;
-            _tenantRepository.Update(tenant);
+
+            try
+            {
+                _tenantRepository.Update(tenant);
+            }
+            catch (DbException)
+            {
+                tenant.IsActive = false; // Revert the change if the update fails
+                ValidationMessage = "Reollejeren kunne ikke genaktiveres i databasen. Prøv igen.";
+                return;
+            }
 
             SelectedTenant = null;
             ValidationMessage = string.Empty;
@@ -263,6 +325,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void DeactivateTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
             if (SelectedTenant is null)
             {
                 return;
@@ -287,7 +350,17 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             tenant.IsActive = false;
-            _tenantRepository.Update(tenant);
+
+            try
+            {
+                _tenantRepository.Update(tenant);
+            }
+            catch (DbException)
+            {
+                tenant.IsActive = true;
+                ValidationMessage = "Reollejeren kunne ikke deaktiveres i databasen. Prøv igen.";
+                return;
+            }
 
             SelectedTenant = null;
             ValidationMessage = string.Empty;
@@ -309,7 +382,8 @@ namespace Reolmarkedet.WPF.ViewModels
                 ValidationMessage = "Navn må ikke være tomt.";
                 return;
             }
-            if (!ValidateContactDetails())
+            if (!ValidateContactDetails() ||
+                !ValidateBankDetails())
             {
                 return;
             }
@@ -318,14 +392,24 @@ namespace Reolmarkedet.WPF.ViewModels
 
             Tenant tenant = new Tenant()
             {
-                Name = Name,
-                Email = Email,
-                PhoneNumber = PhoneNumber,
+                Name = this.Name,
+                Email = this.Email,
+                PhoneNumber = this.PhoneNumber,
+                BankRegistrationNumber = this.BankRegistrationNumber.Trim(),
+                BankAccountNumber = this.BankAccountNumber.Trim()
             };
 
-            _tenantRepository.Add(tenant);
-            Tenants.Add(tenant);
+            try
+            {
+                _tenantRepository.Add(tenant);
+            }
+            catch (DbException)
+            {
+                ValidationMessage = "Reollejeren kunne ikke oprettes i databasen. Prøv igen.";
+                return;
+            }
 
+            Tenants.Add(tenant);
             ApplySearch();
 
             SelectedTenant = null;
@@ -335,11 +419,17 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private bool CanUpdateTenant(object? parameter)
         {
-            return SelectedTenant is not null;
+            return SelectedTenant is not null &&
+                   (Name != SelectedTenant.Name ||
+                    PhoneNumber != (SelectedTenant.PhoneNumber ?? string.Empty) ||
+                    Email != (SelectedTenant.Email ?? string.Empty) ||
+                    BankRegistrationNumber != (SelectedTenant.BankRegistrationNumber ?? string.Empty) ||
+                    BankAccountNumber != (SelectedTenant.BankAccountNumber ?? string.Empty));
         }
 
         private void UpdateTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
             Tenant? tenant = SelectedTenant;
             if (tenant is null)
             {
@@ -352,18 +442,45 @@ namespace Reolmarkedet.WPF.ViewModels
                     "Navn må ikke være tomt. Angiv et navn, eller annuller redigeringen.";
                 return;
             }
-            if (!ValidateContactDetails())
+            if (!ValidateContactDetails() ||
+                !ValidateBankDetails())
             {
                 return;
             }
 
             ValidationMessage = string.Empty;
 
-            tenant.Name = Name;
-            tenant.PhoneNumber = string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber;
-            tenant.Email = string.IsNullOrWhiteSpace(Email) ? null : Email;
+            // store the original values in case the update fails
+            string originalName = tenant.Name;
+            string? originalPhoneNumber = tenant.PhoneNumber;
+            string? originalEmail = tenant.Email;
+            string? originalBankRegistrationNumber = tenant.BankRegistrationNumber;
+            string? originalBankAccountNumber = tenant.BankAccountNumber;
 
-            _tenantRepository.Update(tenant);
+            tenant.Name = Name;
+            tenant.PhoneNumber =
+                string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber;
+            tenant.Email =
+                string.IsNullOrWhiteSpace(Email) ? null : Email;
+            tenant.BankRegistrationNumber =
+                string.IsNullOrWhiteSpace(BankRegistrationNumber) ? null : BankRegistrationNumber.Trim();
+            tenant.BankAccountNumber =
+                string.IsNullOrWhiteSpace(BankAccountNumber) ? null : BankAccountNumber.Trim();
+
+            try
+            {
+                _tenantRepository.Update(tenant);
+            }
+            catch (DbException)
+            {
+                tenant.Name = originalName;
+                tenant.PhoneNumber = originalPhoneNumber;
+                tenant.Email = originalEmail;
+                tenant.BankRegistrationNumber = originalBankRegistrationNumber;
+                tenant.BankAccountNumber = originalBankAccountNumber;
+                ValidationMessage = "Ændringerne kunne ikke gemmes i databasen. Prøv igen.";
+                return;
+            }
 
             ApplySearch();
             SelectedTenant = null;
@@ -390,6 +507,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void DeleteTenant(object? parameter)
         {
+            ConfirmationMessage = string.Empty;
             Tenant? tenant = SelectedTenant;
             if (tenant is null)
             {
@@ -402,7 +520,16 @@ namespace Reolmarkedet.WPF.ViewModels
                 return;
             }
 
-            _tenantRepository.Delete(tenant.TenantId);
+            try
+            {
+                _tenantRepository.Delete(tenant.TenantId);
+            }
+            catch (DbException)
+            {
+                ValidationMessage = "Reollejeren kunne ikke slettes fra databasen. Prøv igen.";
+                return;
+            }
+
             Tenants.Remove(tenant);
 
             ApplySearch();
@@ -418,6 +545,8 @@ namespace Reolmarkedet.WPF.ViewModels
             Email = string.Empty;
             ValidationMessage = string.Empty;
             ConfirmationMessage = string.Empty;
+            BankRegistrationNumber = string.Empty;
+            BankAccountNumber = string.Empty;
         }
 
         private void ApplySearch()
@@ -461,6 +590,116 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             return true;
+        }
+
+        private bool ValidateBankDetails()
+        {
+            if (string.IsNullOrWhiteSpace(BankRegistrationNumber))
+            {
+                ValidationMessage = "Angiv registreringsnummer.";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(BankAccountNumber))
+            {
+                ValidationMessage = "Angiv kontonummer.";
+                return false;
+            }
+            string trimmedRegistrationNumber = BankRegistrationNumber.Trim();
+            string trimmedAccountNumber = BankAccountNumber.Trim();
+            if (trimmedRegistrationNumber.Length != 4)
+            {
+                ValidationMessage = "Registreringsnummeret skal have 4 cifre.";
+                return false;
+            }
+
+            foreach (char c in trimmedRegistrationNumber)
+            {
+                if (c < '0' || c > '9')
+                {
+                    ValidationMessage = "Registreringsnummeret indeholder ugyldige tegn. Brug kun cifre.";
+                    return false;
+                }
+            }
+
+            if (trimmedAccountNumber.Length > 10)
+            {
+                ValidationMessage = "Kontonummeret må højst have 10 cifre.";
+                return false;
+            }
+
+            foreach (char c in trimmedAccountNumber)
+            {
+                if (c < '0' || c > '9')
+                {
+                    ValidationMessage = "Kontonummeret indeholder ugyldige tegn. Brug kun cifre.";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void RefreshTenantRentals()
+        {
+            TenantRentalRows.Clear();
+
+            OnPropertyChanged(nameof(ActiveShelfCount));
+            OnPropertyChanged(nameof(CurrentMonthlyRent));
+
+            DateTime today = DateTime.Today;
+            if (SelectedTenant is null)
+            {
+                return;
+            }
+
+            List<RentalRowViewModel> tenantRentalRows = new();
+            foreach (var rental in Rentals)
+            {
+                if (rental.Tenant.TenantId == SelectedTenant.TenantId)
+                {
+                    DateTime priceDate = today;
+
+                    if (rental.StartDate.Date > today) // future rentals price are calculated based on their start date
+                    {
+                        priceDate = rental.StartDate.Date;
+                    }
+                    else if (rental.EndDate.HasValue &&
+                        rental.EndDate.Value.Date < today) // rental has already ended, price is calculated based on the end date
+                    {
+                        priceDate = rental.EndDate.Value.Date;
+                    }
+
+                    decimal monthlyRent = _rentalService.GetMonthlyRentForDate(
+                        rental, priceDate, Rentals);
+                    tenantRentalRows.Add(new RentalRowViewModel(rental, monthlyRent));
+                }
+            }
+
+            // Sort the tenantRentalRows based on the defined status order
+            RentalStatus[] statusOrder =
+            {
+                RentalStatus.Active,
+                RentalStatus.Upcoming,
+                RentalStatus.Historical
+            };
+            foreach (RentalStatus status in statusOrder)
+            {
+                foreach (RentalRowViewModel row in tenantRentalRows)
+                {
+                    if (row.Status == status)
+                    {
+                        TenantRentalRows.Add(row);
+                    }
+                }
+            }
+
+            OnPropertyChanged(nameof(ActiveShelfCount));
+            OnPropertyChanged(nameof(CurrentMonthlyRent));
+        }
+
+        public void Refresh()
+        {
+            RefreshTenantRentals();
         }
 
         private string? GetPhoneNumberValidationMessage(string phoneNumber)

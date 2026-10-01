@@ -30,6 +30,7 @@ namespace Reolmarkedet.WPF.ViewModels
             ShelfViewModel => NavigationPage.Shelves,
             RentalViewModel => NavigationPage.Rentals,
             ItemViewModel => NavigationPage.Items,
+            SaleViewModel => NavigationPage.Sales,
             _ => null
         };
 
@@ -40,6 +41,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public ShelfViewModel ShelfManagement { get; }
         public RentalViewModel RentalManagement { get; }
         public ItemViewModel ItemManagement { get; }
+        public SaleViewModel SaleManagement { get; }
 
 
         public RelayCommand ShowItemManagementCommand { get; }
@@ -47,13 +49,15 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand ShowTenantsCommand { get; }
         public RelayCommand ShowShelfManagementCommand { get; }
         public RelayCommand ShowRentalManagementCommand { get; }
+        public RelayCommand ShowSaleManagementCommand { get; }
 
         public MainViewModel(
             IRepository<Tenant> tenantRepository,
             IRepository<Shelf> shelfRepository,
             IRepository<ShelfType> shelfTypeRepository,
             IRepository<Rental> rentalRepository,
-            IItemRepository itemRepository)
+            IItemRepository itemRepository,
+            IRepository<Sale> saleRepository)
         {
             Dashboard = new DashboardViewModel();
             TenantManagement = new TenantViewModel(Rentals, tenantRepository);
@@ -70,28 +74,37 @@ namespace Reolmarkedet.WPF.ViewModels
 
             CurrentViewModel = Dashboard;
             ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
+            SaleManagement = new SaleViewModel(itemRepository, saleRepository, rentalRepository);
+
+            ShowDashboardCommand =
+                new RelayCommand(_ => CurrentViewModel = Dashboard);
+            ShowTenantsCommand =
+                new RelayCommand(_ =>
+                {
+                    TenantManagement.Refresh();
+                    CurrentViewModel = TenantManagement;
+                });
+            ShowShelfManagementCommand = new RelayCommand(_ =>
+                {
+                    ShelfManagement.Refresh();
+                    CurrentViewModel = ShelfManagement;
+                });
+            ShowRentalManagementCommand = new RelayCommand(_ =>
+                {
+                    RentalManagement.Refresh();
+                    CurrentViewModel = RentalManagement;
+                });
             ShowItemManagementCommand = new RelayCommand(_ =>
             {
                 ItemManagement.Refresh();
                 CurrentViewModel = ItemManagement;
             });
+            ShowSaleManagementCommand = new RelayCommand(_ =>
+            {
+                SaleManagement.Refresh();
+                CurrentViewModel = SaleManagement;
+            });
 
-            ShowDashboardCommand =
-                new RelayCommand(_ => CurrentViewModel = Dashboard);
-            ShowTenantsCommand =
-                new RelayCommand(_ => CurrentViewModel = TenantManagement);
-            ShowShelfManagementCommand =
-                new RelayCommand(_ =>
-                {
-                    ShelfManagement.Refresh();
-                    CurrentViewModel = ShelfManagement;
-                });
-            ShowRentalManagementCommand =
-                new RelayCommand(_ =>
-                {
-                    RentalManagement.Refresh();
-                    CurrentViewModel = RentalManagement;
-                });
         }
     }
 }

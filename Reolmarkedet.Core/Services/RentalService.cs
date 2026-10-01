@@ -1,4 +1,5 @@
 ﻿using Reolmarkedet.Core.Models;
+using Reolmarkedet.Core.Models.enums;
 
 
 //RentalService
@@ -73,20 +74,10 @@ namespace Reolmarkedet.Core.Services
         {
             DateTime day = date.Date;
 
-            foreach (var rental in rentals)
-            {
-                bool sameShelf = rental.Shelf.ShelfId == shelf.ShelfId;
-                bool hasStarted = rental.StartDate.Date <= day;
-                bool hasNotEnded = rental.EndDate?.Date >= day ||
-                    rental.EndDate is null;
-
-                if (sameShelf && hasStarted && hasNotEnded)
-                {
-                    return rental;
-                }
-            }
-
-            return null;
+            return rentals.FirstOrDefault(r =>
+                r.Shelf.ShelfId == shelf.ShelfId &&
+                r.StartDate.Date <= day &&
+                (r.EndDate?.Date >= day || r.EndDate is null));
         }
 
         public ShelfStatus GetShelfStatus(
@@ -112,64 +103,28 @@ namespace Reolmarkedet.Core.Services
 
         public bool HasRentalsForShelf(Shelf shelf, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-                if (rental.Shelf.ShelfId == shelf.ShelfId)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rentals.Any(r => r.Shelf.ShelfId == shelf.ShelfId);
         }
 
         public bool HasCurrentOrFutureRentalsForShelf(
             Shelf shelf, DateTime date, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-
-                bool sameShelf = rental.Shelf.ShelfId == shelf.ShelfId;
-
-                bool hasNotEnded =
-                    rental.EndDate is null ||
-                    rental.EndDate.Value.Date >= date.Date;
-
-                if (sameShelf && hasNotEnded)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rentals.Any(r =>
+                r.Shelf.ShelfId == shelf.ShelfId &&
+                (r.EndDate is null || r.EndDate.Value.Date >= date.Date));
         }
 
         public bool HasRentalsForTenant(Tenant tenant, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-                if (rental.Tenant.TenantId == tenant.TenantId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return rentals.Any(rental => rental.Tenant.TenantId == tenant.TenantId);
         }
 
         public bool HasCurrentOrFutureRentalsForTenant(
             Tenant tenant, DateTime date, IEnumerable<Rental> rentals)
         {
-            foreach (var rental in rentals)
-            {
-                bool sameTenant = rental.Tenant.TenantId == tenant.TenantId;
-                bool hasNotEnded =
-                    rental.EndDate is null ||
-                    rental.EndDate.Value.Date >= date.Date;
-                if (sameTenant && hasNotEnded)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rentals.Any(r =>
+                r.Tenant.TenantId == tenant.TenantId &&
+                (r.EndDate is null || r.EndDate.Value.Date >= date.Date));
         }
 
         public decimal GetStandardMonthlyRentPerShelf(int shelfCount)
@@ -184,26 +139,120 @@ namespace Reolmarkedet.Core.Services
             };
         }
 
+        public decimal GetStandardMonthlyRentForNewShelves(
+            int existingShelfCount,
+            int newShelfCount)
+        {
+            decimal totalRent = 0;
+            for (int i = 0; i < newShelfCount; i++)
+            {
+                int position = existingShelfCount + i + 1;
+                totalRent += GetStandardMonthlyRentPerShelf(position);
+            }
+            return totalRent;
+        }
+
+        // Calculates one rentals monthly price for a date
+        public decimal GetMonthlyRentForDate(
+            Rental rental,
+            DateTime date,
+            IEnumerable<Rental> rentals)
+        {
+            // An agreed price does not change when other rentals end.
+            if (rental.IsCustomPrice)
+            {
+                return rental.MonthlyRent;
+            }
+
+            // All active rentals for this tenant including those with special prices.
+            List<Rental> activeRentals = new();
+            foreach (Rental existingRental in rentals)
+            {
+                bool sameTenant = rental.Tenant.TenantId == existingRental.Tenant.TenantId;
+                bool hasStarted = existingRental.StartDate.Date <= date.Date;
+                bool hasNotEnded = existingRental.EndDate is null ||
+                    existingRental.EndDate.Value.Date >= date.Date;
+
+                if (sameTenant && hasStarted && hasNotEnded)
+                {
+                    activeRentals.Add(existingRental);
+                }
+            }
+
+            // Earlier rentals get earlier pricing positions
+            activeRentals = activeRentals
+                .OrderBy(r => r.StartDate.Date)
+                .ThenBy(r => r.RentalId == 0 ? int.MaxValue : r.RentalId) // Puts temporary rentals after saved rentals with the same start date
+                .ToList();
+
+
+            for (int i = 1; i <= activeRentals.Count; i++)
+            {
+                // Match the same object in memory, including temporary rentals whose ID is 0.
+                // Also allow matching by a saved ID, since the database can load the same rental
+                // into separate objects. Never match different temporary rentals just by ID 0.
+                if (activeRentals[i - 1] == rental ||
+                    (rental.RentalId != 0 &&
+                    activeRentals[i - 1].RentalId == rental.RentalId))
+                {
+                    return GetStandardMonthlyRentPerShelf(i);
+                }
+            }
+
+            throw new InvalidOperationException(
+                "Lejemålet blev ikke fundet blandt reollejerens aktive lejemål på den valgte dato.");
+        }
+
+        public decimal GetFirstPeriodRent(
+            Rental rental,
+            IEnumerable<Rental> rentals)
+        {
+            DateTime periodStart = rental.StartDate.Date;
+
+            int daysInMonth = DateTime.DaysInMonth(
+                periodStart.Year,
+                periodStart.Month);
+            DateTime periodEnd = new DateTime(
+                periodStart.Year,
+                periodStart.Month,
+                daysInMonth);
+
+
+            if (rental.EndDate.HasValue &&
+                rental.EndDate.Value.Date < periodEnd.Date)
+            {
+                periodEnd = rental.EndDate.Value.Date;
+            }
+            if (periodEnd < periodStart)
+            {
+                throw new ArgumentException(
+                    "Slutdatoen må ikke være før startdatoen");
+            }
+
+            // Calculate total charge:
+            decimal total = 0;
+
+            for (int i = periodStart.Day; i <= periodEnd.Day; i++)
+            {
+                // Calculate the daily price for each day in the period and add it to the total
+                total += (GetMonthlyRentForDate(
+                    rental,
+                    new DateTime(periodStart.Year, periodStart.Month, i),
+                    rentals) / daysInMonth);
+            }
+            // Round to 2 decimals, rounding away from zero on .5 values
+            return Math.Round(total, 2, MidpointRounding.AwayFromZero);
+        }
+
         public int GetRentedShelfCountForTenant(
             Tenant tenant,
             DateTime date,
             IEnumerable<Rental> rentals)
         {
-            int shelfCount = 0;
-
-            foreach (var rental in rentals)
-            {
-                bool sameTenant = rental.Tenant.TenantId == tenant.TenantId;
-                bool hasStarted = rental.StartDate.Date <= date.Date;
-                bool hasNotEnded = rental.EndDate is null ||
-                    rental.EndDate.Value.Date >= date.Date;
-
-                if (sameTenant && hasStarted && hasNotEnded)
-                {
-                    shelfCount++;
-                }
-            }
-            return shelfCount;
+            return rentals.Count(r =>
+                r.Tenant.TenantId == tenant.TenantId &&
+                r.StartDate.Date <= date.Date &&
+                (r.EndDate is null || r.EndDate.Value.Date >= date.Date));
         }
 
         public DateTime GetEarliestTerminationEndDate(DateTime noticeDate)

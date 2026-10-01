@@ -157,6 +157,11 @@
         <Setter Property="CaretBrush" Value="#EEEEEE" />
         <Setter Property="BorderBrush" Value="#595959" />
         <Setter Property="BorderThickness" Value="1" />
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ComboBox Style-->

@@ -52,6 +52,8 @@ namespace ReolMarkedet.Tests.Fakes
             storedShelf.ShelfNumber = shelf.ShelfNumber;
             storedShelf.IsActive = shelf.IsActive;
             storedShelf.ShelfType = shelf.ShelfType;
+            storedShelf.RowLabel = shelf.RowLabel;
+            storedShelf.PositionInRow = shelf.PositionInRow;
         }
 
         public void Delete(int id)

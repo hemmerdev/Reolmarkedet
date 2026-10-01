@@ -1,0 +1,9 @@
+﻿USE ReolmarkedetDB;
+GO
+
+IF COL_LENGTH('dbo.SALE', 'Notes') IS NULL
+BEGIN
+	ALTER TABLE dbo.SALE
+	ADD Notes NVARCHAR(500) NULL;
+END;
+GO

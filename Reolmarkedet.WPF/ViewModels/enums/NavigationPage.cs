@@ -6,6 +6,7 @@
         Tenants,
         Shelves,
         Rentals,
-        Items
+        Items,
+        Sales
     }
 }

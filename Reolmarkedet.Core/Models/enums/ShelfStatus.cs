@@ -1,4 +1,4 @@
-﻿namespace Reolmarkedet.Core.Models
+﻿namespace Reolmarkedet.Core.Models.enums
 {
     public enum ShelfStatus
     {

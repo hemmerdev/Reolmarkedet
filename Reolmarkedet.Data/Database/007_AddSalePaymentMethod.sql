@@ -1,0 +1,5 @@
+﻿USE ReolmarkedetDB;
+GO
+
+ALTER TABLE dbo.SALE
+ADD PaymentMethod NVARCHAR(50) NULL;

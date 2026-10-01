@@ -30,11 +30,23 @@ public class ItemService(IItemRepository items, IRepository<Rental> rentals)
                 "Varen kan kun registreres på et lejemål, hvor både lejer og reol er aktive.");
         }
 
-        string code = string.IsNullOrWhiteSpace(barcode)
-            ? "RM" + Guid.NewGuid().ToString("N").ToUpperInvariant() : NormalizeBarcode(barcode);
+        string code;
+        if (string.IsNullOrWhiteSpace(barcode))
+        {
+            code = "RM" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
 
-        if (items.GetByBarcode(code) is not null)
-            throw new InvalidOperationException("Stregkoden er allerede i brug.");
+            // Ensure that the generated barcode is unique.
+            while (items.GetByBarcode(code) is not null)
+            {
+                code = "RM" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+            }
+        }
+        else
+        {
+            code = NormalizeBarcode(barcode);
+            if (items.GetByBarcode(code) is not null)
+                throw new InvalidOperationException("Stregkoden er allerede i brug.");
+        }
 
         var item = new Item { RentalId = rentalId, Description = description.Trim(), Price = price, Barcode = code };
         items.Add(item);

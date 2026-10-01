@@ -1,4 +1,6 @@
-﻿namespace Reolmarkedet.Core.Models
+﻿using Reolmarkedet.Core.Models.enums;
+
+namespace Reolmarkedet.Core.Models
 {
     public class Rental
     {
@@ -9,6 +11,8 @@
         public DateTime? EndDate { get; set; }
         public DateTime? TerminationNoticeDate { get; set; }
         public decimal MonthlyRent { get; set; }
+        public PaymentMethod? InitialPaymentMethod { get; set; }
+        public bool IsCustomPrice { get; set; }
 
         public Rental(Tenant tenant, Shelf shelf)
         {
