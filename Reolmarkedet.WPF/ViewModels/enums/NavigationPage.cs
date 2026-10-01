@@ -7,6 +7,7 @@
         Shelves,
         Rentals,
         Items,
-        Sales
+        Sales,
+        Settlements
     }
 }
