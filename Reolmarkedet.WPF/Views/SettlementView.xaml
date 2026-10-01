@@ -11,6 +11,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Text="Månedsopgørelse"
@@ -18,24 +19,184 @@
                    FontWeight="SemiBold"
                    Margin="0,0,0,24" />
 
-        <Button Grid.Row="1"
-                Content="Beregn opgørelser"
-                Command="{Binding CalculateSettlementsCommand}"
-                Style="{StaticResource ActionButtonStyle}"
-                HorizontalAlignment="Left"
-                Margin="0,0,0,16"/>
+        <StackPanel Grid.Row="1" Margin="0,0,0,16">
 
+            <TextBlock Text="Opgørelser"
+                       FontSize="20"
+                       Margin="0,0,0,12"/>
+
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Width="120" Margin="0,0,12,0">
+
+
+                    <TextBlock Text="Måned" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding MonthOptions}"
+                              SelectedItem="{Binding SelectedMonth, Mode=TwoWay}"
+                              Style="{StaticResource InputComboBoxStyle}"/>
+                </StackPanel>
+
+                <StackPanel Width="120" Margin="0,0,12,0">
+                    <TextBlock Text="År" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding YearOptions}"
+                              SelectedItem="{Binding SelectedYear, Mode=TwoWay}"
+                              Style="{StaticResource InputComboBoxStyle}"/>
+                </StackPanel>
+
+                <Button x:Name="CalculateButton"
+                        Content="Beregn opgørelser"
+                        Command="{Binding CalculateSettlementsCommand}"
+                        Style="{StaticResource ActionButtonStyle}"
+                        VerticalAlignment="Bottom"/>
+            </StackPanel>
+
+            <TextBlock Text="Månedsopgørelser kan kun beregnes for afsluttede måneder."
+                       Foreground="#AAAAAA"
+                       Margin="0,8,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=CalculateButton, Path=IsEnabled}"
+                                         Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
         <DataGrid Grid.Row="2"
                   ItemsSource="{Binding MonthlySettlements}"
                   AutoGenerateColumns="False"
-                  IsReadOnly="True">
+                  IsReadOnly="True"
+                  SelectedItem="{Binding SelectedSettlement, Mode=TwoWay}"
+                  Style="{StaticResource ManagementDataGridStyle}"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Reollejer" Binding="{Binding Tenant.Name}" Width="*"/>
-                <DataGridTextColumn Header="Salg denne måned:" Binding="{Binding TotalSales, StringFormat=N2}" Width="*"/>
-                <DataGridTextColumn Header="Kommission (10%):" Binding="{Binding Commission, StringFormat=N2}" Width="*"/>
-                <DataGridTextColumn Header="Næste måneds leje:" Binding="{Binding Rent, StringFormat=N2}" Width="*"/>
-                <DataGridTextColumn Header="Til udbetaling:" Binding="{Binding Balance, StringFormat=N2}" Width="*"/>
+                <DataGridTextColumn Header="Reollejer" Binding="{Binding Tenant.Name}" Width="SizeToCells"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Salg denne måned" Binding="{Binding TotalSales, StringFormat=N2, ConverterCulture=da-DK}" Width="*"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Kommission (10%)" Binding="{Binding Commission, StringFormat=N2, ConverterCulture=da-DK}" Width="*"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Næste måneds leje" Binding="{Binding Rent, StringFormat=N2, ConverterCulture=da-DK}" Width="*"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                <DataGridTextColumn Header="Saldo" Binding="{Binding Balance, StringFormat=N2, ConverterCulture=da-DK}" Width="*"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <Border Grid.Row="3"
+                Background="#292929"
+                BorderBrush="#595959"
+                BorderThickness="1"
+                CornerRadius="3"
+                Padding="18"
+                Margin="0,16,0,0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedSettlement}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Row="0"
+                            Grid.ColumnSpan="3"
+                            Orientation="Horizontal"
+                            Margin="0,0,0,16">
+                    <TextBlock Text="Detaljer for "
+                               FontSize="20"/>
+                    <TextBlock Text="{Binding SelectedSettlement.Tenant.Name}"
+                               FontSize="20"/>
+                </StackPanel>
+
+                <DockPanel Grid.Row="1" Grid.Column="0">
+                    <TextBlock Text="Salg i den valgte måned"
+                               DockPanel.Dock="Top"
+                               Margin="0,0,0,8"/>
+                    <DataGrid ItemsSource="{Binding SelectedSettlement.SaleLines}"
+                              Height="220"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Style="{StaticResource ManagementDataGridStyle}"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Dato"
+                                                Binding="{Binding Sale.SaleDate, StringFormat=dd-MM-yyyy}"
+                                                Width="95"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Vare"
+                                                Binding="{Binding Item.Description}"
+                                                Width="*"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Reol"
+                                                Binding="{Binding Rental.Shelf.ShelfNumber}"
+                                                Width="55"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Salg (kr.)"
+                                                Binding="{Binding Sale.SalePrice, StringFormat=N2, ConverterCulture=da-DK}"
+                                                Width="90"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Kommission"
+                                                Binding="{Binding Commission, StringFormat=N2, ConverterCulture=da-DK}"
+                                                Width="105"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+
+                <DockPanel Grid.Row="1" Grid.Column="2">
+                    <TextBlock Text="Leje for næste måned"
+                               DockPanel.Dock="Top"
+                               Margin="0,0,0,8"/>
+                    <DataGrid ItemsSource="{Binding SelectedSettlement.RentalLines}"
+                              Height="220"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Style="{StaticResource ManagementDataGridStyle}"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Reol"
+                                                Binding="{Binding Rental.Shelf.ShelfNumber}"
+                                                Width="55"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Fra"
+                                                Binding="{Binding PeriodStart, StringFormat=dd-MM-yyyy}"
+                                                Width="95"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Til"
+                                                Binding="{Binding PeriodEnd, StringFormat=dd-MM-yyyy}"
+                                                Width="95"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Beløb (kr.)"
+                                                Binding="{Binding Amount, StringFormat=N2, ConverterCulture=da-DK}"
+                                                Width="*"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

@@ -109,7 +109,11 @@ namespace Reolmarkedet.WPF.ViewModels
                 CurrentViewModel = SaleManagement;
             });
             ShowSettlementCommand =
-                new RelayCommand(_ => CurrentViewModel = SettlementManagement);
+                new RelayCommand(_ =>
+                {
+                    SettlementManagement.Refresh();
+                    CurrentViewModel = SettlementManagement;
+                });
 
         }
     }

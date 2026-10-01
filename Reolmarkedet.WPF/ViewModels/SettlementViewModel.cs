@@ -14,9 +14,61 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly IRepository<Sale> _saleRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IRepository<Rental> _rentalRepository;
+        private int _selectedYear;
+        private int _selectedMonth;
+        private MonthlySettlementResult? _selectedSettlement;
+
         public ObservableCollection<MonthlySettlementResult> MonthlySettlements { get; } = new();
-        public int SelectedYear { get; set; }
-        public int SelectedMonth { get; set; }
+        public int SelectedYear
+        {
+            get => _selectedYear;
+            set
+            {
+                if (value == _selectedYear)
+                    return;
+
+                _selectedYear = value;
+                OnPropertyChanged();
+                MonthlySettlements.Clear();
+                SelectedSettlement = null;
+                CalculateSettlementsCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        public int SelectedMonth
+        {
+            get => _selectedMonth;
+            set
+            {
+                if (value == _selectedMonth)
+                    return;
+
+                _selectedMonth = value;
+                OnPropertyChanged();
+                MonthlySettlements.Clear();
+                SelectedSettlement = null;
+                CalculateSettlementsCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        public MonthlySettlementResult? SelectedSettlement
+        {
+            get => _selectedSettlement;
+            set
+            {
+                if (value == _selectedSettlement)
+                    return;
+                _selectedSettlement = value;
+                OnPropertyChanged();
+            }
+        }
+        public IReadOnlyList<int> MonthOptions { get; } =
+            Enumerable.Range(1, 12).ToList();
+        public IReadOnlyList<int> YearOptions { get; } =
+            Enumerable.Range(DateTime.Today.Year - 5, 6)
+            .Reverse()
+            .ToList();
+
 
         public RelayCommand CalculateSettlementsCommand { get; }
 
@@ -33,17 +85,27 @@ namespace Reolmarkedet.WPF.ViewModels
 
             _settlementService = new SettlementService();
 
+            CalculateSettlementsCommand = new RelayCommand(CalculateSettlements, CanCalculateSettlements);
+
             DateTime previousMonth =
                 new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1);
 
             SelectedYear = previousMonth.Year;
             SelectedMonth = previousMonth.Month;
 
-            CalculateSettlementsCommand = new RelayCommand(CalculateSettlements);
+        }
+
+        private bool CanCalculateSettlements(object? parameter)
+        {
+            return SelectedMonth >= 1 && SelectedMonth <= 12 &&
+                   (SelectedYear < DateTime.Today.Year ||
+                   (SelectedYear == DateTime.Today.Year &&
+                   SelectedMonth < DateTime.Today.Month));
         }
 
         private void CalculateSettlements(object? parameter)
         {
+            SelectedSettlement = null;
             var tenants = _tenantRepository.GetAll();
             var sales = _saleRepository.GetAll();
             var items = _itemRepository.GetAll();
@@ -57,6 +119,11 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 MonthlySettlements.Add(result);
             }
+        }
+
+        public void Refresh()
+        {
+            SelectedSettlement = null;
         }
     }
 }
