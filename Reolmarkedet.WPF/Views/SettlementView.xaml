@@ -76,7 +76,7 @@
                   SelectionMode="Single"
                   SelectionUnit="FullRow">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Reollejer" Binding="{Binding Tenant.Name}" Width="SizeToCells"
+                <DataGridTextColumn Header="Reollejer" Binding="{Binding Tenant.Name}" Width="Auto"
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Salg denne måned" Binding="{Binding TotalSales, StringFormat=N2, ConverterCulture=da-DK}" Width="*"
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
@@ -86,6 +86,40 @@
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                 <DataGridTextColumn Header="Saldo" Binding="{Binding Balance, StringFormat=N2, ConverterCulture=da-DK}" Width="*"
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+
+                <DataGridTemplateColumn Header="Status"
+                                        HeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                                        Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border x:Name="StatusPill"
+                                    Background="#3A3A3A"
+                                    Height="28"
+                                    Width="130"
+                                    CornerRadius="14"
+                                    Padding="12,0"
+                                    Margin="6,4"
+                                    HorizontalAlignment="Center">
+                                <TextBlock x:Name="StatusText"
+                                           Text="{Binding Status}"
+                                           Foreground="#CCCCCC"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Til udbetaling">
+                                    <Setter TargetName="StatusPill" Property="Background" Value="#2F4635"/>
+                                    <Setter TargetName="StatusText" Property="Foreground" Value="#B7DDBE"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Skylder">
+                                    <Setter TargetName="StatusPill" Property="Background" Value="#4B3030"/>
+                                    <Setter TargetName="StatusText" Property="Foreground" Value="#F2B1B1"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -113,7 +147,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="4*"/>
                     <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
@@ -153,9 +187,13 @@
                                                 Binding="{Binding Rental.Shelf.ShelfNumber}"
                                                 Width="55"
                                                 ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                            <DataGridTextColumn Header="Salg (kr.)"
+                            <DataGridTextColumn Header="Salg"
                                                 Binding="{Binding Sale.SalePrice, StringFormat=N2, ConverterCulture=da-DK}"
                                                 Width="90"
+                                                ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                            <DataGridTextColumn Header="Bemærkninger"
+                                                Binding="{Binding Sale.Notes}"
+                                                Width="160"
                                                 ElementStyle="{StaticResource ManagementCellTextStyle}"/>
                             <DataGridTextColumn Header="Kommission"
                                                 Binding="{Binding Commission, StringFormat=N2, ConverterCulture=da-DK}"
@@ -189,7 +227,7 @@
                                                 Binding="{Binding PeriodEnd, StringFormat=dd-MM-yyyy}"
                                                 Width="95"
                                                 ElementStyle="{StaticResource ManagementCellTextStyle}"/>
-                            <DataGridTextColumn Header="Beløb (kr.)"
+                            <DataGridTextColumn Header="Beløb"
                                                 Binding="{Binding Amount, StringFormat=N2, ConverterCulture=da-DK}"
                                                 Width="*"
                                                 ElementStyle="{StaticResource ManagementCellTextStyle}"/>

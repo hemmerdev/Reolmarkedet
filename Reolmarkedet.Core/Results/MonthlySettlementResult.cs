@@ -16,5 +16,10 @@ namespace Reolmarkedet.Core.Results
         public IReadOnlyList<SaleSettlementLine> SaleLines { get; } = saleLines;
         public IReadOnlyList<RentalSettlementLine> RentalLines { get; } = rentalLines;
         public decimal Balance => TotalSales - Commission - Rent;
+        public string Status => Balance > 0
+            ? "Til udbetaling"
+            : Balance < 0
+                ? "Skylder"
+                : "Ingen betaling";
     }
 }

@@ -142,7 +142,7 @@
                     </Button.Style>
                 </Button>
 
-                <Button Content="Månedsopgørelser" Command="{Binding ShowSettlementCommand}">
+                <Button Content="Opgørelser" Command="{Binding ShowSettlementCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
                             <Style.Triggers>
