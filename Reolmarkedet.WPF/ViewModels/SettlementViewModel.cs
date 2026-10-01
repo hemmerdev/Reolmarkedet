@@ -16,22 +16,23 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly IRepository<Rental> _rentalRepository;
         private int _selectedYear;
         private int _selectedMonth;
+        private bool _isExpanded;
         private MonthlySettlementResult? _selectedSettlement;
-
         public ObservableCollection<MonthlySettlementResult> MonthlySettlements { get; } = new();
+
         public int SelectedYear
         {
             get => _selectedYear;
             set
             {
-                if (value == _selectedYear)
-                    return;
-
-                _selectedYear = value;
-                OnPropertyChanged();
-                MonthlySettlements.Clear();
-                SelectedSettlement = null;
-                CalculateSettlementsCommand.RaiseCanExecuteChanged();
+                if (value != _selectedYear)
+                {
+                    _selectedYear = value;
+                    OnPropertyChanged();
+                    MonthlySettlements.Clear();
+                    SelectedSettlement = null;
+                    CalculateSettlementsCommand.RaiseCanExecuteChanged();
+                }
             }
         }
 
@@ -40,14 +41,14 @@ namespace Reolmarkedet.WPF.ViewModels
             get => _selectedMonth;
             set
             {
-                if (value == _selectedMonth)
-                    return;
-
-                _selectedMonth = value;
-                OnPropertyChanged();
-                MonthlySettlements.Clear();
-                SelectedSettlement = null;
-                CalculateSettlementsCommand.RaiseCanExecuteChanged();
+                if (value != _selectedMonth)
+                {
+                    _selectedMonth = value;
+                    OnPropertyChanged();
+                    MonthlySettlements.Clear();
+                    SelectedSettlement = null;
+                    CalculateSettlementsCommand.RaiseCanExecuteChanged();
+                }
             }
         }
 
@@ -56,12 +57,30 @@ namespace Reolmarkedet.WPF.ViewModels
             get => _selectedSettlement;
             set
             {
-                if (value == _selectedSettlement)
-                    return;
-                _selectedSettlement = value;
-                OnPropertyChanged();
+                if (value != _selectedSettlement)
+                {
+                    IsExpanded = false;
+                    _selectedSettlement = value;
+                    OnPropertyChanged();
+                }
             }
         }
+
+        // Used to control the expansion state of the Expander in the UI.
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (value != _isExpanded)
+                {
+                    _isExpanded = value;
+                    OnPropertyChanged();
+                }
+            }
+
+        }
+
         public IReadOnlyList<int> MonthOptions { get; } =
             Enumerable.Range(1, 12).ToList();
         public IReadOnlyList<int> YearOptions { get; } =
@@ -71,6 +90,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
 
         public RelayCommand CalculateSettlementsCommand { get; }
+        public RelayCommand CloseDetailedViewCommand { get; }
 
         public SettlementViewModel(
             IRepository<Tenant> tenantRepository,
@@ -86,6 +106,7 @@ namespace Reolmarkedet.WPF.ViewModels
             _settlementService = new SettlementService();
 
             CalculateSettlementsCommand = new RelayCommand(CalculateSettlements, CanCalculateSettlements);
+            CloseDetailedViewCommand = new RelayCommand(_ => SelectedSettlement = null);
 
             DateTime previousMonth =
                 new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1);
