@@ -20,6 +20,7 @@ public class RentalViewModelTests
         Shelf secondShelf = new(shelfType) { ShelfId = 2, ShelfNumber = 2 };
         var rentalRepository = new FakeRentalRepository();
         List<Rental> existingRentals = new();
+        var tomorrow = DateTime.Now.AddDays(1);
 
         RentalViewModel viewModel = new(
             new ObservableCollection<Tenant> { tenant },
@@ -29,7 +30,7 @@ public class RentalViewModelTests
         {
             SelectedTenant = tenant,
             SelectedPaymentMethod = PaymentMethod.Card,
-            StartDate = new DateTime(2026, 10, 1),
+            StartDate = tomorrow.Date,
             EndDate = null
         };
 
@@ -56,7 +57,7 @@ public class RentalViewModelTests
         {
             Assert.AreSame(tenant, rental.Tenant);
             Assert.AreEqual(PaymentMethod.Card, rental.InitialPaymentMethod);
-            Assert.AreEqual(new DateTime(2026, 10, 1), rental.StartDate);
+            Assert.AreEqual(tomorrow.Date, rental.StartDate);
             Assert.IsNull(rental.EndDate);
         }
         Assert.IsNull(viewModel.SelectedPaymentMethod);

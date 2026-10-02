@@ -31,6 +31,9 @@
         <DataTemplate DataType="{x:Type vm:SaleViewModel}">
             <views:SaleView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettlementViewModel}">
+            <views:SettlementView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -138,11 +141,22 @@
                         </Style>
                     </Button.Style>
                 </Button>
+
+                <Button Content="Opgørelser" Command="{Binding ShowSettlementCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Settlements}">
+                                    <Setter Property="Background" Value="#505050"/>
+                                    <Setter Property="BorderBrush" Value="#999999"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </StackPanel>
         </Border>
-
         <ContentControl Grid.Column="1"
                         Content="{Binding CurrentViewModel}" />
     </Grid>
-
 </Window>

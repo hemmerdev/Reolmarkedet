@@ -31,6 +31,7 @@ namespace Reolmarkedet.WPF.ViewModels
             RentalViewModel => NavigationPage.Rentals,
             ItemViewModel => NavigationPage.Items,
             SaleViewModel => NavigationPage.Sales,
+            SettlementViewModel => NavigationPage.Settlements,
             _ => null
         };
 
@@ -42,7 +43,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public RentalViewModel RentalManagement { get; }
         public ItemViewModel ItemManagement { get; }
         public SaleViewModel SaleManagement { get; }
-
+        public SettlementViewModel SettlementManagement { get; }
 
         public RelayCommand ShowItemManagementCommand { get; }
         public RelayCommand ShowDashboardCommand { get; }
@@ -50,6 +51,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand ShowShelfManagementCommand { get; }
         public RelayCommand ShowRentalManagementCommand { get; }
         public RelayCommand ShowSaleManagementCommand { get; }
+        public RelayCommand ShowSettlementCommand { get; }
 
         public MainViewModel(
             IRepository<Tenant> tenantRepository,
@@ -75,6 +77,8 @@ namespace Reolmarkedet.WPF.ViewModels
             CurrentViewModel = Dashboard;
             ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
             SaleManagement = new SaleViewModel(itemRepository, saleRepository, rentalRepository);
+            SettlementManagement = new SettlementViewModel(
+                tenantRepository, saleRepository, itemRepository, rentalRepository);
 
             ShowDashboardCommand =
                 new RelayCommand(_ => CurrentViewModel = Dashboard);
@@ -104,6 +108,12 @@ namespace Reolmarkedet.WPF.ViewModels
                 SaleManagement.Refresh();
                 CurrentViewModel = SaleManagement;
             });
+            ShowSettlementCommand =
+                new RelayCommand(_ =>
+                {
+                    SettlementManagement.Refresh();
+                    CurrentViewModel = SettlementManagement;
+                });
 
         }
     }

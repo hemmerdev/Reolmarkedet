@@ -684,13 +684,10 @@ namespace Reolmarkedet.WPF.ViewModels
             };
             foreach (RentalStatus status in statusOrder)
             {
-                foreach (RentalRowViewModel row in tenantRentalRows)
-                {
-                    if (row.Status == status)
-                    {
-                        TenantRentalRows.Add(row);
-                    }
-                }
+                tenantRentalRows
+                    .Where(row => row.Status == status)
+                    .ToList()
+                    .ForEach(row => TenantRentalRows.Add(row));
             }
 
             OnPropertyChanged(nameof(ActiveShelfCount));
@@ -699,6 +696,7 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public void Refresh()
         {
+            SelectedTenant = null;
             RefreshTenantRentals();
         }
 
