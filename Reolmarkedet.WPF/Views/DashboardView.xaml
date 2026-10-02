@@ -25,5 +25,63 @@
                        Foreground="#BBBBBB"
                        Margin="0,6,0,0"/>
         </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,24">
+            <TextBlock Text="Reolstatus i dag"
+                       FontSize="20"
+                       Margin="0,0,0,12" />
+
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,0,12">
+                <TextBlock Text="Antal aktive reoler: "
+                           Foreground="#BBBBBB"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TotalShelfCount}"
+                           FontSize="18" FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="4,0,0,0"/>
+            </StackPanel>
+
+            <UniformGrid Columns="3">
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Ledige" Foreground="#BBBBBB"/>
+                        <TextBlock Text="{Binding AvailableShelfCount}"
+                                   FontSize="30" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Udlejede" Foreground="#BBBBBB"/>
+                        <TextBlock Text="{Binding RentedShelfCount}"
+                                   FontSize="30" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Opsagte" Foreground="#BBBBBB"/>
+                        <TextBlock Text="{Binding EndingShelfCount}"
+                                   FontSize="30" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </StackPanel>
     </Grid>
 </UserControl>

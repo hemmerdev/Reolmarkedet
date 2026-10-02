@@ -72,7 +72,6 @@ namespace Reolmarkedet.WPF.ViewModels
             IItemRepository itemRepository,
             IRepository<Sale> saleRepository)
         {
-            Dashboard = new DashboardViewModel();
             TenantManagement = new TenantViewModel(Rentals, tenantRepository);
             ShelfManagement = new ShelfViewModel(
                 Rentals,
@@ -85,6 +84,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 Rentals,
                 rentalRepository);
 
+            Dashboard = new DashboardViewModel(ShelfManagement.Shelves, Rentals);
             CurrentViewModel = Dashboard;
             ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
             SaleManagement = new SaleViewModel(itemRepository, saleRepository, rentalRepository);
@@ -92,7 +92,11 @@ namespace Reolmarkedet.WPF.ViewModels
                 tenantRepository, saleRepository, itemRepository, rentalRepository);
 
             ShowDashboardCommand =
-                new RelayCommand(_ => CurrentViewModel = Dashboard);
+                new RelayCommand(_ =>
+                {
+                    Dashboard.RefreshShelfCounts();
+                    CurrentViewModel = Dashboard;
+                });
             ShowTenantsCommand =
                 new RelayCommand(_ =>
                 {
