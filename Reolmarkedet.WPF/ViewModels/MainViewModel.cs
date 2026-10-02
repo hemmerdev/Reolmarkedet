@@ -1,6 +1,7 @@
 ﻿using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -110,24 +111,23 @@ namespace Reolmarkedet.WPF.ViewModels
             IRepository<ShelfType> shelfTypeRepository,
             IRepository<Rental> rentalRepository,
             IItemRepository itemRepository,
-            IRepository<Sale> saleRepository)
+            IRepository<Sale> saleRepository,
+            IConfirmationService confirmationService)
         {
-            TenantManagement = new TenantViewModel(Rentals, tenantRepository);
+            TenantManagement = new TenantViewModel(
+                Rentals, tenantRepository, confirmationService);
             ShelfManagement = new ShelfViewModel(
-                Rentals,
-                shelfRepository,
-                shelfTypeRepository);
-
+                Rentals, shelfRepository, shelfTypeRepository, confirmationService);
             RentalManagement = new RentalViewModel(
-                TenantManagement.Tenants,
-                ShelfManagement.Shelves,
-                Rentals,
-                rentalRepository);
-
-            Dashboard = new DashboardViewModel(ShelfManagement.Shelves, Rentals, saleRepository);
+                TenantManagement.Tenants, ShelfManagement.Shelves, Rentals, rentalRepository, confirmationService);
+            Dashboard = new DashboardViewModel(
+                ShelfManagement.Shelves, Rentals, saleRepository);
             CurrentViewModel = Dashboard;
-            ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
-            SaleManagement = new SaleViewModel(itemRepository, saleRepository, rentalRepository);
+
+            ItemManagement = new ItemViewModel(
+                itemRepository, rentalRepository, confirmationService);
+            SaleManagement = new SaleViewModel(
+                itemRepository, saleRepository, rentalRepository, confirmationService);
             SettlementManagement = new SettlementViewModel(
                 tenantRepository, saleRepository, itemRepository, rentalRepository);
 

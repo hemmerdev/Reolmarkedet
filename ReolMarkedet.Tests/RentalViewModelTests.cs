@@ -26,7 +26,8 @@ public class RentalViewModelTests
             new ObservableCollection<Tenant> { tenant },
             new ObservableCollection<Shelf> { firstShelf, secondShelf },
             new ObservableCollection<Rental>(existingRentals),
-            rentalRepository)
+            rentalRepository,
+            new FakeConfirmationService())
         {
             SelectedTenant = tenant,
             SelectedPaymentMethod = PaymentMethod.Card,
@@ -79,7 +80,8 @@ public class RentalViewModelTests
             new ObservableCollection<Tenant> { tenant },
             new ObservableCollection<Shelf> { firstShelf, secondShelf },
             new ObservableCollection<Rental>(),
-            rentalRepository)
+            rentalRepository,
+            new FakeConfirmationService())
         {
             SelectedTenant = tenant,
             SelectedPaymentMethod = PaymentMethod.Card,

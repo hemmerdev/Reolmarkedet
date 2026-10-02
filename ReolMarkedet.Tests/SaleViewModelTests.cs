@@ -68,7 +68,8 @@ public class SaleViewModelTests
         SaleViewModel saleViewModel = new(
             itemRepository,
             saleRepository,
-            rentalRepository);
+            rentalRepository,
+            new FakeConfirmationService());
 
         saleViewModel.Refresh();
 
@@ -141,7 +142,8 @@ public class SaleViewModelTests
         SaleViewModel saleViewModel = new(
             itemRepository,
             saleRepository,
-            rentalRepository);
+            rentalRepository,
+            new FakeConfirmationService());
 
         saleViewModel.Refresh();
 
@@ -215,7 +217,8 @@ public class SaleViewModelTests
         SaleViewModel viewModel = new(
             itemRepository,
             saleRepository,
-            rentalRepository);
+            rentalRepository,
+            new FakeConfirmationService());
 
         viewModel.Refresh();
         viewModel.SelectedRentalOption = viewModel.RentalOptions.Single();

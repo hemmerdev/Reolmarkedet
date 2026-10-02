@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.Globalization;
@@ -28,6 +29,7 @@ namespace Reolmarkedet.WPF.ViewModels
         };
 
         private readonly RentalService _rentalService = new();
+        private readonly IConfirmationService _confirmationService;
         private readonly IRepository<Rental> _rentalRepository;
         private static readonly CultureInfo PriceCulture =
             CultureInfo.GetCultureInfo("da-DK");
@@ -489,12 +491,14 @@ namespace Reolmarkedet.WPF.ViewModels
             ObservableCollection<Tenant> tenants,
             ObservableCollection<Shelf> shelves,
             ObservableCollection<Rental> rentals,
-            IRepository<Rental> rentalRepository)
+            IRepository<Rental> rentalRepository,
+            IConfirmationService confirmationService)
         {
             Tenants = tenants;
             Shelves = shelves;
             Rentals = rentals;
             _rentalRepository = rentalRepository;
+            _confirmationService = confirmationService;
 
             // Loads existing rentals from the repository and populates the Rentals collection
             foreach (Rental rental in _rentalRepository.GetAll())
@@ -583,6 +587,13 @@ namespace Reolmarkedet.WPF.ViewModels
             if (rental is null || !Rentals.Contains(rental))
             {
                 TerminationMessage = "Vælg et gyldigt lejemål at fortryde opsigelsen for.";
+                return;
+            }
+            if (!_confirmationService.Confirm(
+                $"Vil du fortryde opsigelsen for {rental.Tenant.Name} " +
+                $"på reol #{rental.Shelf.ShelfNumber}?" +
+                $"\n\nOpsigelsen fjernes, og lejemålet fortsætter uden slutdato."))
+            {
                 return;
             }
 
@@ -711,6 +722,12 @@ namespace Reolmarkedet.WPF.ViewModels
             if (TerminationEndDate is null)
             {
                 TerminationMessage = "Vælg en slutdato for opsigelsen.";
+                return;
+            }
+            if (!_confirmationService.Confirm(
+                $"Vil du opsige lejemålet for {rental.Tenant.Name} på reol #{rental.Shelf.ShelfNumber}?" +
+                $"\n\nSidste lejedag: {TerminationEndDate.Value:dd-MM-yyyy}"))
+            {
                 return;
             }
 
@@ -931,7 +948,6 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             IsCustomPrice = true;
-
         }
 
         private bool CanRemoveShelfFromSelection(object? parameter)

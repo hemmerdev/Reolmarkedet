@@ -2,6 +2,7 @@ using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.Globalization;
@@ -14,6 +15,7 @@ public class ItemViewModel : ViewModelBase
     private readonly IItemRepository _items;
     private readonly IRepository<Rental> _rentals;
     private readonly ItemService _service;
+    private readonly IConfirmationService _confirmationService;
     private readonly List<ItemRowViewModel> _itemRows = new();
     private ItemRowViewModel? _selectedItemRow;
     private static readonly CultureInfo PriceCulture = CultureInfo.GetCultureInfo("da-DK");
@@ -127,9 +129,11 @@ public class ItemViewModel : ViewModelBase
     public RelayCommand NewCommand { get; }
     public RelayCommand DeleteItemCommand { get; }
 
-    public ItemViewModel(IItemRepository items, IRepository<Rental> rentals)
+    public ItemViewModel(
+        IItemRepository items, IRepository<Rental> rentals, IConfirmationService confirmationService)
     {
         _items = items; _rentals = rentals; _service = new(items, rentals);
+        _confirmationService = confirmationService;
         SaveCommand = new(_ => Run(Save), CanSave);
         NewCommand = new(_ => SelectedItem = null);
         DeleteItemCommand = new(DeleteItem, CanDeleteItem);
@@ -147,8 +151,8 @@ public class ItemViewModel : ViewModelBase
             PriceText,
             NumberStyles.AllowLeadingWhite |
             NumberStyles.AllowTrailingWhite |
-           NumberStyles.AllowLeadingSign |
-           NumberStyles.AllowDecimalPoint,
+            NumberStyles.AllowLeadingSign |
+            NumberStyles.AllowDecimalPoint,
             PriceCulture,
             out decimal price))
             return true;
@@ -163,6 +167,10 @@ public class ItemViewModel : ViewModelBase
             if (SelectedItem != null)
             {
                 int itemId = SelectedItem.ItemId;
+                if (!_confirmationService.Confirm($"Vil du slette varen: {SelectedItem.Description}?"))
+                {
+                    return;
+                }
                 _service.Delete(itemId);
                 Reload();
                 ConfirmationMessage = $"Vare er slettet.";

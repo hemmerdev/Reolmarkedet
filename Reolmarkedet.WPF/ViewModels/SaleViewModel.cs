@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.Globalization;
@@ -15,6 +16,7 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly IRepository<Rental> _rentalRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IRepository<Sale> _saleRepository;
+        private readonly IConfirmationService _confirmationService;
         private static readonly CultureInfo PriceCulture
             = CultureInfo.GetCultureInfo("da-DK");
 
@@ -340,11 +342,13 @@ namespace Reolmarkedet.WPF.ViewModels
         public SaleViewModel(
             IItemRepository itemRepository,
             IRepository<Sale> saleRepository,
-            IRepository<Rental> rentalRepository)
+            IRepository<Rental> rentalRepository,
+            IConfirmationService confirmationService)
         {
             _itemRepository = itemRepository;
             _saleRepository = saleRepository;
             _rentalRepository = rentalRepository;
+            _confirmationService = confirmationService;
 
             _salesService = new SalesService(_itemRepository, _saleRepository);
 
@@ -375,6 +379,13 @@ namespace Reolmarkedet.WPF.ViewModels
             ClearMessages();
             var selectedRow = SelectedSaleRow;
             if (selectedRow is null)
+            {
+                return;
+            }
+            if (!_confirmationService.Confirm(
+                $"Vil du returnere varen \"{selectedRow.ItemDescription}\" " +
+                $"fra salget den {selectedRow.SaleDate:dd-MM-yyyy}?" +
+                $"\n\nSalget slettes, og varen kan sælges igen."))
             {
                 return;
             }

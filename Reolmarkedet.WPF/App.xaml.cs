@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Data.Database;
 using Reolmarkedet.Data.Repositories;
+using Reolmarkedet.WPF.Services;
 using Reolmarkedet.WPF.ViewModels;
 using System.Data.Common;
 using System.Windows;
@@ -50,14 +51,16 @@ namespace Reolmarkedet.WPF
                     new SqlItemRepository(connectionString);
                 IRepository<Sale> saleRepository =
                     new SqlSaleRepository(connectionString);
-
+                IConfirmationService confirmationService =
+                    new MessageBoxConfirmationService();
                 MainViewModel mainViewModel = new(
                     tenantRepository,
                     shelfRepository,
                     shelfTypeRepository,
                     rentalRepository,
                     itemRepository,
-                    saleRepository);
+                    saleRepository,
+                    confirmationService);
 
                 MainWindow mainWindow = new(mainViewModel);
                 mainWindow.Show();

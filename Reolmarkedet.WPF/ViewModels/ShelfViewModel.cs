@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data.Common;
@@ -19,6 +20,7 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly RentalService _rentalService = new();
         private readonly IRepository<Shelf> _shelfRepository;
         private readonly IRepository<ShelfType> _shelfTypeRepository;
+        private readonly IConfirmationService _confirmationService;
 
         private string _newShelfTypeName = string.Empty;
         private ShelfType? _newShelfType;
@@ -248,11 +250,13 @@ namespace Reolmarkedet.WPF.ViewModels
         public ShelfViewModel(
             ObservableCollection<Rental> rentals,
             IRepository<Shelf> shelfRepository,
-            IRepository<ShelfType> shelfTypeRepository)
+            IRepository<ShelfType> shelfTypeRepository,
+            IConfirmationService confirmationService)
         {
             Rentals = rentals;
             _shelfRepository = shelfRepository;
             _shelfTypeRepository = shelfTypeRepository;
+            _confirmationService = confirmationService;
 
             // Load shelf types and shelves from the repositories
             foreach (ShelfType shelfType in _shelfTypeRepository.GetAll())
@@ -478,6 +482,10 @@ namespace Reolmarkedet.WPF.ViewModels
                 ShelfMessage = "Reolen kan ikke deaktiveres, da den har igangværende eller fremtidige lejemål.";
                 return;
             }
+            if (!_confirmationService.Confirm($"Vil du deaktivere reol #{shelf.ShelfNumber}?"))
+            {
+                return;
+            }
 
             shelf.IsActive = false;
             try
@@ -517,6 +525,10 @@ namespace Reolmarkedet.WPF.ViewModels
             if (_rentalService.HasRentalsForShelf(shelf, Rentals))
             {
                 ShelfMessage = "Reolen kan ikke slettes, da den har tilknyttede lejemål.";
+                return;
+            }
+            if (!_confirmationService.Confirm($"Vil du slette reol #{shelf.ShelfNumber}?"))
+            {
                 return;
             }
 
@@ -634,6 +646,11 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             ShelfType shelfType = ShelfTypeToDelete;
+
+            if (!_confirmationService.Confirm($"Vil du slette reoltypen {shelfType.Name}?"))
+            {
+                return;
+            }
 
             try
             {

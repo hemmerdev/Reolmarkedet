@@ -274,6 +274,7 @@ public class ShelfViewModelTests
         return new ShelfViewModel(
             rentals ?? new ObservableCollection<Rental>(),
             shelfRepository,
-            shelfTypeRepository);
+            shelfTypeRepository,
+            new FakeConfirmationService());
     }
 }
