@@ -48,17 +48,14 @@
                 BorderThickness="0,0,1,0">
 
             <Grid Margin="12,20">
-
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-
                     <Button Content="Startside"
                             Command="{Binding ShowDashboardCommand}" >
-
                         <Button.Style>
                             <Style TargetType="Button"
                                    BasedOn="{StaticResource NavigationButtonStyle}">
@@ -91,7 +88,6 @@
 
                     <Button Content="Reoler"
                             Command="{Binding ShowShelfManagementCommand}" >
-
                         <Button.Style>
                             <Style TargetType="Button"
                                    BasedOn="{StaticResource NavigationButtonStyle}">
@@ -108,7 +104,6 @@
 
                     <Button Content="Lejemål"
                             Command="{Binding ShowRentalManagementCommand}" >
-
                         <Button.Style>
                             <Style TargetType="Button"
                                    BasedOn="{StaticResource NavigationButtonStyle}">
@@ -210,12 +205,10 @@
                                      BorderBrush="#595959"
                                      VerticalContentAlignment="Center"/>
 
-
                         <Button Content="Log ind"
                                 Style="{StaticResource ActionButtonStyle}"
                                 Margin="0,8,0,0"
                                 Click="AdminLogin_Click"/>
-
 
                     </StackPanel>
                     <Button Content="Log ud"

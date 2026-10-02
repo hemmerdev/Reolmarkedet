@@ -80,6 +80,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 IsAdmin = false;
                 if (CurrentViewModel is SettlementViewModel)
                 {
+                    Dashboard.Refresh();
                     CurrentViewModel = Dashboard;
                 }
                 return true;
