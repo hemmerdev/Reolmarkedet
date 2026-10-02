@@ -8,6 +8,8 @@ namespace Reolmarkedet.WPF.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private ViewModelBase? _currentViewModel;
+        private bool _isAdmin;
+
         public ViewModelBase? CurrentViewModel
         {
             get => _currentViewModel;
@@ -47,6 +49,43 @@ namespace Reolmarkedet.WPF.ViewModels
         };
 
         public ObservableCollection<Rental> Rentals { get; } = new();
+        public bool IsAdmin
+        {
+            get => _isAdmin;
+            private set
+            {
+                if (_isAdmin != value)
+                {
+                    _isAdmin = value;
+                    OnPropertyChanged();
+                    ShowSettlementCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public bool TryAdminLogin(string enteredPassword)
+        {
+            if (enteredPassword == "admin")
+            {
+                IsAdmin = true;
+                return true;
+            }
+            return false;
+        }
+
+        public bool TryAdminLogout()
+        {
+            if (IsAdmin)
+            {
+                IsAdmin = false;
+                if (CurrentViewModel is SettlementViewModel)
+                {
+                    CurrentViewModel = Dashboard;
+                }
+                return true;
+            }
+            return false;
+        }
 
         public DashboardViewModel Dashboard { get; }
         public TenantViewModel TenantManagement { get; }
@@ -125,9 +164,13 @@ namespace Reolmarkedet.WPF.ViewModels
             });
             ShowSettlementCommand = new RelayCommand(_ =>
             {
+                if (!IsAdmin)
+                {
+                    return; //Show only in admin state
+                }
                 SettlementManagement.Refresh();
                 CurrentViewModel = SettlementManagement;
-            });
+            }, _ => IsAdmin);
 
         }
     }

@@ -96,7 +96,7 @@
                        FontSize="20"
                        Margin="0,0,0,12" />
 
-            <UniformGrid Columns="2">
+            <UniformGrid Columns="2" Height="120">
                 <Border Background="#292929"
                         BorderBrush="#595959"
                         BorderThickness="1"
@@ -122,20 +122,52 @@
                         CornerRadius="3"
                         Padding="18">
 
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Salg denne måned"
                                    Foreground="#BBBBBB"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding MonthlySalesAmount,
-                                   StringFormat={}{0:N2} kr.,
-                                   ConverterCulture=da-DK}"
-                                   FontSize="30"
-                                   FontWeight="SemiBold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding MonthlySalesCount,
-                                   StringFormat={}{0} salg}"
-                                   Foreground="#BBBBBB"
-                                   HorizontalAlignment="Center"/>
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsAdmin,
+                                                     RelativeSource={RelativeSource AncestorType=Window}}"
+                                                     Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="{Binding MonthlySalesAmount,
+                                       StringFormat={}{0:N2} kr.,
+                                       ConverterCulture=da-DK}"
+                                       FontSize="30"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding MonthlySalesCount,
+                                       StringFormat={}{0} salg}"
+                                       Foreground="#BBBBBB"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Log ind som administrator for at se månedens salg"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Margin="0, 4, 0, 0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsAdmin,
+                                                     RelativeSource={RelativeSource AncestorType=Window}}"
+                                                     Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </Border>
             </UniformGrid>

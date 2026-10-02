@@ -36,7 +36,6 @@ namespace Reolmarkedet.WPF
 
             try
             {
-
                 connectionTester.TestConnection();
 
                 IRepository<Tenant> tenantRepository =
