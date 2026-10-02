@@ -10,12 +10,23 @@ namespace Reolmarkedet.WPF.ViewModels
         private ViewModelBase? _currentViewModel;
         public ViewModelBase? CurrentViewModel
         {
-            get { return _currentViewModel; }
+            get => _currentViewModel;
             private set
             {
                 if (_currentViewModel != value)
-                {
+                {   // Stop the clock when switching away from the Dashboard
+                    if (_currentViewModel is DashboardViewModel previousViewModel)
+                    {
+                        previousViewModel.StopClock();
+                    }
+
                     _currentViewModel = value;
+                    // Start the clock when switching to the Dashboard
+                    if (_currentViewModel is DashboardViewModel nextViewModel)
+                    {
+                        nextViewModel.StartClock();
+                    }
+
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ActivePage));
                 }
