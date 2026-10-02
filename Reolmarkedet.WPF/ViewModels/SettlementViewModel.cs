@@ -16,7 +16,6 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly IRepository<Rental> _rentalRepository;
         private int _selectedYear;
         private int _selectedMonth;
-        private bool _isExpanded;
         private MonthlySettlementResult? _selectedSettlement;
         public ObservableCollection<MonthlySettlementResult> MonthlySettlements { get; } = new();
 
@@ -59,26 +58,10 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 if (value != _selectedSettlement)
                 {
-                    IsExpanded = false;
                     _selectedSettlement = value;
                     OnPropertyChanged();
                 }
             }
-        }
-
-        // Used to control the expansion state of the Expander in the UI.
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set
-            {
-                if (value != _isExpanded)
-                {
-                    _isExpanded = value;
-                    OnPropertyChanged();
-                }
-            }
-
         }
 
         public IReadOnlyList<int> MonthOptions { get; } =

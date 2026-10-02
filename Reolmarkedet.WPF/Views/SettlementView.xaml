@@ -71,6 +71,8 @@
             </TextBlock>
         </StackPanel>
         <DataGrid Grid.Row="2"
+                  VirtualizingPanel.ScrollUnit="Pixel"
+                  ScrollViewer.CanContentScroll="True"
                   ItemsSource="{Binding MonthlySettlements}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
@@ -169,7 +171,6 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="4*"/>
@@ -201,7 +202,7 @@
                             VerticalAlignment="Top"/>
                 </Grid>
 
-                <UniformGrid Grid.Row="1" Grid.ColumnSpan="3"
+                <UniformGrid Grid.Row="1" Grid.Column="0"
                              Columns="4" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="Salg i valgt måned" Foreground="#AAAAAA"/>
@@ -235,14 +236,9 @@
                     </StackPanel>
                 </UniformGrid>
 
-                <Expander Grid.Row="2"
-                          Grid.ColumnSpan="3"
-                          Header="Næste handling"
-                          Foreground="#EEEEEE"
-                          IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
-                          Margin="0,0,0,16">
-                    <Expander.Style>
-                        <Style TargetType="Expander">
+                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,16">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding SelectedSettlement.Status}"
                                              Value="Ingen betaling">
@@ -250,54 +246,55 @@
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </Expander.Style>
+                    </StackPanel.Style>
 
-                    <StackPanel Margin="12,8,0,4">
-                        <StackPanel>
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedSettlement.Status}"
-                                                     Value="Til udbetaling">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
 
-                            <TextBlock Text="Overfør den positive saldo ovenfor til:"
-                                       Margin="0,0,0,6"/>
-                            <TextBlock Text="{Binding SelectedSettlement.Tenant.BankRegistrationNumber,
-                                       StringFormat='Reg.nr.: {0}'}"/>
-                            <TextBlock Text="{Binding SelectedSettlement.Tenant.BankAccountNumber,
-                                       StringFormat='Kontonummer: {0}'}"/>
-                        </StackPanel>
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSettlement.Status}"
+                                                 Value="Til udbetaling">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
 
-                        <StackPanel>
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedSettlement.Status}"
-                                                     Value="Skylder">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-
-                            <TextBlock Text="Send regning for den skyldige saldo ovenfor til:"
-                                       Margin="0,0,0,6"/>
-                            <TextBlock Text="{Binding SelectedSettlement.Tenant.Email,
-                                       StringFormat='Email: {0}'}"/>
-                            <TextBlock Text="{Binding SelectedSettlement.Tenant.PhoneNumber,
-                                       StringFormat='Telefon: {0}'}"/>
-                        </StackPanel>
+                        <TextBlock Text="Overfør den positive saldo til:"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Tenant.BankRegistrationNumber,
+                                   StringFormat='Reg.nr.: {0}'}"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Tenant.BankAccountNumber,
+                                   StringFormat='Kontonummer: {0}'}"/>
                     </StackPanel>
-                </Expander>
 
-                <DockPanel Grid.Row="3" Grid.Column="0">
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSettlement.Status}"
+                                                 Value="Skylder">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <TextBlock Text="Send regning for den skyldige saldo til:"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Tenant.Email,
+                                   StringFormat='Email: {0}'}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding SelectedSettlement.Tenant.PhoneNumber,
+                                   StringFormat='Telefon: {0}'}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <DockPanel Grid.Row="2" Grid.Column="0">
                     <TextBlock Text="Salg i den valgte måned"
                                DockPanel.Dock="Top"
                                Margin="0,0,0,8"/>
@@ -338,7 +335,7 @@
                     </DataGrid>
                 </DockPanel>
 
-                <DockPanel Grid.Row="3" Grid.Column="2">
+                <DockPanel Grid.Row="2" Grid.Column="2">
                     <TextBlock Text="Leje for næste måned"
                                DockPanel.Dock="Top"
                                Margin="0,0,0,8"/>
