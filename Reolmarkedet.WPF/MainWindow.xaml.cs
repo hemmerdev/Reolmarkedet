@@ -11,7 +11,6 @@ namespace Reolmarkedet.WPF
         public MainWindow(MainViewModel mainViewModel)
         {
             InitializeComponent();
-
             DataContext = mainViewModel;
         }
     }
