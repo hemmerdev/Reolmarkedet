@@ -26,19 +26,6 @@ namespace Reolmarkedet.WPF.ViewModels
             }
         }
         public string CurrentTenantName => CurrentRental?.Tenant.Name ?? "-";
-        public ShelfType ShelfType
-        {
-            get => Shelf.ShelfType;
-            set
-            {
-                if (value != Shelf.ShelfType)
-                {
-                    Shelf.ShelfType = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
 
         public ShelfRowViewModel(Shelf shelf, Rental? currentRental, ShelfStatus shelfStatus)
         {

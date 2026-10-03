@@ -424,5 +424,79 @@ namespace Reolmarkedet.Core.Services
             rental.TerminationNoticeDate = null;
         }
 
+        public List<Rental> PrepareRentals(
+            Tenant tenant,
+            List<Shelf> selectedShelves,
+            DateTime startDate,
+            DateTime? endDate,
+            DateTime currentDate,
+            bool isCustomPrice,
+            decimal? customRentPerShelf,
+            PaymentMethod paymentMethod,
+            IEnumerable<Rental> existingRentals)
+        {
+            if (!tenant.IsActive)
+            {
+                throw new ArgumentException("Vælg en aktiv reollejer");
+            }
+            if (selectedShelves.Count == 0)
+            {
+                throw new ArgumentException("Vælg mindst én reol");
+            }
+            if (startDate.Date < currentDate.Date)
+            {
+                throw new ArgumentException("Startdatoen må ikke være i fortiden");
+            }
+            if (endDate.HasValue && endDate.Value.Date <= startDate.Date)
+            {
+                throw new ArgumentException("Slutdatoen skal være efter startdatoen");
+            }
+            if (isCustomPrice &&
+                (!customRentPerShelf.HasValue ||
+                customRentPerShelf.Value <= 0 ||
+                customRentPerShelf.Value > 99_999_999.99m ||
+                decimal.Round(customRentPerShelf.Value, 2) != customRentPerShelf.Value))
+            {
+                throw new ArgumentException(
+                    "Angiv en gyldig pris mellem 0,01 og 99.999.999,99 med højst 2 decimaler");
+            }
+
+            List<Rental> preparedRentals = new();
+            List<Rental> rentalsToCheck = new(existingRentals);
+
+            int position =
+                GetRentedShelfCountForTenant(tenant, startDate, rentalsToCheck) + 1;
+            foreach (var shelf in selectedShelves)
+            {
+                if (!IsShelfAvailable(shelf, startDate, endDate, rentalsToCheck))
+                {
+                    throw new InvalidOperationException(
+                        $"Reol {shelf.ShelfNumber} er ikke tilgængelig i den valgte periode.");
+                }
+
+                decimal monthlyRent;
+                if (isCustomPrice && customRentPerShelf.HasValue)
+                {
+                    monthlyRent = customRentPerShelf.Value;
+                }
+                else
+                {
+                    monthlyRent = GetStandardMonthlyRentPerShelf(position);
+                }
+
+                Rental rental = new(tenant, shelf)
+                {
+                    StartDate = startDate.Date,
+                    EndDate = endDate?.Date,
+                    MonthlyRent = monthlyRent,
+                    IsCustomPrice = isCustomPrice,
+                    InitialPaymentMethod = paymentMethod
+                };
+                preparedRentals.Add(rental);
+                rentalsToCheck.Add(rental);
+                position++;
+            }
+            return preparedRentals;
+        }
     }
 }

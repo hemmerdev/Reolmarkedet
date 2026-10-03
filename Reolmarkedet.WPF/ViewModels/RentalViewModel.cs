@@ -607,11 +607,28 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     Rentals);
 
-                _rentalRepository.Update(rental);
             }
             catch (InvalidOperationException ex)
             {
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
                 TerminationMessage = ex.Message;
+                return;
+            }
+
+            try
+            {
+                _rentalRepository.Update(rental);
+            }
+            catch (InvalidOperationException)
+            {
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
+                Rentals.Remove(rental);
+                SelectedRentalRow = null;
+                Refresh();
+                TerminationMessage = "Lejemålet findes ikke længere i databasen. " +
+                    "Det er fjernet fra oversigten.";
                 return;
             }
             catch (DbException)
@@ -671,18 +688,32 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     TerminationEndDate.Value,
                     Rentals);
-                _rentalRepository.Update(rental);
-
-
             }
             catch (ArgumentException ex)
             {
+                rental.EndDate = originalEndDate;
                 TerminationMessage = ex.Message;
                 return;
             }
             catch (InvalidOperationException ex)
             {
+                rental.EndDate = originalEndDate;
                 TerminationMessage = ex.Message;
+                return;
+            }
+
+            try
+            {
+                _rentalRepository.Update(rental);
+            }
+            catch (InvalidOperationException)
+            {
+                rental.EndDate = originalEndDate;
+                Rentals.Remove(rental);
+                SelectedRentalRow = null;
+                Refresh();
+                TerminationMessage = "Lejemålet findes ikke længere i databasen. " +
+                    "Det er fjernet fra oversigten.";
                 return;
             }
             catch (DbException)
@@ -741,16 +772,36 @@ namespace Reolmarkedet.WPF.ViewModels
                     DateTime.Today,
                     TerminationEndDate.Value,
                     Rentals);
-                _rentalRepository.Update(rental);
             }
             catch (ArgumentException ex)
             {
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
                 TerminationMessage = ex.Message;
                 return;
             }
             catch (InvalidOperationException ex)
             {
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
                 TerminationMessage = ex.Message;
+                return;
+            }
+
+            try
+            {
+                _rentalRepository.Update(rental);
+            }
+            catch (InvalidOperationException)
+            {
+                rental.EndDate = originalEndDate;
+                rental.TerminationNoticeDate = originalNoticeDate;
+                Rentals.Remove(rental);
+                SelectedRentalRow = null;
+                Refresh();
+
+                TerminationMessage = "Lejemålet findes ikke længere i databasen. " +
+                    "Det er fjernet fra oversigten.";
                 return;
             }
             catch (DbException)
@@ -809,22 +860,11 @@ namespace Reolmarkedet.WPF.ViewModels
             DateTime startDate = StartDate.Value.Date;
             DateTime? endDate = EndDate?.Date;
 
-            if (startDate < DateTime.Today)
-            {
-                RentalMessage = "Startdatoen må ikke være i fortiden.";
-                return;
-            }
-
-            if (endDate.HasValue && endDate.Value <= startDate)
-            {
-                RentalMessage = "Slutdatoen skal være efter startdatoen.";
-                return;
-            }
 
             // Update the standard price, preserving an entered custom price.
             RefreshPrice();
 
-            decimal rentPerShelf = 0m;
+            decimal? customRentPerShelf = null;
             if (IsCustomPrice)
             {
                 if (!decimal.TryParse(
@@ -834,24 +874,21 @@ namespace Reolmarkedet.WPF.ViewModels
                     NumberStyles.AllowLeadingSign |
                     NumberStyles.AllowDecimalPoint,
                     PriceCulture,
-                    out rentPerShelf) ||
-                    rentPerShelf <= 0)
+                    out decimal parsedRent))
                 {
                     RentalMessage = "Månedlig leje skal være et positivt tal. Brug decimalkomma, fx 850,00.";
                     return;
                 }
+
+                customRentPerShelf = parsedRent;
             }
 
-            // Copy the selection so later collection changes cannot affect this loop.
-            List<SelectedShelfRowViewModel> shelvesToRent = new(SelectedShelfRows);
+            List<Shelf> shelvesToRent = new(SelectedShelves);
 
             // Check every shelf before adding any rentals.
-            foreach (SelectedShelfRowViewModel shelfRow in shelvesToRent)
+            foreach (var shelf in shelvesToRent)
             {
-                Shelf shelf = shelfRow.Shelf;
-                if (!Shelves.Contains(shelf) ||
-                    !_rentalService.IsShelfAvailable(
-                        shelf, startDate, endDate, Rentals))
+                if (!Shelves.Contains(shelf))
                 {
                     RentalMessage =
                         $"Reol {shelf.ShelfNumber} er ikke tilgængelig i den valgte periode.";
@@ -859,27 +896,37 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
             }
 
+
+            List<Rental> preparedRentals = new();
+            try
+            {
+                preparedRentals = _rentalService.PrepareRentals(
+                    tenant,
+                    shelvesToRent,
+                    startDate,
+                    endDate,
+                    DateTime.Today,
+                    IsCustomPrice,
+                    customRentPerShelf,
+                    SelectedPaymentMethod.Value,
+                    Rentals);
+            }
+            catch (ArgumentException ex)
+            {
+                RentalMessage = ex.Message;
+                return;
+            }
+            catch (InvalidOperationException ex)
+            {
+                RentalMessage = ex.Message;
+                return;
+            }
+
             // All validation passed. Create one rental for each selected shelf.
 
-            List<Rental> createdRentals = new(); // List for calculating the total rent for the first period across all rentals created in this operation.
-            foreach (SelectedShelfRowViewModel shelfRow in shelvesToRent)
+            foreach (Rental rental in preparedRentals)
             {
-                Shelf shelf = shelfRow.Shelf;
-                decimal monthlyRent = shelfRow.MonthlyRent;
-
-                if (IsCustomPrice)
-                {
-                    monthlyRent = rentPerShelf;
-                }
-
-                Rental rental = new(tenant, shelf)
-                {
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    MonthlyRent = monthlyRent,
-                    IsCustomPrice = this.IsCustomPrice,
-                    InitialPaymentMethod = SelectedPaymentMethod.Value
-                };
+                Shelf shelf = rental.Shelf;
 
                 try
                 {
@@ -893,11 +940,10 @@ namespace Reolmarkedet.WPF.ViewModels
                     return;
                 }
                 Rentals.Add(rental);
-                createdRentals.Add(rental);
                 SelectedShelves.Remove(shelf);
             }
             decimal firstPeriodTotal = 0;
-            foreach (var r in createdRentals)
+            foreach (var r in preparedRentals)
             {
                 firstPeriodTotal += _rentalService.GetFirstPeriodRent(r, Rentals);
             }
