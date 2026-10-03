@@ -3,6 +3,7 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Windows.Threading;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -16,6 +17,8 @@ namespace Reolmarkedet.WPF.ViewModels
         private DateTime _lastRefreshDate;
         public DateTime CurrentDateTime => DateTime.Now;
         private IRepository<Sale> _saleRepository;
+        private string _monthlySalesMessage = string.Empty;
+
         public int AvailableShelfCount { get; private set; }
         public int RentedShelfCount { get; private set; }
         public int EndingShelfCount { get; private set; }
@@ -24,6 +27,19 @@ namespace Reolmarkedet.WPF.ViewModels
         public int MonthlySalesCount { get; private set; }
         public decimal MonthlySalesAmount { get; private set; }
         public ObservableCollection<Rental> UpcomingEndings { get; }
+
+        public string MonthlySalesMessage
+        {
+            get => _monthlySalesMessage;
+            private set
+            {
+                if (_monthlySalesMessage != value)
+                {
+                    _monthlySalesMessage = value;
+                    OnPropertyChanged(nameof(MonthlySalesMessage));
+                }
+            }
+        }
 
         public DashboardViewModel(
             ObservableCollection<Shelf> shelves,
@@ -153,16 +169,27 @@ namespace Reolmarkedet.WPF.ViewModels
 
         private void RefreshMonthlySales()
         {
-            var sales = _saleRepository.GetAll();
-            var salesInMonth = sales
-                .Where(s => s.SaleDate.Year == DateTime.Today.Year &&
-                            s.SaleDate.Month == DateTime.Today.Month);
+            try
+            {
+                var sales = _saleRepository.GetAll();
+                var salesInMonth = sales
+                   .Where(s => s.SaleDate.Year == DateTime.Today.Year &&
+                               s.SaleDate.Month == DateTime.Today.Month);
 
-            MonthlySalesCount = salesInMonth.Count();
-            MonthlySalesAmount = salesInMonth.Sum(s => s.SalePrice);
+                MonthlySalesAmount = salesInMonth.Sum(s => s.SalePrice);
+                MonthlySalesCount = salesInMonth.Count();
+                MonthlySalesMessage = string.Empty;
 
-            OnPropertyChanged(nameof(MonthlySalesAmount));
+            }
+            catch (DbException)
+            {
+                MonthlySalesMessage = "Kunne ikke hente månedens salg fra databasen.";
+                MonthlySalesCount = 0;
+                MonthlySalesAmount = 0;
+            }
+
             OnPropertyChanged(nameof(MonthlySalesCount));
+            OnPropertyChanged(nameof(MonthlySalesAmount));
         }
 
         public void Refresh()

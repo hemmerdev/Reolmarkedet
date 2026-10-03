@@ -69,7 +69,14 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
+
+            <TextBlock Text="{Binding SettlementMessage}"
+                       Style="{StaticResource MessageTextStyle}"
+                       Foreground="#F28B82"
+                       TextWrapping="Wrap"
+                       Margin="0,8,0,0" />
         </StackPanel>
+
         <DataGrid Grid.Row="2"
                   VirtualizingPanel.ScrollUnit="Pixel"
                   ScrollViewer.CanContentScroll="True"
