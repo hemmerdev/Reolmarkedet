@@ -3,8 +3,8 @@ using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Models.enums;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Data.Common;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -19,6 +19,7 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly RentalService _rentalService = new();
         private readonly IRepository<Shelf> _shelfRepository;
         private readonly IRepository<ShelfType> _shelfTypeRepository;
+        private readonly IConfirmationService _confirmationService;
 
         private string _newShelfTypeName = string.Empty;
         private ShelfType? _newShelfType;
@@ -131,6 +132,9 @@ namespace Reolmarkedet.WPF.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        private ShelfType? _selectedShelfType;
+
         public string ShelfTypeConfirmationMessage
         {
             get => _shelfTypeConfirmationMessage;
@@ -186,6 +190,7 @@ namespace Reolmarkedet.WPF.ViewModels
                     LocationRowLabel = value?.Shelf.RowLabel ?? string.Empty;
                     LocationPositionText =
                         value?.Shelf.PositionInRow?.ToString() ?? string.Empty;
+                    SelectedShelfType = value?.Shelf.ShelfType;
 
                     ShelfConfirmationMessage = string.Empty;
                     ShelfMessage = string.Empty;
@@ -198,6 +203,23 @@ namespace Reolmarkedet.WPF.ViewModels
                     DeactivateShelfCommand.RaiseCanExecuteChanged();
                     ReactivateShelfCommand.RaiseCanExecuteChanged();
                     SaveShelfLocationCommand.RaiseCanExecuteChanged();
+                    SaveShelfTypeCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public ShelfType? SelectedShelfType
+        {
+            get => _selectedShelfType;
+            set
+            {
+                if (_selectedShelfType != value)
+                {
+                    _selectedShelfType = value;
+                    OnPropertyChanged();
+                    ShelfConfirmationMessage = string.Empty;
+                    ShelfMessage = string.Empty;
+                    SaveShelfTypeCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -244,15 +266,18 @@ namespace Reolmarkedet.WPF.ViewModels
         public RelayCommand DeactivateShelfCommand { get; }
         public RelayCommand ReactivateShelfCommand { get; }
         public RelayCommand SaveShelfLocationCommand { get; }
+        public RelayCommand SaveShelfTypeCommand { get; }
 
         public ShelfViewModel(
             ObservableCollection<Rental> rentals,
             IRepository<Shelf> shelfRepository,
-            IRepository<ShelfType> shelfTypeRepository)
+            IRepository<ShelfType> shelfTypeRepository,
+            IConfirmationService confirmationService)
         {
             Rentals = rentals;
             _shelfRepository = shelfRepository;
             _shelfTypeRepository = shelfTypeRepository;
+            _confirmationService = confirmationService;
 
             // Load shelf types and shelves from the repositories
             foreach (ShelfType shelfType in _shelfTypeRepository.GetAll())
@@ -281,7 +306,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 }
 
                 shelf.ShelfType = matchingShelfType;
-                shelf.PropertyChanged += OnShelfPropertyChanged;
                 Shelves.Add(shelf);
             }
 
@@ -292,12 +316,69 @@ namespace Reolmarkedet.WPF.ViewModels
             DeactivateShelfCommand = new RelayCommand(DeactivateShelf, CanDeactivateShelf);
             ReactivateShelfCommand = new RelayCommand(ReactivateShelf, CanReactivateShelf);
             SaveShelfLocationCommand = new RelayCommand(SaveShelfLocation, CanSaveShelfLocation);
+            SaveShelfTypeCommand = new RelayCommand(SaveShelfType, CanSaveShelfType);
 
             // Refreshes the list of visible shelves whenever the Shelves or Rentals collections change
             Shelves.CollectionChanged += (_, _) => ApplyShelfFilter();
             Rentals.CollectionChanged += (_, _) => ApplyShelfFilter();
 
             ApplyShelfFilter();
+        }
+
+        private bool CanSaveShelfType(object? parameter)
+        {
+            return SelectedShelfRow is not null &&
+                   SelectedShelfType is not null &&
+                   ShelfTypes.Contains(SelectedShelfType) &&
+                   Shelves.Contains(SelectedShelfRow.Shelf) &&
+                   SelectedShelfType != SelectedShelfRow.Shelf.ShelfType;
+        }
+
+        private void SaveShelfType(object? parameter)
+        {
+            ShelfMessage = string.Empty;
+            ShelfConfirmationMessage = string.Empty;
+
+            if (SelectedShelfRow is null ||
+                (SelectedShelfType is null ||
+                !ShelfTypes.Contains(SelectedShelfType)) ||
+                !Shelves.Contains(SelectedShelfRow.Shelf) ||
+                SelectedShelfType == SelectedShelfRow.Shelf.ShelfType)
+            {
+                return;
+            }
+            var chosenShelf = SelectedShelfRow.Shelf;
+            var chosenType = SelectedShelfType;
+
+            Shelf proposedShelf = new(chosenType)
+            {
+                ShelfId = chosenShelf.ShelfId,
+                ShelfNumber = chosenShelf.ShelfNumber,
+                IsActive = chosenShelf.IsActive,
+                RowLabel = chosenShelf.RowLabel,
+                PositionInRow = chosenShelf.PositionInRow,
+            };
+
+            try
+            {
+                _shelfRepository.Update(proposedShelf);
+            }
+            catch (InvalidOperationException)
+            {
+                Shelves.Remove(chosenShelf);
+                ShelfMessage = "Reolen findes ikke længere i databasen. " +
+                    "Den er fjernet fra oversigten.";
+                return;
+            }
+            catch (DbException)
+            {
+                ShelfMessage = "Reoltypen kunne ikke opdateres i databasen. Prøv igen.";
+                return;
+            }
+
+            chosenShelf.ShelfType = chosenType;
+            SaveShelfTypeCommand.RaiseCanExecuteChanged();
+            ShelfConfirmationMessage = "Reoltypen er blevet opdateret.";
         }
 
         private bool CanSaveShelfLocation(object? parameter)
@@ -395,17 +476,6 @@ namespace Reolmarkedet.WPF.ViewModels
             ShelfConfirmationMessage = "Reolens placering er blevet gemt.";
         }
 
-        // Persists shelf-type changes made directly through the DataGrid dropdown.
-        private void OnShelfPropertyChanged(
-            object? sender, PropertyChangedEventArgs e)
-        {
-            if (sender is Shelf shelf &&
-                e.PropertyName == nameof(Shelf.ShelfType))
-            {
-                _shelfRepository.Update(shelf);
-            }
-        }
-
         private bool CanReactivateShelf(object? parameter)
         {
             return SelectedShelfRow is not null &&
@@ -478,6 +548,10 @@ namespace Reolmarkedet.WPF.ViewModels
                 ShelfMessage = "Reolen kan ikke deaktiveres, da den har igangværende eller fremtidige lejemål.";
                 return;
             }
+            if (!_confirmationService.Confirm($"Vil du deaktivere reol #{shelf.ShelfNumber}?"))
+            {
+                return;
+            }
 
             shelf.IsActive = false;
             try
@@ -519,6 +593,10 @@ namespace Reolmarkedet.WPF.ViewModels
                 ShelfMessage = "Reolen kan ikke slettes, da den har tilknyttede lejemål.";
                 return;
             }
+            if (!_confirmationService.Confirm($"Vil du slette reol #{shelf.ShelfNumber}?"))
+            {
+                return;
+            }
 
             try
             {
@@ -529,7 +607,6 @@ namespace Reolmarkedet.WPF.ViewModels
                 ShelfMessage = "Reolen kunne ikke slettes i databasen. Prøv igen.";
                 return;
             }
-            shelf.PropertyChanged -= OnShelfPropertyChanged;
             Shelves.Remove(SelectedShelfRow.Shelf);
 
             SelectedShelfRow = null;
@@ -581,9 +658,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 ShelfMessage = "Reolen kunne ikke oprettes i databasen. Prøv igen.";
                 return;
             }
-            newShelf.PropertyChanged += OnShelfPropertyChanged;
             Shelves.Add(newShelf);
-
 
             NewShelfNumber = string.Empty;
             ShelfMessage = string.Empty;
@@ -634,6 +709,11 @@ namespace Reolmarkedet.WPF.ViewModels
             }
 
             ShelfType shelfType = ShelfTypeToDelete;
+
+            if (!_confirmationService.Confirm($"Vil du slette reoltypen {shelfType.Name}?"))
+            {
+                return;
+            }
 
             try
             {

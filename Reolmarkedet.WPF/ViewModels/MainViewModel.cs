@@ -1,6 +1,7 @@
 ﻿using Reolmarkedet.Core.Interfaces;
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using System.Collections.ObjectModel;
 
 namespace Reolmarkedet.WPF.ViewModels
@@ -8,14 +9,27 @@ namespace Reolmarkedet.WPF.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private ViewModelBase? _currentViewModel;
+        private bool _isAdmin;
+
         public ViewModelBase? CurrentViewModel
         {
-            get { return _currentViewModel; }
+            get => _currentViewModel;
             private set
             {
                 if (_currentViewModel != value)
-                {
+                {   // Stop the clock when switching away from the Dashboard
+                    if (_currentViewModel is DashboardViewModel previousViewModel)
+                    {
+                        previousViewModel.StopClock();
+                    }
+
                     _currentViewModel = value;
+                    // Start the clock when switching to the Dashboard
+                    if (_currentViewModel is DashboardViewModel nextViewModel)
+                    {
+                        nextViewModel.StartClock();
+                    }
+
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ActivePage));
                 }
@@ -36,6 +50,44 @@ namespace Reolmarkedet.WPF.ViewModels
         };
 
         public ObservableCollection<Rental> Rentals { get; } = new();
+        public bool IsAdmin
+        {
+            get => _isAdmin;
+            private set
+            {
+                if (_isAdmin != value)
+                {
+                    _isAdmin = value;
+                    OnPropertyChanged();
+                    ShowSettlementCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public bool TryAdminLogin(string enteredPassword)
+        {
+            if (enteredPassword == "admin")
+            {
+                IsAdmin = true;
+                return true;
+            }
+            return false;
+        }
+
+        public bool TryAdminLogout()
+        {
+            if (IsAdmin)
+            {
+                IsAdmin = false;
+                if (CurrentViewModel is SettlementViewModel)
+                {
+                    Dashboard.Refresh();
+                    CurrentViewModel = Dashboard;
+                }
+                return true;
+            }
+            return false;
+        }
 
         public DashboardViewModel Dashboard { get; }
         public TenantViewModel TenantManagement { get; }
@@ -59,29 +111,32 @@ namespace Reolmarkedet.WPF.ViewModels
             IRepository<ShelfType> shelfTypeRepository,
             IRepository<Rental> rentalRepository,
             IItemRepository itemRepository,
-            IRepository<Sale> saleRepository)
+            IRepository<Sale> saleRepository,
+            IConfirmationService confirmationService)
         {
-            Dashboard = new DashboardViewModel();
-            TenantManagement = new TenantViewModel(Rentals, tenantRepository);
+            TenantManagement = new TenantViewModel(
+                Rentals, tenantRepository, confirmationService);
             ShelfManagement = new ShelfViewModel(
-                Rentals,
-                shelfRepository,
-                shelfTypeRepository);
-
+                Rentals, shelfRepository, shelfTypeRepository, confirmationService);
             RentalManagement = new RentalViewModel(
-                TenantManagement.Tenants,
-                ShelfManagement.Shelves,
-                Rentals,
-                rentalRepository);
-
+                TenantManagement.Tenants, ShelfManagement.Shelves, Rentals, rentalRepository, confirmationService);
+            Dashboard = new DashboardViewModel(
+                ShelfManagement.Shelves, Rentals, saleRepository);
             CurrentViewModel = Dashboard;
-            ItemManagement = new ItemViewModel(itemRepository, rentalRepository);
-            SaleManagement = new SaleViewModel(itemRepository, saleRepository, rentalRepository);
+
+            ItemManagement = new ItemViewModel(
+                itemRepository, rentalRepository, confirmationService);
+            SaleManagement = new SaleViewModel(
+                itemRepository, saleRepository, rentalRepository, confirmationService);
             SettlementManagement = new SettlementViewModel(
                 tenantRepository, saleRepository, itemRepository, rentalRepository);
 
             ShowDashboardCommand =
-                new RelayCommand(_ => CurrentViewModel = Dashboard);
+                new RelayCommand(_ =>
+                {
+                    Dashboard.Refresh();
+                    CurrentViewModel = Dashboard;
+                });
             ShowTenantsCommand =
                 new RelayCommand(_ =>
                 {
@@ -108,12 +163,15 @@ namespace Reolmarkedet.WPF.ViewModels
                 SaleManagement.Refresh();
                 CurrentViewModel = SaleManagement;
             });
-            ShowSettlementCommand =
-                new RelayCommand(_ =>
+            ShowSettlementCommand = new RelayCommand(_ =>
+            {
+                if (!IsAdmin)
                 {
-                    SettlementManagement.Refresh();
-                    CurrentViewModel = SettlementManagement;
-                });
+                    return; //Show only in admin state
+                }
+                SettlementManagement.Refresh();
+                CurrentViewModel = SettlementManagement;
+            }, _ => IsAdmin);
 
         }
     }

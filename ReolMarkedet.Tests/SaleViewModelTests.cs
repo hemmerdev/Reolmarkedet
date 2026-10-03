@@ -68,7 +68,8 @@ public class SaleViewModelTests
         SaleViewModel saleViewModel = new(
             itemRepository,
             saleRepository,
-            rentalRepository);
+            rentalRepository,
+            new FakeConfirmationService());
 
         saleViewModel.Refresh();
 
@@ -141,7 +142,8 @@ public class SaleViewModelTests
         SaleViewModel saleViewModel = new(
             itemRepository,
             saleRepository,
-            rentalRepository);
+            rentalRepository,
+            new FakeConfirmationService());
 
         saleViewModel.Refresh();
 
@@ -215,7 +217,8 @@ public class SaleViewModelTests
         SaleViewModel viewModel = new(
             itemRepository,
             saleRepository,
-            rentalRepository);
+            rentalRepository,
+            new FakeConfirmationService());
 
         viewModel.Refresh();
         viewModel.SelectedRentalOption = viewModel.RentalOptions.Single();
@@ -265,5 +268,86 @@ public class SaleViewModelTests
         Assert.AreEqual(string.Empty, viewModel.SaleMessage);
         Assert.IsFalse(
             string.IsNullOrWhiteSpace(viewModel.SaleConfirmationMessage));
+    }
+
+    [TestMethod]
+    public void RegisterSale_WhenSecondBasketItemIsMissing_SavesFirstAndKeepsSecondInBasket()
+    {
+        // Arrange
+        FakeSaleRepository saleRepository = new();
+        FakeRentalRepository rentalRepository = new();
+        FakeItemRepository itemRepository = new(saleRepository);
+
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "6 hylder" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+
+        Rental rental = new(tenant, shelf)
+        {
+            RentalId = 1,
+            StartDate = DateTime.Today
+        };
+        rentalRepository.Add(rental);
+
+        Item itemA = new()
+        {
+            ItemId = 1,
+            Description = "First item",
+            Price = 100m,
+            Barcode = "RMTESTA",
+            RentalId = rental.RentalId
+        };
+
+        Item itemB = new()
+        {
+            ItemId = 2,
+            Description = "Second item",
+            Price = 30m,
+            Barcode = "RMTESTB",
+            RentalId = rental.RentalId
+        };
+
+        itemRepository.Add(itemA);
+        itemRepository.Add(itemB);
+
+        SaleViewModel viewModel = new(
+            itemRepository,
+            saleRepository,
+            rentalRepository,
+            new FakeConfirmationService());
+
+        viewModel.Refresh();
+        viewModel.SelectedRentalOption = viewModel.RentalOptions.Single();
+        viewModel.SelectedPaymentMethod = PaymentMethod.Card;
+
+        viewModel.SelectedItemOption = viewModel.ItemOptions.First(
+            item => item.ItemId == itemA.ItemId);
+        viewModel.SalePriceText = "80,00";
+        viewModel.AddToBasketCommand.Execute(null);
+
+        viewModel.SelectedItemOption = viewModel.ItemOptions.First(
+            item => item.ItemId == itemB.ItemId);
+        viewModel.SalePriceText = "25,50";
+        viewModel.AddToBasketCommand.Execute(null);
+
+        Assert.HasCount(2, viewModel.BasketItems);
+
+        // Simulate the second item disappearing from database after it was added to the basket.
+        itemRepository.Delete(itemB.ItemId);
+
+        // Act
+        viewModel.RegisterSaleCommand.Execute(null);
+
+        // Assert
+        List<Sale> savedSales = saleRepository.GetAll().ToList();
+        Assert.HasCount(1, savedSales);
+        Assert.AreEqual(itemA.ItemId, savedSales[0].ItemId);
+        Assert.AreEqual(80m, savedSales[0].SalePrice);
+
+        Assert.HasCount(1, viewModel.BasketItems);
+        Assert.AreEqual(itemB.ItemId, viewModel.BasketItems[0].ItemId);
+        Assert.AreEqual(25.50m, viewModel.BasketTotal);
+
+        Assert.Contains("Tidligere registrerede salg er gemt.", viewModel.SaleMessage);
     }
 }

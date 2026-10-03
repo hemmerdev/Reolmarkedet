@@ -414,7 +414,7 @@
                     CornerRadius="3"
                     Padding="18">
                 <StackPanel>
-                    <TextBlock Text="Returnér valgt vare"
+                    <TextBlock Text="Valgt salg"
                                FontSize="20"
                                Margin="0,0,0,12"/>
 
@@ -434,9 +434,15 @@
                         </TextBlock.Style>
                     </TextBlock>
 
-                    <StackPanel>
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.Style>
+                            <Style TargetType="Grid">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedSaleRow}"
                                                  Value="{x:Null}">
@@ -444,33 +450,47 @@
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </StackPanel.Style>
+                        </Grid.Style>
 
-                        <TextBlock Text="{Binding SelectedSaleRow.ItemDescription}"
-                                   FontWeight="SemiBold"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding SelectedSaleRow.ItemDescription}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,8"/>
 
-                        <TextBlock Text="{Binding SelectedSaleRow.SaleDate,
-                                   StringFormat='Salgsdato: {0:dd-MM-yyyy}'}"
-                                   Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SelectedSaleRow.SaleDate,
+                                       StringFormat='Salgsdato: {0:dd-MM-yyyy}'}"
+                                       Margin="0,0,0,4"/>
 
-                        <TextBlock Text="{Binding SelectedSaleRow.SalePrice,
-                                   ConverterCulture=da-DK,
-                                   StringFormat='Salgspris: {0:N2} kr.'}"
-                                   Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding SelectedSaleRow.SalePrice,
+                                       ConverterCulture=da-DK,
+                                       StringFormat='Salgspris: {0:N2} kr.'}"
+                                       Margin="0,0,0,12"/>
 
-                        <TextBlock Text="Når du bekræfter returneringen, slettes salget, og varen kan sælges igen."
-                                   Foreground="#AAAAAA"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,12"/>
+                            <TextBlock Text="Når du bekræfter returneringen, slettes salget, og varen kan sælges igen."
+                                       Foreground="#AAAAAA"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,12"/>
 
-                        <Button Content="Bekræft returnering"
-                                Command="{Binding ReturnItemCommand}"
-                                Style="{StaticResource WarningButtonStyle}"
-                                HorizontalAlignment="Left"/>
+                            <Button Content="Bekræft returnering"
+                                    Command="{Binding ReturnItemCommand}"
+                                    Style="{StaticResource WarningButtonStyle}"
+                                    HorizontalAlignment="Left"/>
+                        </StackPanel>
 
-                    </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Bemærkning"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,6"/>
+
+                            <ScrollViewer MaxHeight="120"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <TextBlock Text="{Binding SelectedSaleRow.Notes}"
+                                           TextWrapping="Wrap"/>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Grid>
 
                     <TextBlock Text="{Binding ReturnMessage}"
                                Foreground="#F28B82"

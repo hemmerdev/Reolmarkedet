@@ -2,6 +2,7 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
+using Reolmarkedet.WPF.Services;
 using Reolmarkedet.WPF.ViewModels.enums;
 using System.Collections.ObjectModel;
 using System.Data.Common;
@@ -18,6 +19,7 @@ namespace Reolmarkedet.WPF.ViewModels
         public ObservableCollection<RentalRowViewModel> TenantRentalRows { get; } = new();
 
         private readonly RentalService _rentalService = new();
+        private readonly IConfirmationService _confirmationService;
         private readonly IRepository<Tenant> _tenantRepository;
 
         private string _searchText = string.Empty;
@@ -258,10 +260,12 @@ namespace Reolmarkedet.WPF.ViewModels
 
         public TenantViewModel(
             ObservableCollection<Rental> rentals,
-            IRepository<Tenant> tenantRepository)
+            IRepository<Tenant> tenantRepository,
+            IConfirmationService confirmationService)
         {
             Rentals = rentals;
             _tenantRepository = tenantRepository;
+            _confirmationService = confirmationService;
 
             // Load tenants from the repository into the Tenants collection
             foreach (var tenant in _tenantRepository.GetAll())
@@ -346,6 +350,10 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 ValidationMessage =
                     "Reollejeren har nuværende eller kommende lejemål og kan ikke deaktiveres.";
+                return;
+            }
+            if (!_confirmationService.Confirm($"Vil du deaktivere reollejeren {tenant.Name}?"))
+            {
                 return;
             }
 
@@ -517,6 +525,10 @@ namespace Reolmarkedet.WPF.ViewModels
             if (_rentalService.HasRentalsForTenant(tenant, Rentals))
             {
                 ValidationMessage = "Reollejeren har tilknyttede lejemål og kan ikke slettes.";
+                return;
+            }
+            if (!_confirmationService.Confirm($"Vil du slette reollejeren {tenant.Name}?"))
+            {
                 return;
             }
 

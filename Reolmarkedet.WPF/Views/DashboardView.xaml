@@ -7,6 +7,245 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="24">
-        <TextBlock Text="Overblik" FontSize="28" FontWeight="SemiBold" />
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+
+            <TextBlock Text="Overblik"
+                       FontSize="28"
+                       FontWeight="SemiBold" />
+
+            <TextBlock Text="{Binding CurrentDateTime,
+                       StringFormat={}{0:dddd d. MMMM yyyy - HH:mm:ss},
+                       ConverterCulture=da-DK}"
+                       Foreground="#BBBBBB"
+                       Margin="0,6,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,24">
+            <TextBlock Text="Reolstatus i dag"
+                       FontSize="20"
+                       Margin="0,0,0,12" />
+
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,0,12">
+                <TextBlock Text="Antal aktive reoler: "
+                           Foreground="#BBBBBB"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TotalShelfCount}"
+                           FontSize="18" FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="4,0,0,0"/>
+            </StackPanel>
+
+            <UniformGrid Columns="3">
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Ledige" Foreground="#BBBBBB"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding AvailableShelfCount}"
+                                   FontSize="30" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Udlejede" Foreground="#BBBBBB"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding RentedShelfCount}"
+                                   FontSize="30" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Opsagte" Foreground="#BBBBBB"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding EndingShelfCount}"
+                                   FontSize="30" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,0,0,24">
+            <TextBlock Text="Nøgletal"
+                       FontSize="20"
+                       Margin="0,0,0,12" />
+
+            <UniformGrid Columns="2" Height="120">
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18"
+                        Margin="0,0,12,0">
+
+                    <StackPanel VerticalAlignment="Center">
+
+                        <TextBlock Text="Aktive reollejere i dag"
+                                   Foreground="#BBBBBB"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding ActiveRentingTenantCount}"
+                                   FontSize="30"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#292929"
+                        BorderBrush="#595959"
+                        BorderThickness="1"
+                        CornerRadius="3"
+                        Padding="18">
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Salg denne måned"
+                                   Foreground="#BBBBBB"
+                                   HorizontalAlignment="Center"/>
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding DataContext.IsAdmin,
+                                                           RelativeSource={RelativeSource AncestorType=Window}}"
+                                                           Value="True"/>
+                                                <Condition Binding="{Binding MonthlySalesMessage}" Value="" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="{Binding MonthlySalesAmount,
+                                       StringFormat={}{0:N2} kr.,
+                                       ConverterCulture=da-DK}"
+                                       FontSize="30"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding MonthlySalesCount,
+                                       StringFormat={}{0} salg}"
+                                       Foreground="#BBBBBB"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding MonthlySalesMessage}"
+                                   Foreground="#F28B82"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock"
+                                       BasedOn="{StaticResource MessageTextStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsAdmin,
+                                                     RelativeSource={RelativeSource AncestorType=Window}}"
+                                                     Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <TextBlock Text="Log ind som administrator for at se månedens salg"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Margin="0, 4, 0, 0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsAdmin,
+                                                     RelativeSource={RelativeSource AncestorType=Window}}"
+                                                     Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </StackPanel>
+
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Kommende slutdatoer"
+                       FontSize="20"
+                       Margin="0,0,0,12" />
+
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding UpcomingEndings}"
+                      Style="{StaticResource ManagementDataGridStyle}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserSortColumns="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Sidste lejedag"
+                                        Binding="{Binding EndDate, StringFormat={}{0:dd-MM-yyyy}}"
+                                        Width="170"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Reol"
+                                        Binding="{Binding Shelf.ShelfNumber}"
+                                        Width="100"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                    <DataGridTextColumn Header="Reollejer"
+                                        Binding="{Binding Tenant.Name}"
+                                        Width="Auto"
+                                        ElementStyle="{StaticResource ManagementCellTextStyle}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Grid.Row="1"
+                       Text="Ingen aktuelle lejemål med registreret slutdato."
+                       Foreground="#AAAAAA"
+                       Margin="16,56,16,0"
+                       VerticalAlignment="Top"
+                       IsHitTestVisible="False">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding UpcomingEndings.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
     </Grid>
 </UserControl>

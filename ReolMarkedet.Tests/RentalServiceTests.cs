@@ -528,4 +528,66 @@ public class RentalServiceTests
         Assert.AreEqual(425m, firstPeriodRent);
         Assert.AreEqual(850m, rental.MonthlyRent);
     }
+
+    [TestMethod]
+    public void PrepareRentals_TwoStandardShelves_AssignsFirstAndSecondShelfPrices()
+    {
+        // Arrange
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf firstShelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        Shelf secondShelf = new(shelfType) { ShelfId = 2, ShelfNumber = 2 };
+        List<Rental> existingRentals = new();
+        DateTime startDate = new(2026, 10, 10);
+
+        // Act
+        List<Rental> preparedRentals = rentalService.PrepareRentals(
+            tenant,
+            new List<Shelf> { firstShelf, secondShelf },
+            startDate,
+            null,
+            startDate,
+            false,
+            null,
+            PaymentMethod.Cash,
+            existingRentals);
+
+        // Assert
+        Assert.HasCount(2, preparedRentals);
+        Assert.AreSame(firstShelf, preparedRentals[0].Shelf);
+        Assert.AreSame(secondShelf, preparedRentals[1].Shelf);
+        Assert.AreEqual(850m, preparedRentals[0].MonthlyRent);
+        Assert.AreEqual(825m, preparedRentals[1].MonthlyRent);
+        Assert.IsFalse(preparedRentals[0].IsCustomPrice);
+        Assert.IsFalse(preparedRentals[1].IsCustomPrice);
+        Assert.HasCount(0, existingRentals);
+    }
+
+    [TestMethod]
+    public void PrepareRentals_CustomRentWithThreeDecimals_ThrowsArgumentException()
+    {
+        // Arrange
+        RentalService rentalService = new();
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        List<Rental> existingRentals = new();
+        DateTime startDate = new(2026, 10, 10);
+
+        // Act & Assert
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            rentalService.PrepareRentals(
+                tenant,
+                new List<Shelf> { shelf },
+                startDate,
+                null,
+                startDate,
+                true,
+                850.001m,
+                PaymentMethod.Cash,
+                existingRentals));
+
+        Assert.HasCount(0, existingRentals);
+    }
 }
