@@ -19,6 +19,10 @@ The real `appsettings.json` is excluded from Git because connection settings may
 
 The initial schema script is intended for a new database. Do not rerun it when the tables already exist.
 
+## Admin mode
+
+In this prototype, the admin mode is accessible by logging in with the password `admin`.
+
 ## Optional demo data
 
 To populate a local database with fictional tenants, rentals, items, and sales, open and execute `Reolmarkedet.Data/Database/SeedRealisticDemoData.sql` in SQL Server Management Studio after steps 1 and 2 above. Its dates are relative to the day you run it.
