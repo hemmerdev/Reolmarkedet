@@ -452,10 +452,7 @@ namespace Reolmarkedet.Core.Services
                 throw new ArgumentException("Slutdatoen skal være efter startdatoen");
             }
             if (isCustomPrice &&
-                (!customRentPerShelf.HasValue ||
-                customRentPerShelf.Value <= 0 ||
-                customRentPerShelf.Value > 99_999_999.99m ||
-                decimal.Round(customRentPerShelf.Value, 2) != customRentPerShelf.Value))
+                !IsValidCustomRentPrice(customRentPerShelf))
             {
                 throw new ArgumentException(
                     "Angiv en gyldig pris mellem 0,01 og 99.999.999,99 med højst 2 decimaler");
@@ -497,6 +494,14 @@ namespace Reolmarkedet.Core.Services
                 position++;
             }
             return preparedRentals;
+        }
+
+        public bool IsValidCustomRentPrice(decimal? customRentPerShelf)
+        {
+            return customRentPerShelf.HasValue &&
+                   customRentPerShelf.Value > 0 &&
+                   customRentPerShelf.Value <= 99_999_999.99m &&
+                   decimal.Round(customRentPerShelf.Value, 2) == customRentPerShelf.Value;
         }
     }
 }

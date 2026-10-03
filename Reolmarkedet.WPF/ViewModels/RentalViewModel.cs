@@ -178,7 +178,9 @@ namespace Reolmarkedet.WPF.ViewModels
                     return null;
                 }
 
-                return rentPerShelf * SelectedShelves.Count;
+                return _rentalService.IsValidCustomRentPrice(rentPerShelf)
+                    ? rentPerShelf * SelectedShelves.Count
+                    : null;
             }
         }
 

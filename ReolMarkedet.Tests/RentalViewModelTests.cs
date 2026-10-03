@@ -103,4 +103,41 @@ public class RentalViewModelTests
         Assert.HasCount(0, viewModel.Rentals);
         Assert.IsFalse(rentalRepository.GetAll().Any());
     }
+
+    [TestMethod]
+    public void TerminateRental_WhenRepositoryRowIsMissing_RestoresDatesAndRemovesStaleRental()
+    {
+        // Arrange
+        Tenant tenant = new() { TenantId = 1, Name = "Test Tenant" };
+        ShelfType shelfType = new() { ShelfTypeId = 1, Name = "Test Type" };
+        Shelf shelf = new(shelfType) { ShelfId = 1, ShelfNumber = 1 };
+        Rental rental = new(tenant, shelf)
+        {
+            RentalId = 1,
+            StartDate = DateTime.Today.AddDays(-1),
+            MonthlyRent = 850m
+        };
+
+        FakeRentalRepository repository = new(); // Contains no rental with ID 1.
+        RentalViewModel viewModel = new(
+           new ObservableCollection<Tenant> { tenant },
+           new ObservableCollection<Shelf> { shelf },
+           new ObservableCollection<Rental> { rental },
+           repository,
+           new FakeConfirmationService());
+
+        viewModel.SelectedRentalRow = viewModel.RentalRows[0];
+        viewModel.TerminationEndDate = viewModel.MinimumTerminationEndDate;
+
+        // Act
+        viewModel.TerminateRentalCommand.Execute(null);
+
+        // Assert
+        Assert.IsNull(rental.EndDate);
+        Assert.IsNull(rental.TerminationNoticeDate);
+        Assert.DoesNotContain(rental, viewModel.Rentals);
+        Assert.IsEmpty(viewModel.RentalRows);
+        Assert.IsNull(viewModel.SelectedRentalRow);
+        Assert.IsNotEmpty(viewModel.TerminationMessage);
+    }
 }
