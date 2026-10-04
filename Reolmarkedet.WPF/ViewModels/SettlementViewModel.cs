@@ -4,6 +4,7 @@ using Reolmarkedet.Core.Results;
 using Reolmarkedet.Core.Services;
 using Reolmarkedet.WPF.Commands;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 
 namespace Reolmarkedet.WPF.ViewModels
 {
@@ -16,8 +17,9 @@ namespace Reolmarkedet.WPF.ViewModels
         private readonly IRepository<Rental> _rentalRepository;
         private int _selectedYear;
         private int _selectedMonth;
-        private bool _isExpanded;
         private MonthlySettlementResult? _selectedSettlement;
+        private string _settlementMessage = string.Empty;
+
         public ObservableCollection<MonthlySettlementResult> MonthlySettlements { get; } = new();
 
         public int SelectedYear
@@ -29,8 +31,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     _selectedYear = value;
                     OnPropertyChanged();
-                    MonthlySettlements.Clear();
-                    SelectedSettlement = null;
+                    Refresh();
                     CalculateSettlementsCommand.RaiseCanExecuteChanged();
                 }
             }
@@ -45,8 +46,7 @@ namespace Reolmarkedet.WPF.ViewModels
                 {
                     _selectedMonth = value;
                     OnPropertyChanged();
-                    MonthlySettlements.Clear();
-                    SelectedSettlement = null;
+                    Refresh();
                     CalculateSettlementsCommand.RaiseCanExecuteChanged();
                 }
             }
@@ -59,26 +59,23 @@ namespace Reolmarkedet.WPF.ViewModels
             {
                 if (value != _selectedSettlement)
                 {
-                    IsExpanded = false;
                     _selectedSettlement = value;
                     OnPropertyChanged();
                 }
             }
         }
 
-        // Used to control the expansion state of the Expander in the UI.
-        public bool IsExpanded
+        public string SettlementMessage
         {
-            get => _isExpanded;
-            set
+            get => _settlementMessage;
+            private set
             {
-                if (value != _isExpanded)
+                if (_settlementMessage != value)
                 {
-                    _isExpanded = value;
-                    OnPropertyChanged();
+                    _settlementMessage = value;
+                    OnPropertyChanged(nameof(SettlementMessage));
                 }
             }
-
         }
 
         public IReadOnlyList<int> MonthOptions { get; } =
@@ -127,24 +124,35 @@ namespace Reolmarkedet.WPF.ViewModels
         private void CalculateSettlements(object? parameter)
         {
             SelectedSettlement = null;
-            var tenants = _tenantRepository.GetAll();
-            var sales = _saleRepository.GetAll();
-            var items = _itemRepository.GetAll();
-            var rentals = _rentalRepository.GetAll();
-
-            var results = _settlementService.CalculateForMonth(
-                SelectedYear, SelectedMonth, tenants, sales, items, rentals);
-
             MonthlySettlements.Clear();
-            foreach (var result in results)
+            SettlementMessage = string.Empty;
+            try
             {
-                MonthlySettlements.Add(result);
+
+                var tenants = _tenantRepository.GetAll();
+                var sales = _saleRepository.GetAll();
+                var items = _itemRepository.GetAll();
+                var rentals = _rentalRepository.GetAll();
+                var results = _settlementService.CalculateForMonth(
+                    SelectedYear, SelectedMonth, tenants, sales, items, rentals);
+
+                foreach (var result in results)
+                {
+                    MonthlySettlements.Add(result);
+                }
+            }
+            catch (DbException)
+            {
+                SettlementMessage = "Der opstod en databasefejl under beregning af opgørelser. " +
+                    "Kontrollér databaseforbindelsen, og prøv igen.";
             }
         }
 
         public void Refresh()
         {
             SelectedSettlement = null;
+            MonthlySettlements.Clear();
+            SettlementMessage = string.Empty;
         }
     }
 }

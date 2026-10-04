@@ -1,5 +1,6 @@
 using Reolmarkedet.Core.Models;
 using Reolmarkedet.WPF.ViewModels;
+using ReolMarkedet.Tests.Fakes;
 using System.Collections.ObjectModel;
 
 namespace ReolMarkedet.Tests;
@@ -11,9 +12,11 @@ public class TenantViewModelTests
     public void UpdateTenant_WhenNameIsBlank_LeavesTenantUnchanged()
     {
         // Arrange
+
         TenantViewModel viewModel = new(
             new ObservableCollection<Rental>(),
-            new FakeTenantRepository());
+            new FakeTenantRepository(),
+            new FakeConfirmationService());
         viewModel.Name = "John Doe";
         viewModel.BankRegistrationNumber = "1234";
         viewModel.BankAccountNumber = "0123456789";
@@ -38,7 +41,9 @@ public class TenantViewModelTests
         // Arrange
         TenantViewModel viewModel = new(
             new ObservableCollection<Rental>(),
-            new FakeTenantRepository());
+            new FakeTenantRepository(),
+            new FakeConfirmationService());
+
         viewModel.Name = "John Doe";
         viewModel.BankRegistrationNumber = "1234";
         viewModel.BankAccountNumber = "0123456789";
@@ -62,7 +67,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository(), new FakeConfirmationService());
         viewModel.Name = "Test Tenant";
         viewModel.BankRegistrationNumber = "1234";
         viewModel.BankAccountNumber = "0123456789";
@@ -99,7 +104,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository(), new FakeConfirmationService());
         viewModel.Name = "Test Tenant";
         viewModel.BankRegistrationNumber = "1234";
         viewModel.BankAccountNumber = "0123456789";
@@ -136,7 +141,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository(), new FakeConfirmationService());
         viewModel.Name = "Test Tenant";
         viewModel.BankRegistrationNumber = "1234";
         viewModel.BankAccountNumber = "0123456789";
@@ -173,7 +178,7 @@ public class TenantViewModelTests
     {
         // Arrange
         var rentals = new ObservableCollection<Rental>();
-        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository());
+        var viewModel = new TenantViewModel(rentals, new FakeTenantRepository(), new FakeConfirmationService());
         viewModel.Name = "Test Tenant";
         viewModel.BankRegistrationNumber = "1234";
         viewModel.BankAccountNumber = "0123456789";
@@ -222,7 +227,8 @@ public class TenantViewModelTests
         var repository = new FakeTenantRepository();
         TenantViewModel viewModel = new(
             new ObservableCollection<Rental>(),
-            repository);
+            repository,
+            new FakeConfirmationService());
 
         viewModel.Name = "Test Tenant";
         viewModel.BankRegistrationNumber = "1234";

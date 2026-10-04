@@ -47,114 +47,177 @@
                 BorderBrush="#595959"
                 BorderThickness="0,0,1,0">
 
-            <StackPanel Margin="12,20">
+            <Grid Margin="12,20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <Button Content="Startside"
-                        Command="{Binding ShowDashboardCommand}" >
+                <StackPanel Grid.Row="0">
+                    <Button Content="Startside"
+                            Command="{Binding ShowDashboardCommand}" >
+                        <Button.Style>
+                            <Style TargetType="Button"
+                                   BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}"
+                                                 Value="{x:Static vm:NavigationPage.Dashboard}">
+                                        <Setter Property="Background" Value="#505050" />
+                                        <Setter Property="BorderBrush" Value="#999999" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                    <Button.Style>
-                        <Style TargetType="Button"
-                               BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}"
-                                             Value="{x:Static vm:NavigationPage.Dashboard}">
-                                    <Setter Property="Background" Value="#505050" />
-                                    <Setter Property="BorderBrush" Value="#999999" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                    <Button Content="Reollejere"
+                            Command="{Binding ShowTenantsCommand}" >
+                        <Button.Style>
+                            <Style TargetType="Button"
+                                   BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}"
+                                                 Value="{x:Static vm:NavigationPage.Tenants}">
+                                        <Setter Property="Background" Value="#505050" />
+                                        <Setter Property="BorderBrush" Value="#999999" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                <Button Content="Reollejere"
-                        Command="{Binding ShowTenantsCommand}" >
-                    <Button.Style>
-                        <Style TargetType="Button"
-                               BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}"
-                                             Value="{x:Static vm:NavigationPage.Tenants}">
-                                    <Setter Property="Background" Value="#505050" />
-                                    <Setter Property="BorderBrush" Value="#999999" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                    <Button Content="Reoler"
+                            Command="{Binding ShowShelfManagementCommand}" >
+                        <Button.Style>
+                            <Style TargetType="Button"
+                                   BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}"
+                                                 Value="{x:Static vm:NavigationPage.Shelves}">
+                                        <Setter Property="Background" Value="#505050" />
+                                        <Setter Property="BorderBrush" Value="#999999" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                <Button Content="Reoler"
-                        Command="{Binding ShowShelfManagementCommand}" >
+                    <Button Content="Lejemål"
+                            Command="{Binding ShowRentalManagementCommand}" >
+                        <Button.Style>
+                            <Style TargetType="Button"
+                                   BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}"
+                                                 Value="{x:Static vm:NavigationPage.Rentals}">
+                                        <Setter Property="Background" Value="#505050" />
+                                        <Setter Property="BorderBrush" Value="#999999" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                    <Button.Style>
-                        <Style TargetType="Button"
-                               BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}"
-                                             Value="{x:Static vm:NavigationPage.Shelves}">
-                                    <Setter Property="Background" Value="#505050" />
-                                    <Setter Property="BorderBrush" Value="#999999" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                    <Button Content="Varer" Command="{Binding ShowItemManagementCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Items}">
+                                        <Setter Property="Background" Value="#505050"/>
+                                        <Setter Property="BorderBrush" Value="#999999"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                <Button Content="Lejemål"
-                        Command="{Binding ShowRentalManagementCommand}" >
+                    <Button Content="Salg" Command="{Binding ShowSaleManagementCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Sales}">
+                                        <Setter Property="Background" Value="#505050"/>
+                                        <Setter Property="BorderBrush" Value="#999999"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                    <Button.Style>
-                        <Style TargetType="Button"
-                               BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}"
-                                             Value="{x:Static vm:NavigationPage.Rentals}">
-                                    <Setter Property="Background" Value="#505050" />
-                                    <Setter Property="BorderBrush" Value="#999999" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                    <Button Content="Opgørelser" Command="{Binding ShowSettlementCommand}"
+                            ToolTipService.ShowOnDisabled="True">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Settlements}">
+                                        <Setter Property="Background" Value="#505050"/>
+                                        <Setter Property="BorderBrush" Value="#999999"/>
+                                    </DataTrigger>
 
-                <Button Content="Varer" Command="{Binding ShowItemManagementCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Items}">
-                                    <Setter Property="Background" Value="#505050"/>
-                                    <Setter Property="BorderBrush" Value="#999999"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.5" />
+                                    </Trigger>
 
-                <Button Content="Salg" Command="{Binding ShowSaleManagementCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Sales}">
-                                    <Setter Property="Background" Value="#505050"/>
-                                    <Setter Property="BorderBrush" Value="#999999"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                                    <DataTrigger Binding="{Binding IsAdmin}" Value="False">
+                                        <Setter Property="ToolTip"
+                                                Value="Log in som administrator for at se opgørelser" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
 
-                <Button Content="Opgørelser" Command="{Binding ShowSettlementCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource NavigationButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ActivePage}" Value="{x:Static vm:NavigationPage.Settlements}">
-                                    <Setter Property="Background" Value="#505050"/>
-                                    <Setter Property="BorderBrush" Value="#999999"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </StackPanel>
+                <StackPanel Grid.Row="1">
+
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" FontSize="12" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Tilstand: Medarbejder" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                        <Setter Property="Text" Value="Tilstand: Administrator" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <TextBlock Text="Administrator login"
+                                   Margin="0,4,0,6"
+                                   FontSize="12"/>
+
+                        <PasswordBox x:Name="AdminPasswordBox"
+                                     Height="30"
+                                     Background="#333333"
+                                     Foreground="White"
+                                     BorderBrush="#595959"
+                                     VerticalContentAlignment="Center"/>
+
+                        <Button Content="Log ind"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Margin="0,8,0,0"
+                                Click="AdminLogin_Click"/>
+
+                    </StackPanel>
+                    <Button Content="Log ud"
+                            Style="{StaticResource ActionButtonStyle}"
+                            IsEnabled="{Binding IsAdmin}"
+                            Click="AdminLogout_Click"
+                            Margin="0,8,0,0"/>
+                </StackPanel>
+            </Grid>
         </Border>
         <ContentControl Grid.Column="1"
                         Content="{Binding CurrentViewModel}" />

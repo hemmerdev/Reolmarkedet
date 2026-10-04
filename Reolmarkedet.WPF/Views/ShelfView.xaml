@@ -99,20 +99,10 @@
                                     Width="*" MinWidth="120"
                                     ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
-                <DataGridTemplateColumn Header="Reoltype"
-                                        Width="1.3*" MinWidth="130">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ComboBox
-                                ItemsSource="{Binding DataContext.ShelfTypes,
-                                RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                DisplayMemberPath="Name"
-                                SelectedItem="{Binding ShelfType, Mode=TwoWay,
-                                UpdateSourceTrigger=PropertyChanged}"
-                                Style="{StaticResource InputComboBoxStyle}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Reoltype"
+                                    Binding="{Binding Shelf.ShelfType.Name}"
+                                    Width="*"
+                                    ElementStyle="{StaticResource ManagementCellTextStyle}"/>
 
                 <DataGridTemplateColumn Header="Status"  HeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
                                         Width="95">
@@ -272,9 +262,19 @@
                                 Visibility="{Binding HasSelectedShelf,
                                 Converter={StaticResource BoolToVisibility}}">
 
-                        <TextBlock Text="Placering af valgt reol"
+                        <TextBlock Text="Rediger valgt reol"
                                    FontSize="20"
                                    Margin="0,0,0,12" />
+
+                        <TextBlock Text="Reoltype" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding ShelfTypes}"
+                                  DisplayMemberPath="Name"
+                                  SelectedItem="{Binding SelectedShelfType, Mode=TwoWay}"
+                                  Style="{StaticResource InputComboBoxStyle}" />
+                        <Button Content="Gem reoltype"
+                                Command="{Binding SaveShelfTypeCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="0,12,0,16" />
 
                         <TextBlock Text="Række (fx A)" Margin="0,0,0,4" />
                         <TextBox Text="{Binding LocationRowLabel,
